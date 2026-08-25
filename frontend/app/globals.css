@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  /* 1. Color Primario */
+  --color-primary: #024EFF;
+  --color-primary-hover: #013BCC;
+  
+  /* 2. Color de Acento (Amarillo Sol) */
+  --color-accent: #FFC300;
+  --color-accent-hover: #E6B000;
+  
+  /* 3. Superficies y Fondos */
+  --color-surface-dark: #091033;
+  --color-surface-light: #F2F6FF;
+  --color-surface-white: #FFFFFF;
+  
+  /* 4. Textos (Tipografía) */
+  --color-content-main: #091033;
+  --color-content-muted: #6B7280;
+  --color-content-inverse: #FFFFFF;
+}
