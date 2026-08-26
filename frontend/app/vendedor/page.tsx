@@ -10,6 +10,7 @@ import { SellerDocumentsSection } from '@/components/organisms/SellerDocumentsSe
 import { SellerProperty } from '@/components/molecules/SellerPropertyCard';
 import { SellerOffer } from '@/components/molecules/SellerOfferItem';
 import { Modal } from '@/components/atoms/Modal';
+import { PublishPropertyForm } from '@/components/organisms/PublishPropertyForm';
 
 const INITIAL_SELLER_PROPERTIES: SellerProperty[] = [
   {
@@ -282,102 +283,39 @@ export default function SellerPortalPage() {
 
       </div>
 
-      {/* MODAL PUBLICAR INMUEBLE */}
+      {/* MODAL CON FORMULARIO COMPLETO RECICLADO DEL COMPAÑERO */}
       <Modal
         isOpen={isPublishModalOpen}
         onClose={() => setIsPublishModalOpen(false)}
-        title="Publicar Nuevo Inmueble en InmoVax"
-        subtitle="Registra tu propiedad para recibir visitas y ofertas de familias verificadas"
+        title="Publicar Nuevo Inmueble (Asistente Oficial InmoVax)"
+        subtitle="Completa los 4 pasos para registrar tu inmueble con geolocalización y Folio Real"
+        maxWidth="3xl"
       >
-        <form onSubmit={handleCreateProperty} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-surface-dark mb-1">Título Descriptivo</label>
-            <input
-              type="text"
-              required
-              value={publishForm.title}
-              onChange={(e) => setPublishForm({ ...publishForm, title: e.target.value })}
-              placeholder="Ej: Departamento Amoblado en Sopocachi"
-              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-medium focus:border-primary outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-surface-dark mb-1">Zona / Ciudad</label>
-              <select
-                value={publishForm.zone}
-                onChange={(e) => setPublishForm({ ...publishForm, zone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-bold focus:border-primary outline-none cursor-pointer"
-              >
-                <option value="Sopocachi, La Paz">Sopocachi, La Paz</option>
-                <option value="Calacoto, La Paz">Calacoto, La Paz</option>
-                <option value="San Miguel, La Paz">San Miguel, La Paz</option>
-                <option value="Achumani, La Paz">Achumani, La Paz</option>
-                <option value="Miraflores, La Paz">Miraflores, La Paz</option>
-                <option value="San Jorge, La Paz">San Jorge, La Paz</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-surface-dark mb-1">Modalidad</label>
-              <select
-                value={publishForm.type}
-                onChange={(e) => setPublishForm({ ...publishForm, type: e.target.value as SellerProperty['type'] })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-bold focus:border-primary outline-none cursor-pointer"
-              >
-                <option value="Anticrético">Anticrético</option>
-                <option value="Venta">Venta</option>
-                <option value="Alquiler">Alquiler</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-surface-dark mb-1">Precio Solicitado ($us)</label>
-              <input
-                type="text"
-                required
-                value={publishForm.price}
-                onChange={(e) => setPublishForm({ ...publishForm, price: e.target.value })}
-                placeholder="$us 48,000"
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-bold focus:border-primary outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-surface-dark mb-1">Matrícula Folio Real (DDRR)</label>
-              <input
-                type="text"
-                required
-                value={publishForm.folioReal}
-                onChange={(e) => setPublishForm({ ...publishForm, folioReal: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-mono font-bold focus:border-primary outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-900 font-medium">
-            🛡️ <strong>Garantía InmoVax:</strong> Un asesor asignado revisará tu Folio Real para habilitar la etiqueta de <em>Propiedad Verificada</em> ante los compradores.
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={() => setIsPublishModalOpen(false)}
-              className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 text-xs font-bold bg-primary hover:bg-primary-hover text-white rounded-xl shadow cursor-pointer active:scale-95"
-            >
-              Registrar y Enviar a Auditoría
-            </button>
-          </div>
-        </form>
+        <div className="pt-2">
+          <PublishPropertyForm
+            isLoggedInSeller={true}
+            onSuccessCallback={(data) => {
+              const newProp: SellerProperty = {
+                id: `PROP-${Math.floor(110 + Math.random() * 880)}`,
+                title: `${data.tipoInmueble.toUpperCase()} en ${data.zona}`,
+                zone: data.zona,
+                type: (data.operacion.charAt(0).toUpperCase() + data.operacion.slice(1)) as SellerProperty['type'],
+                price: `${data.moneda === 'usd' ? '$us' : 'Bs.'} ${data.precio}`,
+                views: 1,
+                inquiries: 0,
+                status: 'En Validación Legal',
+                folioReal: data.folioReal || '2.01.0.99.00' + Math.floor(1000 + Math.random() * 9000),
+                assignedAdvisor: 'Carlos Vega',
+                image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop',
+                datePublished: 'Publicado hoy'
+              };
+              setProperties(prev => [newProp, ...prev]);
+              setIsPublishModalOpen(false);
+              showToast(`¡Inmueble registrado exitosamente con Folio Real!`);
+              setActiveTab('inmuebles');
+            }}
+          />
+        </div>
       </Modal>
 
     </div>
