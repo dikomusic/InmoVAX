@@ -14,7 +14,7 @@ export default function NosotrosPage() {
             Revolucionando el mercado inmobiliario en <span className="text-accent">Bolivia</span>
           </h1>
           <p className="text-lg text-content-inverse/80 font-medium">
-            En InmoPaz no solo conectamos propiedades con personas; garantizamos que cada transacción de anticrético, venta o alquiler sea 100% segura y transparente.
+            En InmoVax no solo conectamos propiedades con personas; garantizamos que cada transacción de anticrético, venta o alquiler sea 100% segura y transparente.
           </p>
         </div>
         {/* Decoración */}
@@ -49,7 +49,7 @@ export default function NosotrosPage() {
       {/* Historia / Equipo */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24 flex flex-col md:flex-row gap-12 items-center">
         <div className="w-full md:w-1/2 relative h-[400px] rounded-2xl overflow-hidden">
-          <Image src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2073&auto=format&fit=crop" alt="Equipo InmoPaz" fill className="object-cover" />
+          <Image src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2073&auto=format&fit=crop" alt="Equipo InmoVax" fill className="object-cover" />
         </div>
         <div className="w-full md:w-1/2">
           <h2 className="text-3xl font-extrabold text-content-main mb-6">Nuestra Misión</h2>

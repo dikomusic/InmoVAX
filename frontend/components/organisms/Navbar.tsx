@@ -55,7 +55,7 @@ export const Navbar = () => {
         
         {/* 1. LOGO */}
         <Link href="/" className="text-2xl font-extrabold text-content-inverse tracking-tight shrink-0">
-          <span className="text-accent">INMO</span>PAZ
+          <span className="text-accent">INMO</span>VAX
         </Link>
 
         {/* 2. ENLACES CENTRALES (Desktop) */}

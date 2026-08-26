@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "InmoPaz | Anticréticos y Alquileres",
+  title: "InmoVax | Anticréticos y Alquileres",
   description: "Encuentra tu hogar ideal en La Paz.",
 };
 

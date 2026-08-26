@@ -12,7 +12,7 @@ export const Footer = () => {
         {/* Columna 1: Info de la empresa */}
         <div>
           <div className="text-3xl font-extrabold text-content-inverse mb-4 tracking-tight">
-            <span className="text-accent">INMO</span>PAZ
+            <span className="text-accent">INMO</span>VAX
           </div>
           <p className="text-content-inverse/70 leading-relaxed mb-6">
             Tu aliado inmobiliario en La Paz. Revolucionando la forma de encontrar 
@@ -47,7 +47,7 @@ export const Footer = () => {
 
       {/* Copyright */}
       <div className="max-w-7xl mx-auto pt-8 border-t border-gray-800 text-center text-content-inverse/50 text-sm">
-        © {new Date().getFullYear()} InmoPaz Bolivia. Todos los derechos reservados.
+        © {new Date().getFullYear()} InmoVax Bolivia. Todos los derechos reservados.
       </div>
     </footer>
   );

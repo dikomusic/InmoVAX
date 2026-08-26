@@ -21,7 +21,7 @@ export default async function AnticreticoDinamicPage({ params }: { params: Promi
             {tituloFormateado} en <span className="text-accent">Anticrético</span>
           </h1>
           <p className="text-content-inverse/80 mt-2 font-medium max-w-2xl">
-            Invierte tu dinero de forma segura. Todos nuestros anticréticos cuentan con revisión de Folio Real y respaldo legal garantizado por InmoPaz.
+            Invierte tu dinero de forma segura. Todos nuestros anticréticos cuentan con revisión de Folio Real y respaldo legal garantizado por InmoVax.
           </p>
         </div>
         {/* Decoración de fondo */}

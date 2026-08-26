@@ -29,7 +29,7 @@ export default function LoginPage() {
         
         {/* Logo flotante (Para volver al inicio) */}
         <Link href="/" className="absolute top-8 left-8 text-2xl font-extrabold text-content-main tracking-tight">
-          <span className="text-accent">INMO</span>PAZ
+          <span className="text-accent">INMO</span>VAX
         </Link>
 
         {/* Contenedor del Formulario */}
