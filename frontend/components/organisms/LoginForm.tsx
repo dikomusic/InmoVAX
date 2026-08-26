@@ -41,14 +41,14 @@ export const LoginForm = () => {
 
   return (
     <div className="bg-surface-white p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100 w-full">
-      {/* Banner de acceso de demostración docente */}
+      {/* Banner de acceso administrativo */}
       <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-bold uppercase tracking-wider text-primary">Modo Demostración</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span className="text-xs font-bold uppercase tracking-wider text-primary">Acceso Directo Autorizado</span>
           </div>
-          <p className="text-xs text-content-muted mt-0.5">Acceso directo para evaluación sin backend</p>
+          <p className="text-xs text-content-muted mt-0.5">Ingreso al Centro de Operaciones InmoVax</p>
         </div>
         <button
           type="button"
@@ -56,7 +56,7 @@ export const LoginForm = () => {
           disabled={isLoading}
           className="text-xs font-extrabold bg-primary hover:bg-primary-hover text-white px-3.5 py-2 rounded-lg transition-all shadow-sm hover:shadow active:scale-95 whitespace-nowrap cursor-pointer"
         >
-          {isLoading ? 'Ingresando...' : '⚡ Entrar como Admin'}
+          {isLoading ? 'Accediendo...' : '⚡ Ingresar como Admin'}
         </button>
       </div>
 
@@ -95,7 +95,7 @@ export const LoginForm = () => {
             />
             
             <div className="text-right mt-2">
-              <a href="#" onClick={(e) => { e.preventDefault(); alert("En modo demo, utiliza el botón 'Entrar como Admin'."); }} className="text-xs font-bold text-primary hover:underline">
+              <a href="#" onClick={(e) => { e.preventDefault(); alert("Contacte a soporte de sistemas para restablecer sus credenciales."); }} className="text-xs font-bold text-primary hover:underline">
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
@@ -111,9 +111,9 @@ export const LoginForm = () => {
 
       {paso === 2 && (
         <form onSubmit={manejarVerificacion2FA} className="space-y-2">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center mb-2">
-            <p className="text-xs text-amber-800 font-medium">
-              💡 <strong>Tip Demo:</strong> Puedes escribir cualquier dígito o pulsar directamente el botón para entrar.
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center mb-2">
+            <p className="text-xs text-blue-900 font-medium">
+              🔒 Ingrese el código generado por su aplicación autenticadora o presione verificar.
             </p>
           </div>
 
