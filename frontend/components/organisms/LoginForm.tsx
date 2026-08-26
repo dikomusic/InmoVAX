@@ -1,75 +1,135 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Input2FA } from '../molecules/Input2FA';
 
 export const LoginForm = () => {
+  const router = useRouter();
   const [paso, setPaso] = useState<1 | 2>(1);
+  const [email, setEmail] = useState('admin@inmovax.com');
+  const [password, setPassword] = useState('••••••••');
+  const [isLoading, setIsLoading] = useState(false);
 
   const manejarLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setPaso(2);
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      setPaso(2);
+    }, 400);
+  };
+
+  const manejarVerificacion2FA = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      router.push('/admin');
+    }, 500);
+  };
+
+  const accesoRapidoAdmin = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      router.push('/admin');
+    }, 300);
   };
 
   return (
     <div className="bg-surface-white p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100 w-full">
-      <div className="mb-8">
-        <h2 className="text-3xl font-extrabold text-content-main mb-2">
-          {paso === 1 ? 'Bienvenido de vuelta' : 'Seguridad 2FA'}
+      {/* Banner de acceso de demostración docente */}
+      <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-xs font-bold uppercase tracking-wider text-primary">Modo Demostración</span>
+          </div>
+          <p className="text-xs text-content-muted mt-0.5">Acceso directo para evaluación sin backend</p>
+        </div>
+        <button
+          type="button"
+          onClick={accesoRapidoAdmin}
+          disabled={isLoading}
+          className="text-xs font-extrabold bg-primary hover:bg-primary-hover text-white px-3.5 py-2 rounded-lg transition-all shadow-sm hover:shadow active:scale-95 whitespace-nowrap cursor-pointer"
+        >
+          {isLoading ? 'Ingresando...' : '⚡ Entrar como Admin'}
+        </button>
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-content-main mb-2">
+          {paso === 1 ? 'Panel de Acceso' : 'Seguridad 2FA'}
         </h2>
-        <p className="text-content-muted">
+        <p className="text-content-muted text-sm">
           {paso === 1 
-            ? 'Ingresa tus datos para acceder a tu cuenta.' 
-            : 'Ingresa el código de 6 dígitos enviado a tu celular.'}
+            ? 'Ingresa tus credenciales administrativas para gestionar InmoVax.' 
+            : 'Ingresa el código de 6 dígitos enviado a tu dispositivo autorizado.'}
         </p>
       </div>
 
       {paso === 1 && (
-        <form onSubmit={manejarLogin} className="space-y-5">
+        <form onSubmit={manejarLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-content-main mb-2">Correo Electrónico</label>
-            <Input type="email" placeholder="ejemplo@correo.com" required />
+            <Input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@inmovax.com" 
+              required 
+            />
           </div>
           
-          <div className="mb-6">
-              <label className="block text-sm font-bold text-content-main mb-2">Contraseña</label>
-              <Input 
-                type="password" 
-                placeholder="••••••••" 
-                required 
-              />
-              
-              {/* Enlace movido a la parte de abajo */}
-              <div className="text-right mt-2">
-                <a href="/recuperar" className="text-sm font-bold text-primary hover:underline">
-                  ¿Olvidaste tu contraseña?
-                </a>
-              </div>
+          <div>
+            <label className="block text-sm font-bold text-content-main mb-2">Contraseña</label>
+            <Input 
+              type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••" 
+              required 
+            />
+            
+            <div className="text-right mt-2">
+              <a href="#" onClick={(e) => { e.preventDefault(); alert("En modo demo, utiliza el botón 'Entrar como Admin'."); }} className="text-xs font-bold text-primary hover:underline">
+                ¿Olvidaste tu contraseña?
+              </a>
             </div>
-          <div className="pt-4">
-            <Button type="submit" variant="primary" fullWidth>
-              Iniciar Sesión
+          </div>
+
+          <div className="pt-2">
+            <Button type="submit" variant="primary" fullWidth disabled={isLoading}>
+              {isLoading ? 'Verificando...' : 'Continuar con 2FA →'}
             </Button>
           </div>
         </form>
       )}
 
       {paso === 2 && (
-        <form className="space-y-2">
+        <form onSubmit={manejarVerificacion2FA} className="space-y-2">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center mb-2">
+            <p className="text-xs text-amber-800 font-medium">
+              💡 <strong>Tip Demo:</strong> Puedes escribir cualquier dígito o pulsar directamente el botón para entrar.
+            </p>
+          </div>
+
           <Input2FA />
+          
           <div className="pt-4">
-            <Button type="submit" variant="accent" fullWidth>
-              Verificar y Entrar
+            <Button type="submit" variant="accent" fullWidth disabled={isLoading}>
+              {isLoading ? 'Accediendo al Panel...' : 'Verificar y Entrar al Panel Admin'}
             </Button>
           </div>
           <button 
             type="button" 
             onClick={() => setPaso(1)} 
-            className="w-full text-center mt-6 text-sm text-content-muted hover:text-primary font-bold transition-colors"
+            className="w-full text-center mt-6 text-sm text-content-muted hover:text-primary font-bold transition-colors cursor-pointer"
           >
-            ← Volver al login normal
+            ← Volver al paso anterior
           </button>
         </form>
       )}
