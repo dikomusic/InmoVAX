@@ -1,14 +1,31 @@
 import React from 'react';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
+import { Textarea } from '@/components/atoms/Textarea';
+import { FormField } from '@/components/molecules/FormField';
+import { PublicSplitTemplate } from '@/components/templates/PublicSplitTemplate';
 
 export default function ContactoPage() {
   return (
-    <div className="min-h-screen bg-surface-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-12 items-center">
-        
-        {/* Columna Izquierda: Info */}
-        <div className="w-full md:w-1/2">
+    <PublicSplitTemplate
+      form={(
+        <div className="bg-surface-light p-8 rounded-2xl border border-gray-100 shadow-sm">
+          <form className="space-y-6">
+            <FormField label="Nombre Completo">
+              <Input type="text" placeholder="Ej. Juan Pérez" required />
+            </FormField>
+            <FormField label="Celular / WhatsApp">
+              <Input type="tel" placeholder="Ej. 70012345" required />
+            </FormField>
+            <FormField label="¿En qué podemos ayudarte?">
+              <Textarea className="h-32" placeholder="Escribe tu mensaje aquí..." required />
+            </FormField>
+            <Button type="button" variant="primary" fullWidth>Enviar Mensaje</Button>
+          </form>
+        </div>
+      )}
+    >
+        <div>
           <h1 className="text-4xl font-extrabold text-content-main mb-6">
             Hablemos de tu <span className="text-accent">próximo hogar</span>
           </h1>
@@ -27,31 +44,6 @@ export default function ContactoPage() {
             </div>
           </div>
         </div>
-
-        {/* Columna Derecha: Formulario */}
-        <div className="w-full md:w-1/2 bg-surface-light p-8 rounded-2xl border border-gray-100 shadow-sm">
-          <form className="space-y-6">
-            <div>
-              <label className="block text-sm font-bold text-content-main mb-2">Nombre Completo</label>
-              <Input type="text" placeholder="Ej. Juan Pérez" required />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-content-main mb-2">Celular / WhatsApp</label>
-              <Input type="tel" placeholder="Ej. 70012345" required />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-content-main mb-2">¿En qué podemos ayudarte?</label>
-              <textarea 
-                className="w-full bg-surface-white text-content-main rounded-lg py-3 px-4 outline-none border-2 border-gray-200 focus:border-primary resize-none h-32 transition-colors"
-                placeholder="Escribe tu mensaje aquí..."
-                required
-              ></textarea>
-            </div>
-            <Button type="button" variant="primary" fullWidth>Enviar Mensaje</Button>
-          </form>
-        </div>
-
-      </div>
-    </div>
+    </PublicSplitTemplate>
   );
 }

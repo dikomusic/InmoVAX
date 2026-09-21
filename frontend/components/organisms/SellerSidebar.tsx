@@ -1,17 +1,21 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
+import { CalendarDays, ClipboardList, FileText, Home, LogOut, MessageCircle, Plus, X, ArrowLeft } from 'lucide-react';
+import { BrandLogo } from '../atoms/BrandLogo';
 
-export type SellerTab = 'resumen' | 'inmuebles' | 'publicar' | 'ofertas' | 'citas' | 'documentos';
+export type SellerTab = 'resumen' | 'favoritos' | 'historial' | 'consultas' | 'inmuebles' | 'citas' | 'documentos';
 
 interface SellerSidebarProps {
   activeTab: SellerTab;
   onSelectTab: (tab: SellerTab) => void;
   isOpen: boolean;
   onClose: () => void;
-  myPropertiesCount: number;
-  offersCount: number;
-  appointmentsCount: number;
+  onPublishClick: () => void;
+  myPropertiesCount?: number;
+  appointmentsCount?: number;
+  userName?: string;
+  userEmail?: string;
 }
 
 export const SellerSidebar = ({
@@ -20,70 +24,100 @@ export const SellerSidebar = ({
   isOpen,
   onClose,
   myPropertiesCount,
-  offersCount,
-  appointmentsCount
+  appointmentsCount,
+  onPublishClick,
+  userName = 'Arq. Gonzalo Benítez',
+  userEmail = 'vendedor@inmovax.com'
 }: SellerSidebarProps) => {
-  const menuItems: { id: SellerTab; label: string; icon: string; badge?: string; badgeColor?: string }[] = [
-    { id: 'resumen', label: 'Mi Panel General', icon: '📊' },
-    { id: 'inmuebles', label: 'Mis Inmuebles Publicados', icon: '🏠', badge: String(myPropertiesCount) },
-    { id: 'publicar', label: 'Publicar Nuevo Inmueble', icon: '➕' },
-    { id: 'ofertas', label: 'Ofertas & Consultas', icon: '💬', badge: String(offersCount), badgeColor: 'bg-emerald-500' },
-    { id: 'citas', label: 'Agenda de Visitas', icon: '📅', badge: String(appointmentsCount), badgeColor: 'bg-blue-500' },
-    { id: 'documentos', label: 'Folios Reales & Contratos', icon: '📄' },
+  const menuItems: {
+    id: SellerTab;
+    label: string;
+    Icon: React.ComponentType<{ className?: string }>;
+    badge?: string;
+    badgeColor?: string;
+  }[] = [
+    { id: 'resumen', label: 'Mi Panel General', Icon: ClipboardList },
+    {
+      id: 'inmuebles',
+      label: 'Mis Inmuebles Publicados',
+      Icon: Home,
+      badge: myPropertiesCount !== undefined ? String(myPropertiesCount) : undefined
+    },
+    { id: 'consultas', label: 'Consultas & Ofertas', Icon: MessageCircle, badgeColor: 'bg-emerald-500' },
+    {
+      id: 'citas',
+      label: 'Agenda y Visitas',
+      Icon: CalendarDays,
+      badge: appointmentsCount !== undefined ? String(appointmentsCount) : undefined,
+      badgeColor: 'bg-blue-500'
+    },
+    { id: 'documentos', label: 'Folio Real y Minutas', Icon: FileText }
   ];
+
+  const initials = userName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0].toUpperCase())
+    .join('') || 'GB';
 
   return (
     <>
+      {/* BACKDROP PARA DISPOSITIVOS MÓVILES */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden animate-in fade-in duration-200"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
+      {/* ASIDE BARRA LATERAL */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-[#081229] text-content-inverse flex flex-col justify-between transition-transform duration-300 ease-in-out border-r border-gray-800 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`fixed left-0 top-0 z-50 flex h-screen w-72 max-w-[85vw] flex-col justify-between border-r border-gray-800 bg-[#081229] text-white transition-transform duration-300 ease-in-out lg:sticky lg:w-72 lg:translate-x-0 ${
+          isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
       >
-        <div>
-          {/* LOGO */}
-          <div className="p-6 border-b border-gray-800/80 flex items-center justify-between">
+        <div className="flex flex-col flex-1 overflow-y-auto">
+          {/* LOGO INMOVAX */}
+          <div className="p-5 sm:p-6 border-b border-gray-800/80 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl font-black tracking-tight text-white">
-                <span className="text-accent">INMO</span>VAX
-              </span>
-              <span className="text-[10px] uppercase font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full tracking-wider">
-                VENDEDOR
-              </span>
+              <BrandLogo />
             </Link>
-            <button 
+            <button
               type="button"
               onClick={onClose}
-              className="lg:hidden text-gray-400 hover:text-white p-1 cursor-pointer"
+              aria-label="Cerrar barra lateral"
+              className="lg:hidden text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
             >
-              ✕
+              <X className="h-5 w-5" />
             </button>
           </div>
 
-          {/* PERFIL VERIFICADO */}
-          <div className="mx-4 my-4 p-3.5 bg-emerald-950/40 border border-emerald-800/40 rounded-2xl">
-            <div className="flex items-center gap-2">
-              <span className="text-emerald-400 font-black text-sm">✓</span>
-              <span className="text-xs font-bold text-emerald-200">Propietario Verificado</span>
+          {/* PERFIL DEL VENDEDOR */}
+          <div className="mx-4 my-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3.5">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-tr from-accent to-emerald-500 font-black text-sm text-slate-900 shadow">
+              {initials}
             </div>
-            <p className="text-[11px] text-gray-400 mt-1 font-medium">
-              Folios Reales matriculados y respaldados legalmente.
-            </p>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-xs font-extrabold text-white">{userName}</div>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[10px] font-bold text-emerald-400">
+                  Vendedor Verificado
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* MENÚ DE OPCIONES */}
-          <nav className="px-3 space-y-1">
+          <nav className="px-3 space-y-1 mt-1">
             <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
               Mi Gestión de Inmuebles
             </div>
             {menuItems.map((item) => {
               const isActive = activeTab === item.id;
+              const Icon = item.Icon;
               return (
                 <button
                   key={item.id}
@@ -94,16 +128,16 @@ export const SellerSidebar = ({
                   }}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all group cursor-pointer ${
                     isActive
-                      ? 'bg-primary text-white shadow-md shadow-primary/20 font-bold'
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20 font-bold'
                       : 'text-gray-300 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-base">{item.icon}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`} />
                     <span className="truncate">{item.label}</span>
                   </div>
                   {item.badge && (
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full text-white ${item.badgeColor || 'bg-primary/80'}`}>
+                    <span suppressHydrationWarning className={`text-[10px] font-black px-2 py-0.5 rounded-full text-white shrink-0 ${item.badgeColor || 'bg-primary/80'}`}>
                       {item.badge}
                     </span>
                   )}
@@ -113,30 +147,26 @@ export const SellerSidebar = ({
           </nav>
         </div>
 
-        {/* PARTE INFERIOR: USUARIO Y ENLACES */}
-        <div className="p-4 border-t border-gray-800/80 space-y-3">
-          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent to-emerald-500 flex items-center justify-center font-black text-surface-dark text-sm shadow">
-              GB
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-bold text-white truncate">Arq. Gonzalo Benítez</div>
-              <div className="text-[11px] text-gray-400 truncate">Vendedor & Propietario</div>
-            </div>
-          </div>
+        {/* PARTE INFERIOR: ACCIÓN PUBLICAR Y REGRESO */}
+        <div className="p-4 border-t border-gray-800/80 space-y-2.5 bg-[#060e20]">
+          <button
+            type="button"
+            onClick={() => {
+              onPublishClick();
+              onClose();
+            }}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-primary hover:bg-primary-hover text-xs font-bold text-white rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Publicar Inmueble</span>
+          </button>
 
           <Link
             href="/"
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white/10 hover:bg-white/15 text-xs font-bold text-white rounded-xl transition-all border border-white/10"
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
           >
-            <span>🌐</span> Explorar Portal InmoVax
-          </Link>
-
-          <Link
-            href="/login"
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 rounded-xl transition-colors"
-          >
-            <span>🚪</span> Cerrar Sesión
+            <ArrowLeft className="h-4 w-4 text-gray-400" />
+            <span>Volver a InmoVAX</span>
           </Link>
         </div>
       </aside>

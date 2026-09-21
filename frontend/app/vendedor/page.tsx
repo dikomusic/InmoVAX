@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { SellerPortalTemplate } from '@/components/templates/SellerPortalTemplate';
 import { SellerSidebar, SellerTab } from '@/components/organisms/SellerSidebar';
 import { SellerHeader } from '@/components/organisms/SellerHeader';
 import { SellerOverviewSection } from '@/components/organisms/SellerOverviewSection';
@@ -7,317 +8,373 @@ import { SellerPropertiesSection } from '@/components/organisms/SellerProperties
 import { SellerOffersSection } from '@/components/organisms/SellerOffersSection';
 import { SellerAppointmentsSection, SellerAppointment } from '@/components/organisms/SellerAppointmentsSection';
 import { SellerDocumentsSection } from '@/components/organisms/SellerDocumentsSection';
+import { SellerDeleteConfirmModal } from '@/components/molecules/SellerDeleteConfirmModal';
 import { SellerProperty } from '@/components/molecules/SellerPropertyCard';
 import { SellerOffer } from '@/components/molecules/SellerOfferItem';
+import { SellerNotificationItem } from '@/components/molecules/SellerNotifications';
 import { Modal } from '@/components/atoms/Modal';
 import { PublishPropertyForm } from '@/components/organisms/PublishPropertyForm';
+import { readStoredSession } from '@/lib/frontendStore';
+import {
+  getPropertiesByAuthor,
+  addManagedProperty,
+  deleteManagedProperty,
+  togglePauseManagedProperty,
+  updateManagedProperty,
+  ManagedProperty
+} from '@/lib/propertiesStore';
+import {
+  fetchSellerProperties,
+  fetchSellerOffers,
+  acceptSellerOffer,
+  rejectSellerOffer,
+  counterSellerOffer,
+  fetchSellerAppointments,
+  fetchSellerNotifications
+} from '@/lib/sellerApi';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { CheckCircle2, Lock, Loader2, ArrowLeft } from 'lucide-react';
 
-const INITIAL_SELLER_PROPERTIES: SellerProperty[] = [
-  {
-    id: "PROP-104",
-    title: "Departamento de Lujo con Terraza Panorámica",
-    zone: "Sopocachi, La Paz",
-    type: "Anticrético",
-    price: "$us 45,000",
-    views: 312,
-    inquiries: 18,
-    status: "Activo",
-    folioReal: "2.01.0.99.0018472",
-    assignedAdvisor: "Carlos Vega",
-    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop",
-    datePublished: "Publicado hace 4 días"
-  },
-  {
-    id: "PROP-102",
-    title: "Penthouse Exclusivo con Vista al Illimani",
-    zone: "Calacoto, La Paz",
-    type: "Anticrético",
-    price: "$us 75,000",
-    views: 184,
-    inquiries: 9,
-    status: "En Validación Legal",
-    folioReal: "2.01.1.05.0083719",
-    assignedAdvisor: "Carlos Vega",
-    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800&auto=format&fit=crop",
-    datePublished: "Publicado ayer"
-  },
-  {
-    id: "PROP-108",
-    title: "Monoambiente para Estudiantes o Ejecutivos",
-    zone: "Miraflores, La Paz",
-    type: "Alquiler",
-    price: "$us 420/mes",
-    views: 95,
-    inquiries: 6,
-    status: "Activo",
-    folioReal: "2.01.2.11.0029381",
-    assignedAdvisor: "Mariana Ríos",
-    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop",
-    datePublished: "Publicado hace 1 semana"
-  }
-];
-
-const INITIAL_SELLER_OFFERS: SellerOffer[] = [
-  {
-    id: "OFR-1",
-    propertyTitle: "Departamento de Lujo con Terraza Panorámica",
-    buyerName: "Dr. Marcelo Zeballos",
-    buyerPhone: "+591 77201928",
-    offerAmount: "$us 42,000",
-    initialPrice: "$us 45,000",
-    date: "Hoy, 10:15 AM",
-    message: "Buen día Arq. Gonzalo, tengo el capital disponible en dólares efectivo para firma notarial inmediata este fin de semana.",
-    status: "Pendiente",
-    type: "Anticrético"
-  },
-  {
-    id: "OFR-2",
-    propertyTitle: "Penthouse Exclusivo con Vista al Illimani",
-    buyerName: "Lic. Andrea Tapia",
-    buyerPhone: "+591 71203948",
-    offerAmount: "$us 70,000",
-    initialPrice: "$us 75,000",
-    date: "Ayer",
-    message: "Estimado, solicito coordinar visita presencial con su asesor Carlos Vega y propongo $us 70,000 por 2 años.",
-    status: "Pendiente",
-    type: "Anticrético"
-  },
-  {
-    id: "OFR-3",
-    propertyTitle: "Monoambiente para Estudiantes o Ejecutivos",
-    buyerName: "Ing. Rodrigo Morales",
-    buyerPhone: "+591 76543219",
-    offerAmount: "$us 400/mes",
-    initialPrice: "$us 420/mes",
-    date: "22 Ago",
-    message: "Propongo contrato de 1 año con garantía de 2 meses.",
-    status: "Aceptada",
-    type: "Alquiler"
-  }
-];
-
-const INITIAL_SELLER_APPOINTMENTS: SellerAppointment[] = [
-  {
-    id: "APT-S1",
-    propertyTitle: "Depto Sopocachi con Terraza",
-    clientName: "Dr. Marcelo Zeballos",
-    clientPhone: "+591 77201928",
-    advisorName: "Carlos Vega",
-    date: "Hoy",
-    time: "16:00",
-    status: "Confirmada"
-  },
-  {
-    id: "APT-S2",
-    propertyTitle: "Penthouse Calacoto Vista Illimani",
-    clientName: "Lic. Andrea Tapia",
-    clientPhone: "+591 71203948",
-    advisorName: "Carlos Vega",
-    date: "Mañana",
-    time: "11:30",
-    status: "Confirmada"
-  }
-];
+const TAB_TITLES: Record<SellerTab, string> = {
+  resumen: 'Mi Panel General',
+  inmuebles: 'Mis Inmuebles Publicados',
+  consultas: 'Consultas y Ofertas',
+  citas: 'Agenda y Visitas',
+  documentos: 'Folio Real y Minutas',
+  favoritos: 'Favoritos Guardados',
+  historial: 'Historial de Navegación'
+};
 
 export default function SellerPortalPage() {
+  const router = useRouter();
+  const [authStatus, setAuthStatus] = useState<'checking' | 'authorized' | 'unauthenticated'>('checking');
   const [activeTab, setActiveTab] = useState<SellerTab>('resumen');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Estados de datos del vendedor
-  const [properties, setProperties] = useState<SellerProperty[]>(INITIAL_SELLER_PROPERTIES);
-  const [offers, setOffers] = useState<SellerOffer[]>(INITIAL_SELLER_OFFERS);
-  const [appointments, setAppointments] = useState<SellerAppointment[]>(INITIAL_SELLER_APPOINTMENTS);
+  // Modal de eliminación segura (reemplazo de window.confirm)
+  const [propertyToDelete, setPropertyToDelete] = useState<SellerProperty | null>(null);
 
-  // Modal de Publicación Rápida
+  // Modal de publicación asistida
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-  const [publishForm, setPublishForm] = useState({
-    title: '',
-    zone: 'Sopocachi, La Paz',
-    type: 'Anticrético' as SellerProperty['type'],
-    price: '$us 48,000',
-    folioReal: '2.01.0.99.00' + Math.floor(1000 + Math.random() * 9000),
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop'
-  });
+
+  // Sesión actual
+  const [session, setSession] = useState<{ email: string; name: string } | null>(null);
+
+  // Control de montaje seguro contra desajustes de hidratación SSR
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Datos reactivos de publicaciones del vendedor
+  const [properties, setProperties] = useState<SellerProperty[]>([]);
+  const [offers, setOffers] = useState<SellerOffer[]>([]);
+  const [appointments, setAppointments] = useState<SellerAppointment[]>([]);
+  const [notifications, setNotifications] = useState<SellerNotificationItem[]>([]);
+
+  const currentEmail = session?.email || '';
+  const currentName = session?.name || '';
+
+  // Carga inicial y conexión con Backend Bun y PostgreSQL
+  useEffect(() => {
+    setIsMounted(true);
+    const current = readStoredSession();
+    if (!current || !current.email) {
+      setAuthStatus('unauthenticated');
+      const timer = setTimeout(() => {
+        router.replace('/login?redirect=/vendedor&error=auth_required');
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+
+    setAuthStatus('authorized');
+    const userEmail = current.email;
+    const userName = current.name || userEmail.split('@')[0];
+    setSession({ email: userEmail, name: userName });
+
+    // 1. Inmuebles sincronizados (Carga rápida local + actualización desde Supabase)
+    const localProps = getPropertiesByAuthor(userEmail);
+    setProperties(localProps);
+
+    fetchSellerProperties(userEmail).then((cloudProps) => {
+      if (cloudProps && cloudProps.length > 0) {
+        setProperties(cloudProps);
+      }
+    });
+
+    // 2. Ofertas reales desde Supabase
+    fetchSellerOffers().then((data) => {
+      if (data && data.length > 0) setOffers(data);
+    });
+
+    // 3. Citas reales desde Supabase
+    fetchSellerAppointments().then((data) => {
+      if (data && data.length > 0) setAppointments(data);
+    });
+
+    // 4. Notificaciones reales desde Supabase
+    fetchSellerNotifications().then((data) => {
+      if (data && data.length > 0) setNotifications(data);
+    });
+  }, []);
+
+  // Escuchar cambios reactivos en el almacén de propiedades
+  useEffect(() => {
+    if (!isMounted) return;
+    const syncProperties = () => {
+      const localProps = getPropertiesByAuthor(currentEmail);
+      setProperties(localProps);
+      fetchSellerProperties(currentEmail).then((cloudProps) => {
+        if (cloudProps && cloudProps.length > 0) {
+          setProperties(cloudProps);
+        }
+      });
+    };
+
+    window.addEventListener('inmovax:properties-updated', syncProperties);
+    return () => window.removeEventListener('inmovax:properties-updated', syncProperties);
+  }, [currentEmail, isMounted]);
 
   const showToast = (msg: string) => {
     setNotification(msg);
-    setTimeout(() => setNotification(null), 3500);
+    setTimeout(() => setNotification(null), 4000);
   };
 
-  // Manejo de Inmuebles
+  // Acciones CRUD Inmuebles
   const handleTogglePause = (id: string) => {
-    setProperties(prev => prev.map(p => {
-      if (p.id === id) {
-        const nextStatus = p.status === 'Activo' ? 'Pausado' : 'Activo';
-        showToast(`Inmueble cambiado a estado: ${nextStatus}`);
-        return { ...p, status: nextStatus };
-      }
-      return p;
-    }));
+    const nextStatus = togglePauseManagedProperty(id);
+    setProperties(getPropertiesByAuthor(currentEmail));
+    showToast(`Inmueble cambiado a estado: ${nextStatus}`);
+  };
+
+  const handleRequestDelete = (property: SellerProperty) => {
+    setPropertyToDelete(property);
+  };
+
+  const handleConfirmDelete = () => {
+    if (propertyToDelete) {
+      const deletedTitle = propertyToDelete.title;
+      deleteManagedProperty(propertyToDelete.id);
+      setProperties(getPropertiesByAuthor(currentEmail));
+      setPropertyToDelete(null);
+      showToast(`Publicación "${deletedTitle}" eliminada del catálogo.`);
+    }
   };
 
   const handleUpdateProperty = (updated: SellerProperty) => {
-    setProperties(prev => prev.map(p => p.id === updated.id ? updated : p));
-    showToast(`Inmueble ${updated.title} actualizado.`);
+    updateManagedProperty({
+      ...updated,
+      authorEmail: currentEmail,
+      authorName: currentName
+    });
+    setProperties(getPropertiesByAuthor(currentEmail));
+    showToast(`Inmueble "${updated.title}" actualizado correctamente.`);
   };
 
-  const handleCreateProperty = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newProp: SellerProperty = {
-      id: `PROP-${Math.floor(110 + Math.random() * 880)}`,
-      title: publishForm.title,
-      zone: publishForm.zone,
-      type: publishForm.type,
-      price: publishForm.price,
-      views: 1,
-      inquiries: 0,
-      status: 'En Validación Legal',
-      folioReal: publishForm.folioReal,
-      assignedAdvisor: 'Carlos Vega',
-      image: publishForm.image,
-      datePublished: 'Publicado hoy'
-    };
-    setProperties(prev => [newProp, ...prev]);
-    setIsPublishModalOpen(false);
-    showToast(`Inmueble registrado. Nuestro equipo legal auditará el Folio Real en menos de 2 horas.`);
-    setActiveTab('inmuebles');
-  };
-
-  // Manejo de Ofertas
-  const handleAcceptOffer = (id: string) => {
+  // Manejo de Ofertas con persistencia real en Supabase
+  const handleAcceptOffer = async (id: string) => {
     setOffers(prev => prev.map(o => o.id === id ? { ...o, status: 'Aceptada' } : o));
-    showToast(`Oferta aceptada. El asesor Carlos Vega coordinará la minuta notarial.`);
+    const ok = await acceptSellerOffer(id);
+    if (ok) {
+      showToast('Oferta aceptada en base de datos. El asesor coordinará la minuta notarial.');
+    } else {
+      showToast('Oferta aceptada localmente.');
+    }
   };
 
-  const handleRejectOffer = (id: string) => {
+  const handleRejectOffer = async (id: string) => {
     setOffers(prev => prev.map(o => o.id === id ? { ...o, status: 'Rechazada' } : o));
-    showToast(`Oferta rechazada.`);
+    const ok = await rejectSellerOffer(id);
+    if (ok) {
+      showToast('Oferta rechazada en base de datos.');
+    } else {
+      showToast('Oferta rechazada.');
+    }
   };
 
-  const handleCounterOfferSubmit = (id: string, counterPrice: string) => {
+  const handleCounterOfferSubmit = async (id: string, counterPrice: string) => {
     setOffers(prev => prev.map(o => o.id === id ? { ...o, status: 'Contraofertada', offerAmount: counterPrice } : o));
-    showToast(`Contraoferta enviada al comprador por ${counterPrice}.`);
+    const ok = await counterSellerOffer(id, counterPrice);
+    if (ok) {
+      showToast(`Contraoferta guardada en Supabase por ${counterPrice}.`);
+    } else {
+      showToast(`Contraoferta enviada al comprador por ${counterPrice}.`);
+    }
   };
+
+  if (authStatus === 'checking') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
+        <div className="flex flex-col items-center space-y-4 max-w-sm text-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20 animate-pulse">
+            <Lock className="w-8 h-8 text-accent" />
+          </div>
+          <h2 className="text-xl font-black">Portal del Propietario InmoVAX</h2>
+          <p className="text-xs text-gray-400 flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-accent" /> Verificando sesión de vendedor...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (authStatus === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-white">
+        <div className="bg-slate-900 border border-amber-500/30 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+            <Lock className="w-8 h-8" />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+              Sesión Requerida
+            </span>
+            <h2 className="text-2xl font-black text-white mt-3">Portal de Propietario</h2>
+            <p className="text-xs text-gray-400 mt-2 font-medium">
+              Debes iniciar sesión con tu cuenta para gestionar tus publicaciones, recibir ofertas y coordinar visitas.
+            </p>
+          </div>
+          <div className="pt-2 flex flex-col gap-2.5">
+            <Link
+              href="/login?redirect=/vendedor"
+              className="w-full py-3 bg-accent hover:brightness-110 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg transition-all text-center"
+            >
+              Iniciar Sesión en InmoVAX
+            </Link>
+            <Link
+              href="/"
+              className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs rounded-xl transition-all text-center flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" /> Volver a la Página Principal
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen">
-      
-      {/* TOAST FLOTANTE */}
-      {notification && (
-        <div className="fixed bottom-6 right-6 z-50 bg-surface-dark text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-gray-700 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-3 duration-200">
-          <span className="text-emerald-400 font-black">🏠 InmoVax Propietario:</span>
-          <span className="text-xs sm:text-sm font-semibold">{notification}</span>
-        </div>
+    <SellerPortalTemplate
+      sidebar={
+        <SellerSidebar
+          activeTab={activeTab}
+          onSelectTab={(tab) => setActiveTab(tab)}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onPublishClick={() => setIsPublishModalOpen(true)}
+          myPropertiesCount={isMounted ? properties.length : undefined}
+          appointmentsCount={isMounted ? appointments.length : undefined}
+          userName={currentName}
+          userEmail={currentEmail}
+        />
+      }
+      header={
+        <SellerHeader
+          onToggleSidebar={() => setSidebarOpen(prev => !prev)}
+        />
+      }
+      notificationToast={
+        notification ? (
+          <div className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md bg-slate-900/95 backdrop-blur-md text-white px-4 sm:px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-3 duration-200">
+            <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+            <div className="text-xs sm:text-sm font-semibold leading-tight">
+              {notification}
+            </div>
+          </div>
+        ) : null
+      }
+      modals={
+        <>
+          {/* MODAL ELIMINACIÓN SEGURA CON PREVIEW */}
+          <SellerDeleteConfirmModal
+            isOpen={!!propertyToDelete}
+            property={propertyToDelete}
+            onClose={() => setPropertyToDelete(null)}
+            onConfirm={handleConfirmDelete}
+          />
+
+          {/* MODAL PUBLICACIÓN RÁPIDA CON FOLIO REAL */}
+          <Modal
+            isOpen={isPublishModalOpen}
+            onClose={() => setIsPublishModalOpen(false)}
+            title="Publicar Nuevo Inmueble (Asistente Oficial InmoVAX)"
+            subtitle="Registra tu propiedad con geolocalización y Folio Real verificado"
+            maxWidth="3xl"
+          >
+            <div className="pt-2">
+              <PublishPropertyForm
+                isLoggedInSeller={true}
+                onSuccessCallback={(data) => {
+                  addManagedProperty({
+                    title: `${data.tipoInmueble.toUpperCase()} en ${data.zona}`,
+                    zone: data.zona,
+                    address: data.calle || data.zona,
+                    description: data.descripcion || `${data.tipoInmueble.toUpperCase()} en ${data.zona}`,
+                    type: (data.operacion.charAt(0).toUpperCase() + data.operacion.slice(1)) as ManagedProperty['type'],
+                    price: `${data.moneda === 'usd' ? '$us' : 'Bs.'} ${data.precio}`,
+                    status: 'Activo',
+                    folioReal: data.folioReal || `2.01.0.99.00${Math.floor(1000 + Math.random() * 9000)}`,
+                    assignedAdvisor: 'Lic. Carlos Vega',
+                    image: data.imagenUrl || '',
+                    authorEmail: currentEmail,
+                    authorName: currentName,
+                    habitaciones: Number(data.habitaciones) || 3,
+                    banos: Number(data.banos) || 2,
+                    metros: Number(data.supConstruida) || 120,
+                    estacionamientos: Number(data.parqueos) || 0,
+                    amenidades: data.amenidades || []
+                  });
+                  setProperties(getPropertiesByAuthor(currentEmail));
+                  setIsPublishModalOpen(false);
+                  showToast('¡Inmueble registrado con éxito! Nuestro equipo legal auditará el Folio Real en menos de 2 horas.');
+                  setActiveTab('inmuebles');
+                }}
+              />
+            </div>
+          </Modal>
+        </>
+      }
+    >
+      {/* SECCIONES SEGÚN TAB ACTIVO */}
+      {activeTab === 'resumen' && (
+        <SellerOverviewSection
+          properties={properties}
+          offers={offers}
+          notifications={notifications}
+          onNavigateTab={(tab) => setActiveTab(tab)}
+          onRequestDeleteProperty={handleRequestDelete}
+          onOpenPublishModal={() => setIsPublishModalOpen(true)}
+          userName={currentName}
+        />
       )}
 
-      {/* SIDEBAR VENDEDOR */}
-      <SellerSidebar
-        activeTab={activeTab}
-        onSelectTab={(tab) => {
-          if (tab === 'publicar') {
-            setIsPublishModalOpen(true);
-          } else {
-            setActiveTab(tab);
-          }
-        }}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        myPropertiesCount={properties.length}
-        offersCount={offers.filter(o => o.status === 'Pendiente').length}
-        appointmentsCount={appointments.length}
-      />
-
-      {/* CONTENEDOR PRINCIPAL */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
-        {/* HEADER VENDEDOR */}
-        <SellerHeader
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          onPublishClick={() => setIsPublishModalOpen(true)}
-          pendingOffersCount={offers.filter(o => o.status === 'Pendiente').length}
+      {activeTab === 'inmuebles' && (
+        <SellerPropertiesSection
+          properties={properties}
+          onTogglePause={handleTogglePause}
+          onOpenPublishModal={() => setIsPublishModalOpen(true)}
+          onUpdateProperty={handleUpdateProperty}
+          onRequestDeleteProperty={handleRequestDelete}
         />
+      )}
 
-        {/* PESTAÑAS ACTIVAS */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
-          <div className="max-w-7xl mx-auto space-y-8">
-            
-            {activeTab === 'resumen' && (
-              <SellerOverviewSection
-                properties={properties}
-                offers={offers}
-                onNavigateTab={(tab) => setActiveTab(tab)}
-              />
-            )}
+      {activeTab === 'consultas' && (
+        <SellerOffersSection
+          offers={offers}
+          onAcceptOffer={handleAcceptOffer}
+          onRejectOffer={handleRejectOffer}
+          onCounterOfferSubmit={handleCounterOfferSubmit}
+        />
+      )}
 
-            {activeTab === 'inmuebles' && (
-              <SellerPropertiesSection
-                properties={properties}
-                onTogglePause={handleTogglePause}
-                onOpenPublishModal={() => setIsPublishModalOpen(true)}
-                onUpdateProperty={handleUpdateProperty}
-              />
-            )}
+      {activeTab === 'citas' && (
+        <SellerAppointmentsSection
+          appointments={appointments}
+        />
+      )}
 
-            {activeTab === 'ofertas' && (
-              <SellerOffersSection
-                offers={offers}
-                onAcceptOffer={handleAcceptOffer}
-                onRejectOffer={handleRejectOffer}
-                onCounterOfferSubmit={handleCounterOfferSubmit}
-              />
-            )}
-
-            {activeTab === 'citas' && (
-              <SellerAppointmentsSection
-                appointments={appointments}
-              />
-            )}
-
-            {activeTab === 'documentos' && (
-              <SellerDocumentsSection />
-            )}
-
-          </div>
-        </main>
-
-      </div>
-
-      {/* MODAL CON FORMULARIO COMPLETO RECICLADO DEL COMPAÑERO */}
-      <Modal
-        isOpen={isPublishModalOpen}
-        onClose={() => setIsPublishModalOpen(false)}
-        title="Publicar Nuevo Inmueble (Asistente Oficial InmoVax)"
-        subtitle="Completa los 4 pasos para registrar tu inmueble con geolocalización y Folio Real"
-        maxWidth="3xl"
-      >
-        <div className="pt-2">
-          <PublishPropertyForm
-            isLoggedInSeller={true}
-            onSuccessCallback={(data) => {
-              const newProp: SellerProperty = {
-                id: `PROP-${Math.floor(110 + Math.random() * 880)}`,
-                title: `${data.tipoInmueble.toUpperCase()} en ${data.zona}`,
-                zone: data.zona,
-                type: (data.operacion.charAt(0).toUpperCase() + data.operacion.slice(1)) as SellerProperty['type'],
-                price: `${data.moneda === 'usd' ? '$us' : 'Bs.'} ${data.precio}`,
-                views: 1,
-                inquiries: 0,
-                status: 'En Validación Legal',
-                folioReal: data.folioReal || '2.01.0.99.00' + Math.floor(1000 + Math.random() * 9000),
-                assignedAdvisor: 'Carlos Vega',
-                image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop',
-                datePublished: 'Publicado hoy'
-              };
-              setProperties(prev => [newProp, ...prev]);
-              setIsPublishModalOpen(false);
-              showToast(`¡Inmueble registrado exitosamente con Folio Real!`);
-              setActiveTab('inmuebles');
-            }}
-          />
-        </div>
-      </Modal>
-
-    </div>
+      {activeTab === 'documentos' && (
+        <SellerDocumentsSection />
+      )}
+    </SellerPortalTemplate>
   );
 }

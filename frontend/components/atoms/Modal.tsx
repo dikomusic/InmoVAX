@@ -43,17 +43,17 @@ export const Modal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-xs sm:p-4">
       <div 
         className="fixed inset-0"
         onClick={onClose}
       />
-      <div className={`relative bg-white rounded-3xl w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200 z-10`}>
+      <div className={`relative z-10 max-h-[calc(100vh-1rem)] w-full overflow-y-auto rounded-2xl border border-gray-100 bg-white p-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 sm:max-h-[90vh] sm:rounded-3xl sm:p-8 ${maxWidthClasses[maxWidth]}`}>
         
         <div className="flex items-start justify-between pb-4 border-b border-gray-100">
-          <div>
-            <h3 className="text-xl font-extrabold text-surface-dark">{title}</h3>
-            {subtitle && <p className="text-xs text-content-muted mt-1 font-medium">{subtitle}</p>}
+          <div className="min-w-0 pr-3">
+            <h3 className="text-lg font-extrabold text-surface-dark sm:text-xl">{title}</h3>
+            {subtitle && <p className="mt-1 text-xs font-medium text-content-muted">{subtitle}</p>}
           </div>
           <button
             type="button"

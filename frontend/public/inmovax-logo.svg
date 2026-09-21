@@ -1,0 +1,11 @@
+<svg width="258" height="64" viewBox="0 0 258 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">InmoVAX</title>
+  <desc id="desc">Logo de InmoVAX</desc>
+  <path d="M10 29.5 29 12l19 17.5V54H10V29.5Z" stroke="#F6A800" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M18 54V34h8v20m8 0V27h8v27" stroke="#F6A800" stroke-width="4" stroke-linecap="round"/>
+  <path d="M57 52V25" stroke="#F6A800" stroke-width="4" stroke-linecap="round"/>
+  <path d="M77 17h12.5c10.3 0 17 6.7 17 17s-6.7 17-17 17H77V17Zm10.5 26h2c4.7 0 7.5-3.1 7.5-9s-2.8-9-7.5-9h-2v18Z" fill="#F6A800"/>
+  <path d="M111 17h9v26h15v8h-24V17Zm28 0h9v34h-9V17Z" fill="#F6A800"/>
+  <path d="M157 17h9v26h15v8h-24V17Z" fill="#fff"/>
+  <path d="m190 17 7 11 7-11h10l-12 17 12 17h-10l-7-11-7 11h-10l12-17-12-17h10Zm29 0h10l6 10 6-10h10l-11 17 11 17h-10l-6-10-6 10h-10l11-17-11-17Z" fill="#fff"/>
+</svg>

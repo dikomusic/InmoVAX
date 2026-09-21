@@ -19,3 +19,8 @@
   --color-content-muted: #6B7280;
   --color-content-inverse: #FFFFFF;
 }
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}

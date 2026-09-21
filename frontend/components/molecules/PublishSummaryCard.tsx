@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check } from 'lucide-react';
 
 export interface PropertyFormData {
   operacion: string;
@@ -19,6 +20,8 @@ export interface PropertyFormData {
   folioReal: string;
   tieneFolio: boolean;
   fotosCount: number;
+  imagenUrl?: string;
+  galeria: string[];
 }
 
 interface PublishSummaryCardProps {
@@ -36,8 +39,9 @@ export const PublishSummaryCard = ({
       {/* CABECERA RESUMEN */}
       <div className="flex items-center justify-between pb-4 border-b border-gray-700/80">
         <div>
-          <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full">
-            ✓ Datos Guardados Intactos
+          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+            <Check className="h-3 w-3 stroke-[3]" />
+            <span>Datos Guardados Intactos</span>
           </span>
           <h3 className="text-xl font-extrabold text-white mt-2">Resumen de tu Inmueble</h3>
         </div>

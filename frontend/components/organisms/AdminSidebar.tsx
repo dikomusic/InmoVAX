@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
+import { BarChart3, Building2, Scale, Users, Briefcase, Settings } from 'lucide-react';
 
 export type AdminTab = 'resumen' | 'propiedades' | 'legal' | 'asesores' | 'transacciones' | 'configuracion';
 
@@ -21,13 +22,13 @@ export const AdminSidebar = ({
   pendingLegalCount = 3,
   propertiesCount = 14
 }: AdminSidebarProps) => {
-  const menuItems: { id: AdminTab; label: string; icon: string; badge?: string; badgeColor?: string }[] = [
-    { id: 'resumen', label: 'Dashboard & Métricas', icon: '📊' },
-    { id: 'propiedades', label: 'Gestión de Inmuebles', icon: '🏠', badge: String(propertiesCount) },
-    { id: 'legal', label: 'Revisión Legal / Folio Real', icon: '⚖️', badge: String(pendingLegalCount), badgeColor: 'bg-amber-500' },
-    { id: 'asesores', label: 'Asesores & Citas', icon: '👥', badge: '3' },
-    { id: 'transacciones', label: 'Transacciones & Anticréticos', icon: '💼' },
-    { id: 'configuracion', label: 'Configuración del Portal', icon: '⚙️' },
+  const menuItems: { id: AdminTab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string; badgeColor?: string }[] = [
+    { id: 'resumen', label: 'Dashboard & Métricas', icon: BarChart3 },
+    { id: 'propiedades', label: 'Gestión de Inmuebles', icon: Building2, badge: String(propertiesCount) },
+    { id: 'legal', label: 'Revisión Legal / Folio Real', icon: Scale, badge: String(pendingLegalCount), badgeColor: 'bg-amber-500' },
+    { id: 'asesores', label: 'Asesores & Citas', icon: Users, badge: '3' },
+    { id: 'transacciones', label: 'Transacciones & Anticréticos', icon: Briefcase },
+    { id: 'configuracion', label: 'Configuración del Portal', icon: Settings },
   ];
 
   return (
@@ -102,7 +103,7 @@ export const AdminSidebar = ({
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-base">{item.icon}</span>
+                    <item.icon className="h-4 w-4 shrink-0" />
                     <span className="truncate">{item.label}</span>
                   </div>
                   {item.badge && (
@@ -136,10 +137,10 @@ export const AdminSidebar = ({
           </Link>
 
           <Link
-            href="/login"
+            href="/"
             className="w-full flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 rounded-xl transition-colors"
           >
-            <span>🚪</span> Cerrar Sesión
+            <span>🚪</span> Cerrar Portal
           </Link>
         </div>
       </aside>

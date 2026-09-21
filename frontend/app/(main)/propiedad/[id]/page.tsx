@@ -1,147 +1,296 @@
 import React from 'react';
 import Image from 'next/image';
+import { Check, Heart, MapPin, MessageCircle, Building2, ShieldCheck, CameraOff, Share2 } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Input } from '@/components/atoms/Input';
+import { Textarea } from '@/components/atoms/Textarea';
+import { FormField } from '@/components/molecules/FormField';
+import { fetchPropertyById } from '@/components/data/propertyListings';
+import Link from 'next/link';
+import { ClientMap } from '@/components/molecules/ClientMap';
 
 export default async function PropiedadDetallePage({ params }: { params: Promise<{ id: string }> }) {
-  // En el futuro, usaremos este 'id' para buscar los datos reales en tu base de datos
   const resolvedParams = await params;
   const propiedadId = resolvedParams.id;
+  const property = await fetchPropertyById(propiedadId);
+
+  if (!property) {
+    return (
+      <div className="min-h-[65vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+          <Building2 className="w-8 h-8" />
+        </div>
+        <h1 className="text-2xl font-black text-surface-dark mb-2">Inmueble no encontrado</h1>
+        <p className="text-sm text-content-muted max-w-md mb-6">
+          La propiedad con identificador &quot;{propiedadId}&quot; no existe en la base de datos de InmoVAX o no está disponible.
+        </p>
+        <Link href="/comprar/todos">
+          <Button variant="primary">Explorar Inmuebles Activos</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const titulo = property.titulo;
+  const ubicacion = property.ubicacion;
+  const direccion = property.direccion || property.ubicacion;
+  const precio = property.precio;
+  const tipoContrato = property.tipoContrato;
+  const habitaciones = property.habitaciones;
+  const banos = property.banos;
+  const metros = property.metros;
+  const estacionamientos = property.estacionamientos;
+  const folioReal = property.folioReal;
+
+  // Extraer fotografías reales sin inventar imágenes de casas ficticias
+  const galeria: string[] = property.galeria && property.galeria.length > 0
+    ? property.galeria.filter((img) => typeof img === 'string' && img.trim() !== '')
+    : (property.imagenUrl && property.imagenUrl.trim() !== '' ? [property.imagenUrl] : []);
+
+  // Descripción real del autor o resumen fidedigno sin datos inventados
+  const descripcion = property.descripcion && property.descripcion.trim() !== ''
+    ? property.descripcion
+    : `Inmueble en modalidad de ${tipoContrato.toLowerCase()} ubicado en ${ubicacion}. Documentación registrada con Folio Real ${folioReal || 'disponible para verificación notarial'}.`;
+
+  // Amenidades reales seleccionadas por el propietario
+  const amenidades: string[] = property.amenidades && property.amenidades.length > 0
+    ? property.amenidades
+    : [];
 
   return (
     <div className="min-h-screen bg-surface-light pb-20">
       
-      {/* 1. GALERÍA DE FOTOS (Estilo Mosaico) */}
+      {/* 1. CABECERA & GALERÍA DE FOTOS REALES */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="flex justify-between items-end mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-5">
           <div>
-            <div className="flex gap-2 mb-2">
-              <span className="bg-primary/10 text-primary text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">Anticrético</span>
-              <span className="bg-gray-200 text-content-muted text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">ID: {propiedadId}</span>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="bg-primary/10 text-primary text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                {tipoContrato}
+              </span>
+              <span className="bg-gray-200 text-content-muted text-xs font-mono font-bold px-3 py-1 rounded-full">
+                ID: {property.id}
+              </span>
+              {folioReal && (
+                <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  DDRR Verificado
+                </span>
+              )}
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-content-main">Casa de Lujo Minimalista</h1>
-            <p className="text-content-muted font-medium mt-1 flex items-center gap-2">
-              <span>📍</span> Calacoto, Zona Sur, La Paz
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-content-main">
+              {titulo}
+            </h1>
+            <p className="text-content-muted font-medium mt-1 flex items-center gap-1.5 text-sm sm:text-base">
+              <MapPin className="w-4 h-4 text-primary shrink-0" /> {direccion}
             </p>
           </div>
-          <div className="hidden sm:flex gap-2">
-            <Button variant="outline">Compartir</Button>
-            <Button variant="outline">♡ Guardar</Button>
+          <div className="flex gap-2 shrink-0">
+            <Button variant="outline" className="text-xs sm:text-sm">
+              <Share2 className="w-4 h-4 mr-1 inline" /> Compartir
+            </Button>
+            <Button variant="outline" className="text-xs sm:text-sm">
+              <Heart className="w-4 h-4 mr-1 inline" /> Guardar
+            </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-4 h-[400px] md:h-[500px] rounded-2xl overflow-hidden">
-          {/* Foto Principal */}
-          <div className="md:col-span-2 md:row-span-2 relative w-full h-full">
-            <Image src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop" alt="Fachada principal" fill className="object-cover hover:scale-105 transition-transform duration-500" />
-          </div>
-          {/* Fotos Secundarias */}
-          <div className="hidden md:block relative w-full h-full">
-            <Image src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070&auto=format&fit=crop" alt="Sala de estar" fill className="object-cover hover:scale-105 transition-transform duration-500" />
-          </div>
-          <div className="hidden md:block relative w-full h-full rounded-tr-2xl">
-            <Image src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop" alt="Cocina" fill className="object-cover hover:scale-105 transition-transform duration-500" />
-          </div>
-          <div className="hidden md:block relative w-full h-full">
-            <Image src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop" alt="Baño" fill className="object-cover hover:scale-105 transition-transform duration-500" />
-          </div>
-          <div className="hidden md:block relative w-full h-full relative cursor-pointer group">
-            <Image src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop" alt="Jardín" fill className="object-cover" />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/50 transition-colors">
-              <span className="text-white font-extrabold text-lg">+12 Fotos</span>
+        {/* CONTENEDOR DE FOTOS REALES (CERO FOTOS FALSAS) */}
+        {galeria.length === 0 ? (
+          <div className="w-full h-64 sm:h-80 md:h-96 rounded-2xl border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center p-6 text-center shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
+              <CameraOff className="w-8 h-8 stroke-[1.5]" />
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. CONTENIDO PRINCIPAL Y BARRA LATERAL */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 flex flex-col lg:flex-row gap-12">
-        
-        {/* Columna Izquierda: Detalles del Inmueble */}
-        <div className="w-full lg:w-2/3">
-          
-          {/* Resumen de características */}
-          <div className="flex flex-wrap gap-6 py-6 border-y border-gray-200 mb-8">
-            <div className="flex flex-col">
-              <span className="text-xl font-extrabold text-content-main">4</span>
-              <span className="text-sm font-medium text-content-muted">Habitaciones</span>
-            </div>
-            <div className="w-px h-10 bg-gray-200"></div>
-            <div className="flex flex-col">
-              <span className="text-xl font-extrabold text-content-main">3</span>
-              <span className="text-sm font-medium text-content-muted">Baños</span>
-            </div>
-            <div className="w-px h-10 bg-gray-200"></div>
-            <div className="flex flex-col">
-              <span className="text-xl font-extrabold text-content-main">400</span>
-              <span className="text-sm font-medium text-content-muted">m² Construidos</span>
-            </div>
-            <div className="w-px h-10 bg-gray-200"></div>
-            <div className="flex flex-col">
-              <span className="text-xl font-extrabold text-content-main">2</span>
-              <span className="text-sm font-medium text-content-muted">Parqueos</span>
-            </div>
-          </div>
-
-          {/* Descripción */}
-          <div className="mb-10">
-            <h3 className="text-2xl font-extrabold text-content-main mb-4">Acerca de esta propiedad</h3>
-            <p className="text-content-muted font-medium leading-relaxed">
-              Hermosa casa soleada con diseño minimalista y amplios ventanales. Cuenta con acabados de primera calidad, pisos de madera tajibo y calefacción central. El jardín incluye un área de parrillero techado ideal para reuniones familiares.
-              <br /><br />
-              La documentación se encuentra completamente al día, con Folio Real saneado, sin gravámenes y listo para la firma del contrato de anticrético.
+            <h3 className="text-base font-extrabold text-content-main">Sin fotografías registradas</h3>
+            <p className="text-xs sm:text-sm text-content-muted max-w-md mt-1 leading-relaxed">
+              El propietario no adjuntó fotografías al momento de publicar. La información legal con Folio Real <span className="font-mono font-semibold text-slate-700">{folioReal || 'en trámite'}</span> y sus especificaciones están disponibles a continuación.
             </p>
           </div>
-
-          {/* Amenidades */}
-          <div className="mb-10">
-            <h3 className="text-2xl font-extrabold text-content-main mb-4">Amenidades</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {['Parrillero', 'Jardín privado', 'Seguridad 24/7', 'Pet Friendly', 'Calefacción', 'Baulera'].map((amenidad, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-content-main font-medium">
-                  <span className="text-primary text-xl">✓</span> {amenidad}
+        ) : galeria.length === 1 ? (
+          <div className="relative w-full h-[320px] sm:h-[420px] md:h-[480px] rounded-2xl overflow-hidden bg-gray-100 shadow-md border border-gray-200">
+            <Image
+              src={galeria[0]}
+              alt={`Fotografía de ${titulo}`}
+              fill
+              priority
+              className="object-cover"
+            />
+          </div>
+        ) : (
+          <div className="relative w-full h-[350px] md:h-[500px] rounded-2xl overflow-hidden shadow-md">
+            <div className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {galeria.map((imgUrl, i) => (
+                <div key={i} className="min-w-full h-full relative snap-center bg-gray-100 shrink-0">
+                  <Image
+                    src={imgUrl}
+                    alt={`Fotografía ${i + 1} de ${titulo}`}
+                    fill
+                    priority={i === 0}
+                    className="object-cover"
+                  />
+                  <div className="absolute bottom-4 right-4 bg-black/60 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm pointer-events-none">
+                    {i + 1} / {galeria.length}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+        )}
+      </div>
 
-          {/* Ubicación (Simulación de mapa para lectura) */}
+      {/* 2. CONTENIDO PRINCIPAL Y BARRA LATERAL */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 flex flex-col lg:flex-row gap-10">
+        
+        {/* Columna Izquierda: Información Real del Inmueble */}
+        <div className="w-full lg:w-2/3">
+          
+          {/* Resumen de características reales (sin inventar datos fijos) */}
+          <div className="flex flex-wrap items-center gap-6 py-5 border-y border-gray-200 mb-8">
+            {habitaciones !== undefined && (
+              <div className="flex flex-col">
+                <span className="text-xl font-extrabold text-content-main">{habitaciones}</span>
+                <span className="text-xs font-semibold text-content-muted uppercase tracking-wider">Habitaciones</span>
+              </div>
+            )}
+            {habitaciones !== undefined && banos !== undefined && (
+              <div className="w-px h-8 bg-gray-200" />
+            )}
+            {banos !== undefined && (
+              <div className="flex flex-col">
+                <span className="text-xl font-extrabold text-content-main">{banos}</span>
+                <span className="text-xs font-semibold text-content-muted uppercase tracking-wider">Baños</span>
+              </div>
+            )}
+            {banos !== undefined && metros !== undefined && (
+              <div className="w-px h-8 bg-gray-200" />
+            )}
+            {metros !== undefined && (
+              <div className="flex flex-col">
+                <span className="text-xl font-extrabold text-content-main">{metros}</span>
+                <span className="text-xs font-semibold text-content-muted uppercase tracking-wider">m² Construidos</span>
+              </div>
+            )}
+            {estacionamientos !== undefined && estacionamientos > 0 && (
+              <>
+                <div className="w-px h-8 bg-gray-200" />
+                <div className="flex flex-col">
+                  <span className="text-xl font-extrabold text-content-main">{estacionamientos}</span>
+                  <span className="text-xs font-semibold text-content-muted uppercase tracking-wider">Parqueos</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Descripción Real */}
           <div className="mb-10">
-            <h3 className="text-2xl font-extrabold text-content-main mb-4">Ubicación</h3>
-            <div className="w-full h-64 bg-gray-200 rounded-2xl relative overflow-hidden flex items-center justify-center border border-gray-300">
-              <Image src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074&auto=format&fit=crop" alt="Mapa" fill className="object-cover opacity-50" />
-              <div className="absolute bg-white px-4 py-2 rounded-xl shadow-lg font-extrabold text-content-main flex items-center gap-2">
-                <span className="text-xl">📍</span> Zona Sur, Calacoto
+            <h3 className="text-xl sm:text-2xl font-extrabold text-content-main mb-3">
+              Descripción de la propiedad
+            </h3>
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+              <p className="text-content-main/80 font-medium leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                {descripcion}
+              </p>
+            </div>
+          </div>
+
+          {/* Amenidades Reales (solo se muestran si el propietario seleccionó alguna) */}
+          {amenidades.length > 0 && (
+            <div className="mb-10">
+              <h3 className="text-xl sm:text-2xl font-extrabold text-content-main mb-4">
+                Amenidades incluidas
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {amenidades.map((amenidad, idx) => (
+                  <div key={idx} className="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-gray-200 text-content-main font-semibold text-sm shadow-xs">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{amenidad}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ubicación y Respaldo Legal Real */}
+          <div className="mb-10">
+            <h3 className="text-xl sm:text-2xl font-extrabold text-content-main mb-4">
+              Ubicación y Respaldo Legal
+            </h3>
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-content-muted">Dirección del Inmueble</span>
+                  <p className="text-base font-extrabold text-content-main mt-0.5">{direccion}</p>
+                  <p className="text-sm font-medium text-content-muted">{ubicacion}, Bolivia</p>
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <ClientMap 
+                  readOnly={true} 
+                  externalCenter={{ lat: -16.5000, lng: -68.1193 }} 
+                />
+              </div>
+
+              <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-content-muted">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Folio Real Registrado: <strong className="font-mono text-content-main">{folioReal || 'En trámite de validación'}</strong></span>
+                </div>
+                <span className="font-semibold text-primary">Plataforma InmoVAX</span>
               </div>
             </div>
           </div>
 
         </div>
 
-        {/* Columna Derecha: Tarjeta Flotante (Sticky Sidebar) */}
+        {/* Columna Derecha: Tarjeta Flotante de Contacto */}
         <div className="w-full lg:w-1/3 relative">
           <div className="sticky top-8 bg-surface-white p-6 rounded-2xl shadow-xl border border-gray-100">
             
             <div className="mb-6">
-              <span className="block text-sm font-bold text-content-muted uppercase tracking-wider mb-1">Precio del Anticrético</span>
-              <h2 className="text-4xl font-extrabold text-content-main">$us 45,000</h2>
-              <p className="text-sm font-medium text-green-600 mt-2">✓ Papeles al día (Verificado)</p>
+              <span className="block text-xs font-extrabold text-content-muted uppercase tracking-wider mb-1">
+                Precio de Publicación
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-content-main">
+                {precio}
+              </h2>
+              {folioReal && (
+                <p className="text-xs sm:text-sm font-semibold text-emerald-600 mt-2 flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" /> Papeles al día (Verificado)
+                </p>
+              )}
             </div>
 
-            <form className="space-y-4 border-t border-gray-100 pt-6">
-              <h4 className="font-extrabold text-content-main text-lg mb-2">Contactar al Agente</h4>
-              <Input type="text" placeholder="Tu nombre" required />
-              <Input type="tel" placeholder="Tu celular" required />
-              <textarea 
-                className="w-full bg-surface-light text-content-main rounded-lg py-3 px-4 outline-none border-2 border-transparent focus:border-primary resize-none h-24"
-                placeholder="Hola, me interesa agendar una visita para esta propiedad..."
-              ></textarea>
+            <form className="space-y-4 border-t border-gray-100 pt-5">
+              <h4 className="font-extrabold text-content-main text-base sm:text-lg mb-1">
+                Contactar por este Inmueble
+              </h4>
+              <FormField label="Nombre">
+                <Input type="text" placeholder="Tu nombre completo" required />
+              </FormField>
+              <FormField label="Celular">
+                <Input type="tel" placeholder="Tu número de celular" required />
+              </FormField>
+              <FormField label="Mensaje">
+                <Textarea className="h-24 text-sm" placeholder={`Hola, me interesa obtener más información sobre el inmueble ${property.id}...`} />
+              </FormField>
               <Button type="button" variant="primary" fullWidth>
                 Agendar Visita
               </Button>
-              <Button type="button" variant="outline" fullWidth className="border-green-500 text-green-600 hover:bg-green-50">
-                Contactar por WhatsApp
-              </Button>
+              <a
+                href={`https://wa.me/59170000000?text=Hola%20InmoVAX,%20me%20interesa%20la%20propiedad%20con%20código%20${encodeURIComponent(property.id)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <Button type="button" variant="outline" fullWidth className="border-emerald-500 text-emerald-600 hover:bg-emerald-50 flex items-center justify-center gap-2">
+                  <MessageCircle className="w-4 h-4 shrink-0" />
+                  <span>Contactar por WhatsApp</span>
+                </Button>
+              </a>
             </form>
             
           </div>

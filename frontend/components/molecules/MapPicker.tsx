@@ -13,11 +13,12 @@ const emojiIcon = L.divIcon({
 });
 
 interface MapPickerProps {
-  onLocationSelect: (lat: number, lng: number) => void;
+  onLocationSelect?: (lat: number, lng: number) => void;
   externalCenter?: { lat: number; lng: number } | null;
+  readOnly?: boolean;
 }
 
-const LocationMarker = ({ onLocationSelect, externalCenter }: MapPickerProps) => {
+const LocationMarker = ({ onLocationSelect, externalCenter, readOnly }: MapPickerProps) => {
   const map = useMap();
 
   // 2. Ya no usamos setPosition, solo volamos hacia la coordenada que manda el papá
@@ -29,24 +30,27 @@ const LocationMarker = ({ onLocationSelect, externalCenter }: MapPickerProps) =>
 
   useMapEvents({
     click(e) {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
+      if (!readOnly && onLocationSelect) {
+        onLocationSelect(e.latlng.lat, e.latlng.lng);
+      }
     }
   });
 
   const eventHandlers = useMemo(() => ({
     // 3. Cambiamos el "any" por el tipo correcto de Leaflet: L.DragEndEvent
     dragend(e: L.DragEndEvent) {
+      if (readOnly || !onLocationSelect) return;
       const marker = e.target;
       const position = marker.getLatLng();
       // Le mandamos las nuevas coordenadas al papá cuando terminas de arrastrar
       onLocationSelect(position.lat, position.lng);
     },
-  }), [onLocationSelect]);
+  }), [onLocationSelect, readOnly]);
 
   // Usamos externalCenter directamente como la única fuente de la verdad
   return externalCenter ? (
     <Marker 
-      draggable={true} 
+      draggable={!readOnly} 
       eventHandlers={eventHandlers} 
       position={externalCenter} 
       icon={emojiIcon} 
@@ -54,14 +58,14 @@ const LocationMarker = ({ onLocationSelect, externalCenter }: MapPickerProps) =>
   ) : null;
 };
 
-const MapPicker = ({ onLocationSelect, externalCenter }: MapPickerProps) => {
+const MapPicker = ({ onLocationSelect, externalCenter, readOnly }: MapPickerProps) => {
   const defaultCenter = { lat: -16.5000, lng: -68.1193 };
 
   return (
     <div className="h-64 w-full rounded-xl overflow-hidden border-2 border-gray-200 z-0 relative">
-      <MapContainer center={defaultCenter} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%', zIndex: 10 }}>
+      <MapContainer center={externalCenter || defaultCenter} zoom={externalCenter ? 15 : 13} scrollWheelZoom={true} style={{ height: '100%', width: '100%', zIndex: 10 }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <LocationMarker onLocationSelect={onLocationSelect} externalCenter={externalCenter} />
+        <LocationMarker onLocationSelect={onLocationSelect} externalCenter={externalCenter} readOnly={readOnly} />
       </MapContainer>
     </div>
   );

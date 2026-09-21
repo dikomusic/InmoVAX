@@ -6,7 +6,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
 }
 
-export const Button = ({ variant = 'primary', fullWidth = false, children, ...props }: ButtonProps) => {
+export const Button = ({ variant = 'primary', fullWidth = false, children, className = '', ...props }: ButtonProps) => {
   // Clases base compartidas por todos los botones
   const baseClasses = "font-bold py-3 px-6 rounded-lg transition-all duration-200 text-center flex items-center justify-center gap-2";
   
@@ -28,7 +28,7 @@ export const Button = ({ variant = 'primary', fullWidth = false, children, ...pr
   const widthClass = fullWidth ? "w-full" : "w-auto";
 
   return (
-    <button className={`${baseClasses} ${variants[variant]} ${widthClass}`} {...props}>
+    <button className={`${baseClasses} ${variants[variant]} ${widthClass} ${className}`} {...props}>
       {children}
     </button>
   );

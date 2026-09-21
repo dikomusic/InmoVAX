@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminSidebar, AdminTab } from '@/components/organisms/AdminSidebar';
 import { AdminHeader } from '@/components/organisms/AdminHeader';
 import { AdminOverviewSection } from '@/components/organisms/AdminOverviewSection';
@@ -10,206 +10,101 @@ import { AdminTransactionsSection } from '@/components/organisms/AdminTransactio
 import { AdminSettingsSection } from '@/components/organisms/AdminSettingsSection';
 import { LegalProperty } from '@/components/molecules/LegalDocItem';
 import { Advisor } from '@/components/molecules/AdvisorCard';
-
-const INITIAL_PROPERTIES: PropertyItem[] = [
-  {
-    id: "PROP-104",
-    title: "Departamento de Lujo con Terraza Panorámica",
-    zone: "Sopocachi, La Paz",
-    type: "Anticrético",
-    price: "$us 45,000",
-    status: "En Revisión Legal",
-    advisor: "Carlos Vega",
-    folioReal: "2.01.0.99.0018472",
-    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop",
-    date: "Hoy, 10:30 AM",
-    rooms: 3,
-    area: "140 m²",
-    description: "Departamento soleado con vista al Illimani y terraza privada."
-  },
-  {
-    id: "PROP-103",
-    title: "Casa Familiar con Jardín y Parrillero",
-    zone: "Achumani, La Paz",
-    type: "Venta",
-    price: "$us 320,000",
-    status: "Publicado",
-    advisor: "Mariana Ríos",
-    folioReal: "2.01.4.12.0049182",
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop",
-    date: "Ayer",
-    rooms: 4,
-    area: "320 m²",
-    description: "Amplia residencia con garaje para 3 vehículos y parrillero techado."
-  },
-  {
-    id: "PROP-102",
-    title: "Penthouse Exclusivo con Vista al Illimani",
-    zone: "Calacoto, La Paz",
-    type: "Anticrético",
-    price: "$us 75,000",
-    status: "Pendiente",
-    advisor: "Carlos Vega",
-    folioReal: "2.01.1.05.0083719",
-    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800&auto=format&fit=crop",
-    date: "24 Ago 2026",
-    rooms: 3,
-    area: "185 m²",
-    description: "Acabados de mármol y ascensor directo al departamento."
-  },
-  {
-    id: "PROP-101",
-    title: "Oficina Corporativa Torre Empresarial",
-    zone: "San Jorge, La Paz",
-    type: "Alquiler",
-    price: "$us 1,200/mes",
-    status: "Publicado",
-    advisor: "Andrea Morales",
-    folioReal: "2.01.0.88.0029314",
-    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop",
-    date: "22 Ago 2026",
-    rooms: 2,
-    area: "90 m²",
-    description: "Piso alto con divisiones de vidrio templado y parqueo privado."
-  },
-  {
-    id: "PROP-100",
-    title: "Monoambiente Amoblado para Ejecutivos",
-    zone: "Miraflores, La Paz",
-    type: "Alquiler",
-    price: "$us 450/mes",
-    status: "Publicado",
-    advisor: "Mariana Ríos",
-    folioReal: "2.01.2.33.0019283",
-    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop",
-    date: "20 Ago 2026",
-    rooms: 1,
-    area: "48 m²",
-    description: "Totalmente equipado a pasos de la estación del teleférico blanco."
-  }
-];
-
-const INITIAL_LEGAL_ITEMS: LegalProperty[] = [
-  {
-    id: "PROP-104",
-    title: "Departamento de Lujo con Terraza Panorámica",
-    zone: "Sopocachi, La Paz",
-    price: "$us 45,000",
-    folioReal: "2.01.0.99.0018472",
-    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop",
-    advisor: "Carlos Vega",
-    status: "En Revisión Notarial",
-    alodialStatus: "Vigente",
-    taxesYear: 2025
-  },
-  {
-    id: "PROP-102",
-    title: "Penthouse Exclusivo con Vista al Illimani",
-    zone: "Calacoto, La Paz",
-    price: "$us 75,000",
-    folioReal: "2.01.1.05.0083719",
-    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800&auto=format&fit=crop",
-    advisor: "Carlos Vega",
-    status: "Pendiente Certificado DDRR",
-    alodialStatus: "En Trámite",
-    taxesYear: 2025
-  },
-  {
-    id: "PROP-106",
-    title: "Casa Tradicional en San Miguel",
-    zone: "San Miguel, La Paz",
-    price: "$us 60,000",
-    folioReal: "2.01.1.09.0039182",
-    image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=800&auto=format&fit=crop",
-    advisor: "Mariana Ríos",
-    status: "Revisión de Gravamen",
-    alodialStatus: "Vigente",
-    taxesYear: 2024
-  }
-];
-
-const INITIAL_ADVISORS: Advisor[] = [
-  {
-    id: "ADV-1",
-    name: "Carlos Vega",
-    email: "carlos.vega@inmovax.com",
-    phone: "+591 76543210",
-    zone: "Zona Sur & Sopocachi",
-    activeProperties: 8,
-    rating: 4.9,
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop",
-    dealsClosed: 14
-  },
-  {
-    id: "ADV-2",
-    name: "Mariana Ríos",
-    email: "mariana.rios@inmovax.com",
-    phone: "+591 71234567",
-    zone: "Achumani & Calacoto",
-    activeProperties: 6,
-    rating: 4.8,
-    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&auto=format&fit=crop",
-    dealsClosed: 9
-  },
-  {
-    id: "ADV-3",
-    name: "Andrea Morales",
-    email: "andrea.morales@inmovax.com",
-    phone: "+591 78901234",
-    zone: "Centro & San Jorge",
-    activeProperties: 4,
-    rating: 4.9,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop",
-    dealsClosed: 11
-  }
-];
-
-const INITIAL_APPOINTMENTS: AppointmentItem[] = [
-  {
-    id: "APT-1",
-    clientName: "Lic. Roberto Quiroga",
-    clientPhone: "+591 77201928",
-    propertyTitle: "Anticrético Sopocachi ($us 45,000)",
-    date: "Hoy",
-    time: "15:00",
-    advisorName: "Carlos Vega",
-    status: "Confirmada",
-    notes: "Cliente interesado en entrega de llaves este mes."
-  },
-  {
-    id: "APT-2",
-    clientName: "Arq. Patricia Paredes",
-    clientPhone: "+591 70619283",
-    propertyTitle: "Casa Achumani ($us 320,000)",
-    date: "Mañana",
-    time: "10:30",
-    advisorName: "Mariana Ríos",
-    status: "Pendiente",
-    notes: "Visita en familia con chequeo de garaje."
-  },
-  {
-    id: "APT-3",
-    clientName: "Dr. Fernando Morales",
-    clientPhone: "+591 72039485",
-    propertyTitle: "Oficina San Jorge ($us 1,200)",
-    date: "28 Ago",
-    time: "16:00",
-    advisorName: "Andrea Morales",
-    status: "Confirmada",
-    notes: "Reunión corporativa para firma de contrato."
-  }
-];
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { readStoredSession } from '@/lib/frontendStore';
+import { ShieldAlert, Lock, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function AdminPage() {
+  const router = useRouter();
+  const [authStatus, setAuthStatus] = useState<'checking' | 'authorized' | 'denied'>('checking');
   const [activeTab, setActiveTab] = useState<AdminTab>('resumen');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Estados de datos en memoria (Frontend)
-  const [properties, setProperties] = useState<PropertyItem[]>(INITIAL_PROPERTIES);
-  const [legalItems, setLegalItems] = useState<LegalProperty[]>(INITIAL_LEGAL_ITEMS);
-  const [advisors, setAdvisors] = useState<Advisor[]>(INITIAL_ADVISORS);
-  const [appointments, setAppointments] = useState<AppointmentItem[]>(INITIAL_APPOINTMENTS);
+  // Estados dinámicos alimentados directamente por Supabase / Bun
+  const [properties, setProperties] = useState<PropertyItem[]>([]);
+  const [legalItems, setLegalItems] = useState<LegalProperty[]>([]);
+  const [advisors, setAdvisors] = useState<Advisor[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
+
+  useEffect(() => {
+    // Verificación de autenticación y rol de Administrador
+    const session = readStoredSession();
+    const isAdmin = session && (session.role === 'admin' || session.email === 'admin@inmovax.com');
+
+    if (!isAdmin) {
+      setAuthStatus('denied');
+      const timer = setTimeout(() => {
+        router.replace('/login?error=admin_required&redirect=/admin');
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+
+    setAuthStatus('authorized');
+
+    // 1. Inmuebles reales desde Supabase
+    fetch('http://localhost:4000/api/properties', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.properties) {
+          const mapped: PropertyItem[] = data.properties.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            zone: p.zone,
+            type: p.type,
+            price: p.price,
+            status: p.status === 'Activo' ? 'Publicado' : p.status === 'En Validación Legal' ? 'En Revisión Legal' : 'Pendiente',
+            advisor: p.assignedAdvisor || 'Lic. Carlos Vega',
+            folioReal: p.folioReal,
+            image: p.image || '',
+            date: p.datePublished || 'Reciente',
+            rooms: p.habitaciones || 3,
+            area: `${p.metros || 120} m²`,
+            description: p.title
+          }));
+          setProperties(mapped);
+        }
+      })
+      .catch(() => {});
+
+    // 2. Expedientes legales desde Supabase
+    fetch('http://localhost:4000/api/legal-audits', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.audits) setLegalItems(data.audits);
+      })
+      .catch(() => {});
+
+    // 3. Asesores oficiales desde Supabase
+    fetch('http://localhost:4000/api/advisors', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.advisors) setAdvisors(data.advisors);
+      })
+      .catch(() => {});
+
+    // 4. Citas presenciales desde Supabase
+    fetch('http://localhost:4000/api/appointments', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.appointments) {
+          const mappedApts: AppointmentItem[] = data.appointments.map((a: any) => ({
+            id: a.id,
+            clientName: a.clientName,
+            clientPhone: a.clientPhone,
+            propertyTitle: a.propertyTitle,
+            date: a.date,
+            time: a.time,
+            advisorName: a.advisorName,
+            status: a.status === 'Confirmada' ? 'Confirmada' : 'Pendiente',
+            notes: 'Coordinado vía InmoVAX DDRR'
+          }));
+          setAppointments(mappedApts);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const showToast = (msg: string) => {
     setNotification(msg);
@@ -272,6 +167,57 @@ export default function AdminPage() {
   const handleSaveSettings = () => {
     showToast(`Parámetros y políticas notariales actualizados correctamente.`);
   };
+
+  if (authStatus === 'checking') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
+        <div className="flex flex-col items-center space-y-4 max-w-sm text-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20 animate-pulse">
+            <Lock className="w-8 h-8 text-accent" />
+          </div>
+          <h2 className="text-xl font-black">Panel Administrador InmoVAX</h2>
+          <p className="text-xs text-gray-400 flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-accent" /> Verificando permisos de seguridad...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (authStatus === 'denied') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-white">
+        <div className="bg-slate-900 border border-red-500/30 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-400">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-red-400 bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20">
+              Acceso Restringido
+            </span>
+            <h2 className="text-2xl font-black text-white mt-3">Área de Administrador</h2>
+            <p className="text-xs text-gray-400 mt-2 font-medium">
+              Esta sección requiere credenciales maestras de Administrador. No tienes permisos para visualizar este portal.
+            </p>
+          </div>
+          <div className="pt-2 flex flex-col gap-2.5">
+            <Link
+              href="/login?redirect=/admin"
+              className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all text-center"
+            >
+              Iniciar Sesión como Administrador
+            </Link>
+            <Link
+              href="/"
+              className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs rounded-xl transition-all text-center flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" /> Volver al Inicio
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen">

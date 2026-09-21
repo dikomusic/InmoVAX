@@ -1,7 +1,52 @@
+"use client";
+
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { PublishPropertyForm } from '@/components/organisms/PublishPropertyForm';
+import { readStoredSession, saveStoredSession } from '@/lib/frontendStore';
+import { addManagedProperty, ManagedProperty } from '@/lib/propertiesStore';
 
 export default function PublicarPage() {
+  const router = useRouter();
+
+  const handlePublished = async (data: Parameters<NonNullable<React.ComponentProps<typeof PublishPropertyForm>['onSuccessCallback']>>[0]) => {
+    let session = readStoredSession();
+    if (!session || !session.email) {
+      session = {
+        name: 'Propietario InmoVAX',
+        email: 'propietario@inmovax.com',
+        hasPublishedProperties: true,
+        role: 'vendedor'
+      };
+      saveStoredSession(session);
+    } else {
+      saveStoredSession({ ...session, hasPublishedProperties: true, role: 'vendedor' });
+    }
+
+    const newProp = await addManagedProperty({
+      title: `${data.tipoInmueble.toUpperCase()} en ${data.zona}`,
+      zone: data.zona,
+      address: data.calle || data.zona,
+      description: data.descripcion || `${data.tipoInmueble.toUpperCase()} en ${data.zona}`,
+      type: (data.operacion === 'anticretico' ? 'Anticrético' : data.operacion.charAt(0).toUpperCase() + data.operacion.slice(1)) as ManagedProperty['type'],
+      price: `${data.moneda === 'usd' ? '$us' : 'Bs.'} ${data.precio}`,
+      status: 'Activo',
+      folioReal: data.folioReal,
+      assignedAdvisor: 'Lic. Carlos Vega',
+      image: data.imagenUrl || '',
+      gallery: data.galeria || [],
+      authorEmail: session.email,
+      authorName: session.name,
+      habitaciones: Number(data.habitaciones) || 3,
+      banos: Number(data.banos) || 2,
+      metros: Number(data.supConstruida) || 120,
+      estacionamientos: Number(data.parqueos) || 0,
+      amenidades: data.amenidades || []
+    });
+
+    router.push(`/propiedad/${newProp.id}`);
+  };
+
   return (
     <div className="min-h-screen bg-surface-light py-12 px-4 sm:px-6">
       
@@ -15,7 +60,7 @@ export default function PublicarPage() {
       </div>
 
       {/* Aquí renderizamos nuestro asistente paso a paso */}
-      <PublishPropertyForm />
+      <PublishPropertyForm onSuccessCallback={handlePublished} />
       
     </div>
   );

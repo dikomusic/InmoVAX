@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { Modal } from '../atoms/Modal';
+import { CheckCircle2, FileText, Scale } from 'lucide-react';
 
 export interface SellerDoc {
   id: string;
@@ -57,7 +58,7 @@ export const SellerDocumentsSection = () => {
       <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-900 text-xs font-black uppercase tracking-wider mb-2">
-            <span>⚖️</span> Bóveda Legal del Propietario
+            <Scale aria-hidden="true" className="h-4 w-4" /> Bóveda Legal del Propietario
           </div>
           <h3 className="text-xl sm:text-2xl font-black text-amber-950">
             Respaldo de Folios Reales & Minutas Notariadas
@@ -80,10 +81,11 @@ export const SellerDocumentsSection = () => {
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <span className="text-xs font-bold text-primary bg-blue-50 px-2.5 py-1 rounded-lg">
-                  📄 {doc.docType}
+                  <FileText aria-hidden="true" className="mr-1 inline h-3.5 w-3.5" /> {doc.docType}
                 </span>
-                <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
-                  ● {doc.status}
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span>{doc.status}</span>
                 </span>
               </div>
 
@@ -134,7 +136,7 @@ export const SellerDocumentsSection = () => {
             </div>
 
             <div className="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-900 font-medium">
-              ✓ Certificado libre de gravamen, hipotecas pendientes ni órdenes judiciales.
+              <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-4 w-4" /> Certificado libre de gravamen, hipotecas pendientes ni órdenes judiciales.</span>
             </div>
 
             <div className="flex justify-end pt-4 border-t border-gray-100">

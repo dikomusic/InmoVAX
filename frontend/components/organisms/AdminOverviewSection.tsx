@@ -2,6 +2,7 @@
 import React from 'react';
 import { StatCard } from '../atoms/StatCard';
 import { AdminTab } from './AdminSidebar';
+import { Building2, Scale, CircleDollarSign, Users } from 'lucide-react';
 
 interface AdminOverviewSectionProps {
   propertiesCount: number;
@@ -43,7 +44,7 @@ export const AdminOverviewSection = ({
           title="Inmuebles en Catálogo"
           value={propertiesCount}
           subtitle="14 en venta • 8 anticréticos • 6 alquiler"
-          icon="🏠"
+          icon={<Building2 className="h-5 w-5" />}
           trend="+12% este mes"
           trendType="positive"
           bgColor="bg-blue-50 text-primary"
@@ -53,7 +54,7 @@ export const AdminOverviewSection = ({
           title="Revisión Folio Real"
           value={pendingLegalCount}
           subtitle="Documentos alodiales pendientes"
-          icon="⚖️"
+          icon={<Scale className="h-5 w-5" />}
           trend={pendingLegalCount > 0 ? "Prioridad Alta" : "Al día"}
           trendType={pendingLegalCount > 0 ? "urgent" : "positive"}
           bgColor="bg-amber-50 text-amber-600"
@@ -63,7 +64,7 @@ export const AdminOverviewSection = ({
           title="Volumen Transaccional"
           value={transactionsVolume}
           subtitle="Capital en anticréticos gestionados"
-          icon="💰"
+          icon={<CircleDollarSign className="h-5 w-5" />}
           trend="+18.4%"
           trendType="positive"
           bgColor="bg-emerald-50 text-emerald-600"
@@ -72,8 +73,8 @@ export const AdminOverviewSection = ({
         <StatCard
           title="Equipo de Asesores"
           value={advisorsCount}
-          subtitle="Calificación promedio: 4.86 ⭐"
-          icon="👥"
+          subtitle="Calificación promedio: 4.86 / 5"
+          icon={<Users className="h-5 w-5" />}
           trend="100% operativos"
           trendType="neutral"
           bgColor="bg-purple-50 text-purple-600"
