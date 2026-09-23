@@ -63,13 +63,10 @@ const PropertyResultsContent = ({ operation, type, showMap = false }: PropertyRe
   const operationLabel = operationLabels[operation];
 
   // Estado reactivo conectado a Supabase vía backend Bun
-  const [managedProps, setManagedProps] = useState<ManagedProperty[]>([]);
+  const [managedProps, setManagedProps] = useState<ManagedProperty[]>(() => getAllManagedProperties());
 
   useEffect(() => {
-    // 1. Cargar datos locales existentes
-    setManagedProps(getAllManagedProperties());
-
-    // 2. Consultar datos frescos del backend en tiempo real
+    // Consultar datos frescos del backend en tiempo real
     fetchAllPropertiesFromBackend().then((data) => {
       if (data) setManagedProps(data);
     });

@@ -44,10 +44,12 @@ export const propertyListingsData: Record<PropertyOperation, PropertyListing[]> 
  * Convierte un objeto ManagedProperty (del backend/Supabase) al formato PropertyListing del catálogo
  */
 export function managedPropertyToListing(mp: ManagedProperty): PropertyListing {
-  // Extraer valor numérico del precio
-  const rawDigits = (mp.price || '').replace(/[^0-9.]/g, '');
+  // Extraer valor numérico del precio eliminando prefijos de moneda (evita que el punto de "Bs." se interprete como decimal)
+  const rawPrice = (mp.price || '').trim();
+  const moneda: 'USD' | 'BOB' = rawPrice.toLowerCase().includes('bs') ? 'BOB' : 'USD';
+  const cleanPriceStr = rawPrice.replace(/^(bs\.?|\$us|usd)\s*/i, '').replace(/,/g, '');
+  const rawDigits = cleanPriceStr.replace(/[^0-9.]/g, '');
   const precioNumerico = Number(rawDigits) || 0;
-  const moneda: 'USD' | 'BOB' = (mp.price || '').includes('Bs') ? 'BOB' : 'USD';
 
   // Inferencia de tipo de inmueble por título
   const text = `${mp.title} ${mp.zone}`.toLowerCase();

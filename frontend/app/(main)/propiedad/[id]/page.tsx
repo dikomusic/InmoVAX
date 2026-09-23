@@ -8,6 +8,8 @@ import { FormField } from '@/components/molecules/FormField';
 import { fetchPropertyById } from '@/components/data/propertyListings';
 import Link from 'next/link';
 import { ClientMap } from '@/components/molecules/ClientMap';
+import { PropertyContactForm } from '@/components/molecules/PropertyContactForm';
+import { PropertyViewTracker } from '@/components/atoms/PropertyViewTracker';
 
 export default async function PropiedadDetallePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -59,6 +61,13 @@ export default async function PropiedadDetallePage({ params }: { params: Promise
 
   return (
     <div className="min-h-screen bg-surface-light pb-20">
+      <PropertyViewTracker
+        propertyId={property.id}
+        title={property.titulo}
+        price={property.precio}
+        location={property.ubicacion}
+        imageUrl={property.imagenUrl}
+      />
       
       {/* 1. CABECERA & GALERÍA DE FOTOS REALES */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
@@ -264,34 +273,18 @@ export default async function PropiedadDetallePage({ params }: { params: Promise
               )}
             </div>
 
-            <form className="space-y-4 border-t border-gray-100 pt-5">
-              <h4 className="font-extrabold text-content-main text-base sm:text-lg mb-1">
-                Contactar por este Inmueble
-              </h4>
-              <FormField label="Nombre">
-                <Input type="text" placeholder="Tu nombre completo" required />
-              </FormField>
-              <FormField label="Celular">
-                <Input type="tel" placeholder="Tu número de celular" required />
-              </FormField>
-              <FormField label="Mensaje">
-                <Textarea className="h-24 text-sm" placeholder={`Hola, me interesa obtener más información sobre el inmueble ${property.id}...`} />
-              </FormField>
-              <Button type="button" variant="primary" fullWidth>
-                Agendar Visita
-              </Button>
-              <a
-                href={`https://wa.me/59170000000?text=Hola%20InmoVAX,%20me%20interesa%20la%20propiedad%20con%20código%20${encodeURIComponent(property.id)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block"
-              >
-                <Button type="button" variant="outline" fullWidth className="border-emerald-500 text-emerald-600 hover:bg-emerald-50 flex items-center justify-center gap-2">
-                  <MessageCircle className="w-4 h-4 shrink-0" />
-                  <span>Contactar por WhatsApp</span>
-                </Button>
-              </a>
-            </form>
+            <PropertyContactForm
+              property={{
+                id: property.id,
+                titulo: property.titulo,
+                precio: property.precio,
+                ubicacion: property.ubicacion,
+                imagenUrl: property.imagenUrl,
+                autorEmail: property.autorEmail,
+                autorNombre: property.autorNombre,
+                asesor: property.asesor
+              }}
+            />
             
           </div>
         </div>

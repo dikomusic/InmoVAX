@@ -14,6 +14,7 @@ interface SellerSidebarProps {
   onPublishClick: () => void;
   myPropertiesCount?: number;
   appointmentsCount?: number;
+  consultationsCount?: number;
   userName?: string;
   userEmail?: string;
 }
@@ -25,6 +26,7 @@ export const SellerSidebar = ({
   onClose,
   myPropertiesCount,
   appointmentsCount,
+  consultationsCount,
   onPublishClick,
   userName = 'Arq. Gonzalo Benítez',
   userEmail = 'vendedor@inmovax.com'
@@ -43,7 +45,13 @@ export const SellerSidebar = ({
       Icon: Home,
       badge: myPropertiesCount !== undefined ? String(myPropertiesCount) : undefined
     },
-    { id: 'consultas', label: 'Consultas & Ofertas', Icon: MessageCircle, badgeColor: 'bg-emerald-500' },
+    {
+      id: 'consultas',
+      label: 'Consultas & Ofertas',
+      Icon: MessageCircle,
+      badge: consultationsCount !== undefined && consultationsCount > 0 ? String(consultationsCount) : undefined,
+      badgeColor: 'bg-emerald-500'
+    },
     {
       id: 'citas',
       label: 'Agenda y Visitas',

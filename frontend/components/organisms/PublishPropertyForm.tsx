@@ -46,7 +46,7 @@ export const PublishPropertyForm = ({
     banos: '2',
     parqueos: '1',
     amenidades: ['Ascensor', 'Seguridad 24/7', 'Parrillero'],
-    folioReal: `2.01.0.${Math.floor(10 + Math.random() * 89)}.${Math.floor(1000000 + Math.random() * 8999999)}`,
+    folioReal: '2.01.0.12.3456789',
     tieneFolio: true,
     fotosCount: 0,
     imagenUrl: '',

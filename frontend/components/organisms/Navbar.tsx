@@ -129,6 +129,13 @@ export const Navbar = () => {
       const supabase = createBrowserClient();
       await supabase.auth.signOut();
     } catch {}
+
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path.startsWith('/vendedor') || path.startsWith('/admin')) {
+        window.location.href = '/';
+      }
+    }
   };
 
   const hasPublished = hasUserPublishedProperties(session);

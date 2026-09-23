@@ -14,7 +14,7 @@ import { SellerOffer } from '@/components/molecules/SellerOfferItem';
 import { SellerNotificationItem } from '@/components/molecules/SellerNotifications';
 import { Modal } from '@/components/atoms/Modal';
 import { PublishPropertyForm } from '@/components/organisms/PublishPropertyForm';
-import { readStoredSession } from '@/lib/frontendStore';
+import { readStoredSession, ConsultationItem, CONSULTATIONS_KEY, getConsultationsForSeller, fetchConsultationsForSeller } from '@/lib/frontendStore';
 import {
   getPropertiesByAuthor,
   addManagedProperty,
@@ -36,18 +36,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle2, Lock, Loader2, ArrowLeft } from 'lucide-react';
 
-const TAB_TITLES: Record<SellerTab, string> = {
-  resumen: 'Mi Panel General',
-  inmuebles: 'Mis Inmuebles Publicados',
-  consultas: 'Consultas y Ofertas',
-  citas: 'Agenda y Visitas',
-  documentos: 'Folio Real y Minutas',
-  favoritos: 'Favoritos Guardados',
-  historial: 'Historial de Navegación'
-};
-
 export default function SellerPortalPage() {
   const router = useRouter();
+  // Estado inicial uniforme para evitar errores de hidratación SSR
   const [authStatus, setAuthStatus] = useState<'checking' | 'authorized' | 'unauthenticated'>('checking');
   const [activeTab, setActiveTab] = useState<SellerTab>('resumen');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -56,7 +47,7 @@ export default function SellerPortalPage() {
   // Modal de eliminación segura (reemplazo de window.confirm)
   const [propertyToDelete, setPropertyToDelete] = useState<SellerProperty | null>(null);
 
-  // Modal de publicación asistida
+  // Modal para publicar nueva propiedad
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
 
   // Sesión actual
@@ -70,6 +61,7 @@ export default function SellerPortalPage() {
   const [offers, setOffers] = useState<SellerOffer[]>([]);
   const [appointments, setAppointments] = useState<SellerAppointment[]>([]);
   const [notifications, setNotifications] = useState<SellerNotificationItem[]>([]);
+  const [consultations, setConsultations] = useState<ConsultationItem[]>([]);
 
   const currentEmail = session?.email || '';
   const currentName = session?.name || '';
@@ -115,23 +107,44 @@ export default function SellerPortalPage() {
     fetchSellerNotifications().then((data) => {
       if (data && data.length > 0) setNotifications(data);
     });
+
+    // 5. Consultas y mensajes P2P directos de compradores
+    setConsultations(getConsultationsForSeller(userEmail));
+    fetchConsultationsForSeller(userEmail).then((cloud) => {
+      if (cloud && cloud.length > 0) setConsultations(cloud);
+    });
   }, []);
 
-  // Escuchar cambios reactivos en el almacén de propiedades
+  // Escuchar cambios reactivos en el almacén de propiedades y consultas
   useEffect(() => {
     if (!isMounted) return;
     const syncProperties = () => {
       const localProps = getPropertiesByAuthor(currentEmail);
       setProperties(localProps);
-      fetchSellerProperties(currentEmail).then((cloudProps) => {
-        if (cloudProps && cloudProps.length > 0) {
-          setProperties(cloudProps);
-        }
-      });
+    };
+
+    const syncConsultations = (e?: Event) => {
+      const custom = e as CustomEvent<{ key?: string }>;
+      if (custom?.detail?.key && custom.detail.key !== CONSULTATIONS_KEY) return;
+      setConsultations(getConsultationsForSeller(currentEmail));
+      fetchConsultationsForSeller(currentEmail).then((cloud) => {
+        setConsultations(cloud || []);
+      }).catch(() => {});
     };
 
     window.addEventListener('inmovax:properties-updated', syncProperties);
-    return () => window.removeEventListener('inmovax:properties-updated', syncProperties);
+    window.addEventListener('inmovax:list-updated', syncConsultations);
+    window.addEventListener('inmovax:new-inquiry', syncConsultations);
+
+    // Polling ligero cada 10s para sincronizar consultas
+    const pollInterval = setInterval(syncConsultations, 10000);
+
+    return () => {
+      window.removeEventListener('inmovax:properties-updated', syncProperties);
+      window.removeEventListener('inmovax:list-updated', syncConsultations);
+      window.removeEventListener('inmovax:new-inquiry', syncConsultations);
+      clearInterval(pollInterval);
+    };
   }, [currentEmail, isMounted]);
 
   const showToast = (msg: string) => {
@@ -263,6 +276,7 @@ export default function SellerPortalPage() {
           onPublishClick={() => setIsPublishModalOpen(true)}
           myPropertiesCount={isMounted ? properties.length : undefined}
           appointmentsCount={isMounted ? appointments.length : undefined}
+          consultationsCount={isMounted ? consultations.length : undefined}
           userName={currentName}
           userEmail={currentEmail}
         />
@@ -360,6 +374,7 @@ export default function SellerPortalPage() {
       {activeTab === 'consultas' && (
         <SellerOffersSection
           offers={offers}
+          consultations={consultations}
           onAcceptOffer={handleAcceptOffer}
           onRejectOffer={handleRejectOffer}
           onCounterOfferSubmit={handleCounterOfferSubmit}

@@ -422,6 +422,11 @@ propertiesRouter.get('/:id', async (c) => {
     return c.json({ success: false, error: 'Inmueble no encontrado' }, 404);
   }
 
+  // Incrementar visualizaciones en Supabase en segundo plano
+  const newViews = (data.views_count || 0) + 1;
+  supabase.from('properties').update({ views_count: newViews }).eq('id', found.id).then();
+  data.views_count = newViews;
+
   return c.json({
     success: true,
     source: 'supabase-postgresql',

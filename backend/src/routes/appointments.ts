@@ -54,12 +54,14 @@ function mapDbAppointment(dbApt: any): Appointment {
 const newAppointmentSchema = z.object({
   propertyId: z.string().optional(),
   propertyTitle: z.string().optional(),
-  clientName: z.string().min(2),
-  clientPhone: z.string().min(6),
+  clientName: z.string().min(1, 'El nombre es requerido'),
+  clientPhone: z.string().optional().default('No provisto'),
   advisorId: z.string().optional(),
   advisorName: z.string().optional(),
-  date: z.string().min(3),
-  time: z.string().min(3),
+  date: z.string().optional(),
+  time: z.string().optional(),
+  visitDate: z.string().optional(),
+  timeSlot: z.string().optional(),
   notes: z.string().optional()
 });
 
@@ -92,12 +94,45 @@ appointmentsRouter.post('/', async (c) => {
     const body = await c.req.json();
     const validated = newAppointmentSchema.parse(body);
 
-    // Determinar property_id
-    let propertyId = validated.propertyId;
+    const inputDate = validated.date || validated.visitDate || 'Hoy';
+    const inputTime = validated.time || validated.timeSlot || '10:30 AM';
+
+    // Determinar property_id UUID válido para PostgreSQL
+    let propertyId: string | null = null;
+    const rawPropId = validated.propertyId;
+
+    if (rawPropId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawPropId);
+      if (isUuid) {
+        propertyId = rawPropId;
+      } else {
+        // Buscar por código (ej. PROP-127)
+        const { data: propFound } = await supabase
+          .from('properties')
+          .select('id, inquiries_count')
+          .eq('code', rawPropId)
+          .maybeSingle();
+
+        if (propFound) {
+          propertyId = propFound.id;
+          // Incrementar contador de consultas en Supabase
+          await supabase
+            .from('properties')
+            .update({ inquiries_count: (propFound.inquiries_count || 0) + 1 })
+            .eq('id', propFound.id);
+        }
+      }
+    }
+
     if (!propertyId) {
-      // Buscar primera propiedad disponible en DB si no se envió ID
-      const { data: firstProp } = await supabase.from('properties').select('id').limit(1).single();
+      const { data: firstProp } = await supabase.from('properties').select('id, inquiries_count').limit(1).single();
       propertyId = firstProp?.id || 'c0000000-0000-0000-0000-000000000001';
+      if (firstProp) {
+        await supabase
+          .from('properties')
+          .update({ inquiries_count: (firstProp.inquiries_count || 0) + 1 })
+          .eq('id', firstProp.id);
+      }
     }
 
     // Determinar advisor_id
@@ -108,16 +143,15 @@ appointmentsRouter.post('/', async (c) => {
     }
 
     // Formatear fecha para PostgreSQL DATE (YYYY-MM-DD)
-    let visitDate = validated.date;
+    let visitDate = inputDate;
     const now = new Date();
-    if (validated.date.toLowerCase() === 'hoy') {
+    if (inputDate.toLowerCase() === 'hoy') {
       visitDate = now.toISOString().split('T')[0];
-    } else if (validated.date.toLowerCase() === 'mañana') {
+    } else if (inputDate.toLowerCase() === 'mañana') {
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
       visitDate = tomorrow.toISOString().split('T')[0];
-    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(validated.date)) {
-      // Fallback a fecha de mañana si no tiene formato ISO
+    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(inputDate)) {
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
       visitDate = tomorrow.toISOString().split('T')[0];
@@ -131,7 +165,7 @@ appointmentsRouter.post('/', async (c) => {
         client_name: validated.clientName,
         client_phone: validated.clientPhone,
         visit_date: visitDate,
-        time_slot: validated.time,
+        time_slot: inputTime,
         status: 'Confirmada',
         notes: validated.notes || null
       })

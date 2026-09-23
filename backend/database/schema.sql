@@ -420,3 +420,55 @@ INSERT INTO public.appointments (property_id, advisor_id, client_name, client_ph
 ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Dr. Marcelo Zeballos', '+591 77201928', CURRENT_DATE, '16:00', 'Confirmada'),
 ('c0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'Lic. Andrea Tapia', '+591 71203948', CURRENT_DATE + INTERVAL '1 day', '11:30', 'Confirmada')
 ON CONFLICT (id) DO NOTHING;
+
+-- ==============================================================================
+-- 13. CONSULTAS Y MENSAJERÍA P2P DIRECTA COMPRADOR <-> VENDEDOR (REQ-34)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.consultations (
+    id TEXT PRIMARY KEY,
+    property_id UUID REFERENCES public.properties(id) ON DELETE CASCADE,
+    property_title VARCHAR(200) NOT NULL,
+    property_location VARCHAR(150),
+    property_price VARCHAR(50),
+    property_image TEXT,
+    property_href TEXT,
+    seller_email VARCHAR(255) NOT NULL,
+    seller_name VARCHAR(150),
+    buyer_email VARCHAR(255) NOT NULL,
+    buyer_name VARCHAR(150) NOT NULL,
+    buyer_phone VARCHAR(30),
+    status VARCHAR(20) NOT NULL DEFAULT 'pendiente' CHECK (status IN ('pendiente', 'respondido')),
+    last_message TEXT NOT NULL,
+    unread_by_seller INTEGER DEFAULT 1 CHECK (unread_by_seller >= 0),
+    unread_by_buyer INTEGER DEFAULT 0 CHECK (unread_by_buyer >= 0),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.consultation_messages (
+    id TEXT PRIMARY KEY,
+    consultation_id TEXT NOT NULL REFERENCES public.consultations(id) ON DELETE CASCADE,
+    sender_email VARCHAR(255) NOT NULL,
+    sender_name VARCHAR(150) NOT NULL,
+    sender_role VARCHAR(20) NOT NULL CHECK (sender_role IN ('comprador', 'vendedor')),
+    text TEXT NOT NULL,
+    timestamp VARCHAR(30) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_consultations_seller ON public.consultations(seller_email);
+CREATE INDEX IF NOT EXISTS idx_consultations_buyer ON public.consultations(buyer_email);
+CREATE INDEX IF NOT EXISTS idx_consultations_property ON public.consultations(property_id);
+CREATE INDEX IF NOT EXISTS idx_consultation_messages_cons ON public.consultation_messages(consultation_id);
+
+-- Políticas de Seguridad RLS en Supabase
+ALTER TABLE public.consultations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.consultation_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "consultations_access" ON public.consultations;
+CREATE POLICY "consultations_access" ON public.consultations FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "consultation_messages_access" ON public.consultation_messages;
+CREATE POLICY "consultation_messages_access" ON public.consultation_messages FOR ALL USING (true) WITH CHECK (true);
+
+

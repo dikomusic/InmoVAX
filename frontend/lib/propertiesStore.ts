@@ -78,10 +78,17 @@ export const isMatchingSellerEmail = (emailA?: string, emailB?: string): boolean
 
 let hasSyncedOnce = false;
 
+const getBackendPropertiesUrl = () => {
+  const base = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
+    ? process.env.NEXT_PUBLIC_API_URL
+    : 'http://localhost:4000/api';
+  return `${base}/properties`;
+};
+
 export const syncPropertiesWithCloudBackend = async () => {
   if (typeof window === 'undefined') return;
   try {
-    const res = await fetch('http://127.0.0.1:4000/api/properties', { cache: 'no-store' });
+    const res = await fetch(getBackendPropertiesUrl(), { cache: 'no-store' });
     if (res.ok) {
       const json = await res.json();
       if (json.properties && Array.isArray(json.properties)) {
@@ -98,7 +105,7 @@ export const syncPropertiesWithCloudBackend = async () => {
  */
 export const fetchAllPropertiesFromBackend = async (): Promise<ManagedProperty[]> => {
   try {
-    const res = await fetch('http://127.0.0.1:4000/api/properties', { cache: 'no-store' });
+    const res = await fetch(getBackendPropertiesUrl(), { cache: 'no-store' });
     if (res.ok) {
       const json = await res.json();
       if (json.properties && Array.isArray(json.properties)) {
@@ -106,8 +113,8 @@ export const fetchAllPropertiesFromBackend = async (): Promise<ManagedProperty[]
         return json.properties;
       }
     }
-  } catch (err) {
-    console.error('Error fetching properties from backend:', err);
+  } catch {
+    // Si el backend local no está encendido o no responde, usa de forma transparente la memoria local
   }
   return getAllManagedProperties();
 };
@@ -160,7 +167,31 @@ export const getPropertiesByAuthor = (authorEmail?: string): ManagedProperty[] =
 export const countAuthorProperties = (authorEmail?: string): number => {
   return getPropertiesByAuthor(authorEmail).length;
 };
+/**
+ * Incrementar contador de visualizaciones de un inmueble
+ */
+export const incrementPropertyViews = (propertyId: string): void => {
+  if (typeof window === 'undefined' || !propertyId) return;
+  const cleanId = propertyId.toLowerCase().trim();
+  const list = getAllManagedProperties();
+  const index = list.findIndex(p => p.id.toLowerCase() === cleanId || (p.href && p.href.toLowerCase().includes(cleanId)));
+  if (index === -1) return;
+  list[index].views = (list[index].views || 0) + 1;
+  saveManagedProperties(list);
+};
 
+/**
+ * Incrementar contador de consultas de un inmueble
+ */
+export const incrementPropertyInquiries = (propertyId: string): void => {
+  if (typeof window === 'undefined' || !propertyId) return;
+  const cleanId = propertyId.toLowerCase().trim();
+  const list = getAllManagedProperties();
+  const index = list.findIndex(p => p.id.toLowerCase() === cleanId || (p.href && p.href.toLowerCase().includes(cleanId)));
+  if (index === -1) return;
+  list[index].inquiries = (list[index].inquiries || 0) + 1;
+  saveManagedProperties(list);
+};
 /**
  * Verificar si el autor tiene 1 o más propiedades
  */

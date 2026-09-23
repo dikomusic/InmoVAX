@@ -85,7 +85,7 @@ export const SellerDeleteConfirmModal = ({
             </p>
             <ul className="list-disc list-inside text-[11px] text-amber-800/90 pl-1 space-y-0.5">
               <li>El inmueble dejará de mostrarse en la página principal y búsquedas.</li>
-              <li>Si no tienes más inmuebles publicados, la opción "Mi cuenta" se ocultará de la cabecera.</li>
+              <li>Si no tienes más inmuebles publicados, la opción &ldquo;Mi cuenta&rdquo; se ocultará de la cabecera.</li>
               <li>Se cancelarán las consultas activas vinculadas a este inmueble.</li>
             </ul>
           </div>

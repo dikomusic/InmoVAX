@@ -17,7 +17,12 @@ import { ShieldAlert, Lock, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function AdminPage() {
   const router = useRouter();
-  const [authStatus, setAuthStatus] = useState<'checking' | 'authorized' | 'denied'>('checking');
+  const [authStatus, setAuthStatus] = useState<'checking' | 'authorized' | 'denied'>(() => {
+    if (typeof window === 'undefined') return 'checking';
+    const session = readStoredSession();
+    const isAdmin = session && (session.role === 'admin' || session.email === 'admin@inmovax.com');
+    return isAdmin ? 'authorized' : 'denied';
+  });
   const [activeTab, setActiveTab] = useState<AdminTab>('resumen');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
@@ -29,22 +34,19 @@ export default function AdminPage() {
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
 
   useEffect(() => {
-    // Verificación de autenticación y rol de Administrador
-    const session = readStoredSession();
-    const isAdmin = session && (session.role === 'admin' || session.email === 'admin@inmovax.com');
-
-    if (!isAdmin) {
-      setAuthStatus('denied');
+    if (authStatus === 'denied') {
       const timer = setTimeout(() => {
         router.replace('/login?error=admin_required&redirect=/admin');
       }, 1800);
       return () => clearTimeout(timer);
     }
 
-    setAuthStatus('authorized');
+    const apiBase = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
+      ? process.env.NEXT_PUBLIC_API_URL
+      : 'http://localhost:4000/api';
 
     // 1. Inmuebles reales desde Supabase
-    fetch('http://localhost:4000/api/properties', { cache: 'no-store' })
+    fetch(`${apiBase}/properties`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (data.properties) {

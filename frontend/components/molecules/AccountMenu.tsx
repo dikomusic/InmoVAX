@@ -36,10 +36,13 @@ export const AccountMenu = ({ session, onLogout, onOpenActivity }: AccountMenuPr
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Dynamic counts for badges
-  const [counts, setCounts] = useState({
-    favorites: 0,
-    history: 0,
-    consultations: 0
+  const [counts, setCounts] = useState(() => {
+    if (typeof window === 'undefined') return { favorites: 0, history: 0, consultations: 0 };
+    return {
+      favorites: readStoredList(FAVORITES_KEY).length,
+      history: readStoredList(HISTORY_KEY).length,
+      consultations: readStoredList(CONSULTATIONS_KEY).length
+    };
   });
 
   const [hasPublished, setHasPublished] = useState(() => hasUserPublishedProperties(session));
@@ -55,8 +58,6 @@ export const AccountMenu = ({ session, onLogout, onOpenActivity }: AccountMenuPr
   };
 
   useEffect(() => {
-    updateCounts();
-
     const handleEvent = () => updateCounts();
     window.addEventListener('inmovax:list-updated', handleEvent);
     window.addEventListener('inmovax:session-updated', handleEvent);

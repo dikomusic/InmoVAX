@@ -9,8 +9,9 @@ import { appointmentsRouter } from './routes/appointments';
 import { notificationsRouter } from './routes/notifications';
 import { advisorsRouter } from './routes/advisors';
 import { legalRouter } from './routes/legal';
+import { consultationsRouter } from './routes/consultations';
 
-const app = new Hono();
+export const app = new Hono();
 
 // 1. CONFIGURACIÓN DE CORS RESTRINGIDO (Solo localhost:3000)
 app.use('*', cors({
@@ -42,6 +43,7 @@ app.route('/api/appointments', appointmentsRouter);
 app.route('/api/notifications', notificationsRouter);
 app.route('/api/advisors', advisorsRouter);
 app.route('/api/legal-audits', legalRouter);
+app.route('/api/consultations', consultationsRouter);
 
 // 5. RUTA RAÍZ INFORMATIVA
 app.get('/', (c) => {
