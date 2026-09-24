@@ -2,7 +2,9 @@
   "name": "inmovax-root",
   "private": true,
   "scripts": {
-    "dev": "npm run dev --prefix frontend",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"magenta,cyan\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "bun --watch backend/src/index.ts",
+    "dev:frontend": "npm run dev --prefix frontend",
     "build": "npm run build --prefix frontend",
     "start": "npm run start --prefix frontend"
   },
@@ -11,6 +13,7 @@
     "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
-    "@types/leaflet": "^1.9.22"
+    "@types/leaflet": "^1.9.22",
+    "concurrently": "^10.0.5"
   }
 }

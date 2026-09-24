@@ -27,11 +27,18 @@ export interface ManagedProperty {
   datePublished: string;
   authorEmail: string;
   authorName?: string;
+  category?: string;
+  isNegotiable?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
   habitaciones?: number;
   banos?: number;
   metros?: number;
+  landAreaSqm?: number | null;
   estacionamientos?: number;
+  parkingSpots?: number;
   amenidades?: string[];
+  amenities?: string[];
   href?: string;
   esNuevo?: boolean;
 }
@@ -214,11 +221,18 @@ export type NewPropertyInput = {
   assignedAdvisor?: string;
   authorEmail?: string;
   authorName?: string;
+  category?: string;
+  isNegotiable?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
   habitaciones?: number;
   banos?: number;
   metros?: number;
+  landAreaSqm?: number | null;
   estacionamientos?: number;
+  parkingSpots?: number;
   amenidades?: string[];
+  amenities?: string[];
 };
 
 /**
@@ -257,11 +271,18 @@ export const addManagedProperty = async (data: NewPropertyInput): Promise<Manage
     datePublished: 'Publicado hoy',
     authorEmail,
     authorName,
+    category: data.category || 'Departamento',
+    isNegotiable: data.isNegotiable ?? false,
+    latitude: data.latitude,
+    longitude: data.longitude,
     habitaciones: data.habitaciones,
     banos: data.banos,
     metros: data.metros,
-    estacionamientos: data.estacionamientos,
-    amenidades: data.amenidades || [],
+    landAreaSqm: data.landAreaSqm,
+    estacionamientos: data.estacionamientos ?? data.parkingSpots,
+    parkingSpots: data.parkingSpots ?? data.estacionamientos,
+    amenidades: data.amenidades || data.amenities || [],
+    amenities: data.amenities || data.amenidades || [],
     href: `/propiedad/${propId}`,
     esNuevo: true
   };
@@ -269,29 +290,36 @@ export const addManagedProperty = async (data: NewPropertyInput): Promise<Manage
   const updated = [newProperty, ...all];
   saveManagedProperties(updated);
 
-    // Sincronizar asíncronamente con el Backend en Bun y Supabase
-    if (typeof window !== 'undefined') {
-      try {
-        const res = await fetch('http://127.0.0.1:4000/api/properties', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: newProperty.id,
-            title: newProperty.title,
-            description: `${data.description || `${newProperty.title} en ${newProperty.zone}`}\n\nCaracterísticas adicionales:\n- Parqueos: ${newProperty.estacionamientos || 0}\n- Amenidades: ${(newProperty.amenidades || []).length > 0 ? newProperty.amenidades?.join(', ') : 'Ninguna'}`,
-            address: data.address || newProperty.zone,
-            zone: newProperty.zone,
-            type: normalizedType,
-            price: newProperty.price,
-            status: newProperty.status,
-            folioReal: newProperty.folioReal,
+  // Sincronizar asíncronamente con el Backend en Bun y Supabase
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch('http://127.0.0.1:4000/api/properties', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: newProperty.id,
+          title: newProperty.title,
+          description: newProperty.description,
+          category: newProperty.category,
+          isNegotiable: newProperty.isNegotiable,
+          address: newProperty.address,
+          zone: newProperty.zone,
+          latitude: newProperty.latitude,
+          longitude: newProperty.longitude,
+          type: normalizedType,
+          price: newProperty.price,
+          status: newProperty.status,
+          folioReal: newProperty.folioReal,
           image: newProperty.image,
           gallery: newProperty.gallery,
           authorEmail: newProperty.authorEmail,
           authorName: newProperty.authorName || 'Vendedor InmoVAX',
           bedrooms: newProperty.habitaciones,
           bathrooms: newProperty.banos,
-          areaSqm: newProperty.metros
+          areaSqm: newProperty.metros,
+          landAreaSqm: newProperty.landAreaSqm,
+          parkingSpots: newProperty.parkingSpots,
+          amenities: newProperty.amenities
         })
       });
       
@@ -360,12 +388,60 @@ export const deleteManagedProperty = (propertyId: string): boolean => {
 };
 
 /**
- * Actualizar una propiedad existente
+ * REQ-13: Actualizar una propiedad existente con persistencia inmediata en Supabase PostgreSQL
  */
-export const updateManagedProperty = (updated: ManagedProperty) => {
+export const updateManagedProperty = async (updated: ManagedProperty): Promise<boolean> => {
   const all = getAllManagedProperties();
   const next = all.map((p) => (p.id === updated.id ? updated : p));
   saveManagedProperties(next);
+
+  // Sincronizar asíncronamente con el Backend en Bun y Supabase PostgreSQL
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch(`http://127.0.0.1:4000/api/properties/${encodeURIComponent(updated.id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: updated.title,
+          description: updated.description,
+          category: updated.category,
+          isNegotiable: updated.isNegotiable,
+          zone: updated.zone,
+          address: updated.address,
+          latitude: updated.latitude,
+          longitude: updated.longitude,
+          type: updated.type,
+          price: updated.price,
+          status: updated.status,
+          bedrooms: updated.habitaciones,
+          bathrooms: updated.banos,
+          areaSqm: updated.metros,
+          landAreaSqm: updated.landAreaSqm,
+          parkingSpots: updated.estacionamientos ?? updated.parkingSpots,
+          amenities: updated.amenidades ?? updated.amenities,
+          image: updated.image,
+          gallery: updated.gallery
+        })
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.property) {
+          const fresh = getAllManagedProperties().map(p => p.id === updated.id ? { ...p, ...json.property } : p);
+          saveManagedProperties(fresh);
+        }
+        return true;
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        console.error('Error al actualizar en backend:', errJson);
+        return false;
+      }
+    } catch (err) {
+      console.error('Error de red al actualizar en backend:', err);
+      return false;
+    }
+  }
+  return true;
 };
 
 /**

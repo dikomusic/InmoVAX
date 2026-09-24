@@ -40,8 +40,15 @@ export default function PublicarPage() {
       habitaciones: Number(data.habitaciones) || 3,
       banos: Number(data.banos) || 2,
       metros: Number(data.supConstruida) || 120,
+      landAreaSqm: data.supTerreno ? Number(data.supTerreno) : null,
       estacionamientos: Number(data.parqueos) || 0,
-      amenidades: data.amenidades || []
+      parkingSpots: Number(data.parqueos) || 0,
+      amenidades: data.amenidades || [],
+      amenities: data.amenidades || [],
+      category: data.tipoInmueble ? (data.tipoInmueble.charAt(0).toUpperCase() + data.tipoInmueble.slice(1)) : 'Departamento',
+      isNegotiable: data.negociable ?? false,
+      latitude: data.coordenadas?.lat ?? null,
+      longitude: data.coordenadas?.lng ?? null
     });
 
     router.push(`/propiedad/${newProp.id}`);

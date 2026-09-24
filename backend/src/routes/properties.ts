@@ -10,8 +10,12 @@ const propertyInputSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres').max(200),
   description: z.string().optional(),
+  category: z.string().optional().default('Departamento'),
+  isNegotiable: z.boolean().optional().default(false),
   zone: z.string().min(2, 'La zona es requerida').max(100),
   address: z.string().optional(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
   type: z.preprocess((val) => {
     if (typeof val === 'string') {
       const s = val.trim().toLowerCase();
@@ -31,7 +35,41 @@ const propertyInputSchema = z.object({
   bedrooms: z.number().int().nonnegative().optional().default(3),
   bathrooms: z.number().int().nonnegative().optional().default(2),
   areaSqm: z.number().positive().optional().default(120),
+  landAreaSqm: z.number().optional().nullable(),
+  parkingSpots: z.number().int().nonnegative().optional().default(0),
+  amenities: z.array(z.string()).optional().default([]),
   status: z.enum(['Activo', 'En Validación Legal', 'Pausado', 'Cerrado']).optional()
+});
+
+// Esquema Zod para Edición (REQ-13) - Todos los campos editables opcionales
+const propertyUpdateSchema = z.object({
+  title: z.string().min(3, 'El título debe tener al menos 3 caracteres').max(200).optional(),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  isNegotiable: z.boolean().optional(),
+  zone: z.string().min(2, 'La zona es requerida').max(100).optional(),
+  address: z.string().optional(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
+  type: z.preprocess((val) => {
+    if (typeof val === 'string') {
+      const s = val.trim().toLowerCase();
+      if (s === 'anticretico' || s === 'anticrético') return 'Anticrético';
+      if (s === 'venta') return 'Venta';
+      if (s === 'alquiler') return 'Alquiler';
+    }
+    return val;
+  }, z.enum(['Anticrético', 'Venta', 'Alquiler'])).optional(),
+  price: z.string().min(1).optional(),
+  bedrooms: z.number().int().nonnegative().optional(),
+  bathrooms: z.number().int().nonnegative().optional(),
+  areaSqm: z.number().positive().optional(),
+  landAreaSqm: z.number().optional().nullable(),
+  parkingSpots: z.number().int().nonnegative().optional(),
+  amenities: z.array(z.string()).optional(),
+  status: z.enum(['Activo', 'En Validación Legal', 'Pausado', 'Cerrado']).optional(),
+  image: z.string().optional().or(z.literal('')),
+  gallery: z.array(z.string()).optional(),
 });
 
 // Helper de mapeo desde Supabase a formato unificado
@@ -73,9 +111,18 @@ function mapDbProperty(dbProp: any) {
     assignedAdvisor: 'Lic. Carlos Vega',
     image,
     gallery,
+    category: dbProp.category || 'Departamento',
+    isNegotiable: dbProp.is_negotiable ?? false,
+    latitude: dbProp.latitude !== null && dbProp.latitude !== undefined ? Number(dbProp.latitude) : null,
+    longitude: dbProp.longitude !== null && dbProp.longitude !== undefined ? Number(dbProp.longitude) : null,
     habitaciones: dbProp.bedrooms !== null && dbProp.bedrooms !== undefined ? dbProp.bedrooms : undefined,
     banos: dbProp.bathrooms !== null && dbProp.bathrooms !== undefined ? dbProp.bathrooms : undefined,
     metros: dbProp.area_sqm !== null && dbProp.area_sqm !== undefined ? Number(dbProp.area_sqm) : undefined,
+    landAreaSqm: dbProp.land_area_sqm !== null && dbProp.land_area_sqm !== undefined ? Number(dbProp.land_area_sqm) : undefined,
+    parkingSpots: dbProp.parking_spots ?? 0,
+    estacionamientos: dbProp.parking_spots ?? 0,
+    amenities: Array.isArray(dbProp.amenities) ? dbProp.amenities : [],
+    amenidades: Array.isArray(dbProp.amenities) ? dbProp.amenities : [],
     href: `/propiedad/${code}`,
     datePublished: dbProp.created_at ? 'Publicado recientemente' : 'Publicado hace 4 días',
     authorEmail: dbProp.profiles?.email || 'vendedor@inmovax.com',
@@ -281,7 +328,14 @@ propertiesRouter.post('/', async (c) => {
         folio_real: folioRealToInsert,
         bedrooms: validated.bedrooms,
         bathrooms: validated.bathrooms,
-        area_sqm: validated.areaSqm
+        area_sqm: validated.areaSqm,
+        category: validated.category,
+        is_negotiable: validated.isNegotiable,
+        latitude: validated.latitude ?? null,
+        longitude: validated.longitude ?? null,
+        land_area_sqm: validated.landAreaSqm ?? null,
+        parking_spots: validated.parkingSpots,
+        amenities: validated.amenities
       })
       .select()
       .single();
@@ -377,6 +431,110 @@ propertiesRouter.patch('/:id/toggle-pause', async (c) => {
     message: `Inmueble cambiado a estado: ${nextStatusText}`,
     status: nextStatusText
   });
+});
+
+// 4.5 PATCH /api/properties/:id: REQ-13 - Editar información de un inmueble publicado
+propertiesRouter.patch('/:id', async (c) => {
+  const idOrCode = c.req.param('id');
+  const prop = await findPropertySafely(idOrCode);
+
+  if (!prop) {
+    return c.json({ success: false, error: 'Inmueble no encontrado' }, 404);
+  }
+
+  try {
+    const body = await c.req.json();
+    const validated = propertyUpdateSchema.parse(body);
+
+    const updatePayload: Record<string, any> = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (validated.title !== undefined) updatePayload.title = validated.title;
+    if (validated.description !== undefined) updatePayload.description = validated.description;
+    if (validated.category !== undefined) updatePayload.category = validated.category;
+    if (validated.isNegotiable !== undefined) updatePayload.is_negotiable = validated.isNegotiable;
+    if (validated.zone !== undefined) updatePayload.zone = validated.zone;
+    if (validated.address !== undefined) updatePayload.address = validated.address;
+    if (validated.latitude !== undefined) updatePayload.latitude = validated.latitude;
+    if (validated.longitude !== undefined) updatePayload.longitude = validated.longitude;
+    if (validated.bedrooms !== undefined) updatePayload.bedrooms = validated.bedrooms;
+    if (validated.bathrooms !== undefined) updatePayload.bathrooms = validated.bathrooms;
+    if (validated.areaSqm !== undefined) updatePayload.area_sqm = validated.areaSqm;
+    if (validated.landAreaSqm !== undefined) updatePayload.land_area_sqm = validated.landAreaSqm;
+    if (validated.parkingSpots !== undefined) updatePayload.parking_spots = validated.parkingSpots;
+    if (validated.amenities !== undefined) updatePayload.amenities = validated.amenities;
+
+    if (validated.type !== undefined) {
+      updatePayload.type_id = validated.type === 'Anticrético' ? 1 : validated.type === 'Venta' ? 2 : 3;
+    }
+
+    if (validated.price !== undefined) {
+      const cleanNumber = validated.price.replace(/[^0-9]/g, '');
+      const numericPrice = parseFloat(cleanNumber);
+      if (!isNaN(numericPrice) && numericPrice > 0) {
+        updatePayload.price_amount = numericPrice;
+        updatePayload.currency = validated.price.includes('Bs') ? 'BOB' : 'USD';
+      }
+    }
+
+    if (validated.status !== undefined) {
+      const statusMap: Record<string, number> = {
+        'Activo': 1,
+        'En Validación Legal': 2,
+        'Pausado': 3,
+        'Cerrado': 4
+      };
+      updatePayload.status_id = statusMap[validated.status] || 1;
+    }
+
+    const { error: updateErr } = await supabase
+      .from('properties')
+      .update(updatePayload)
+      .eq('id', prop.id);
+
+    if (updateErr) {
+      return c.json({ success: false, error: updateErr.message }, 500);
+    }
+
+    // Actualizar galería de imágenes si fue enviada
+    if (validated.gallery && validated.gallery.length > 0) {
+      await supabase.from('property_images').delete().eq('property_id', prop.id);
+      const newImages = validated.gallery.map((url, idx) => ({
+        property_id: prop.id,
+        image_url: url,
+        is_cover: idx === 0,
+        display_order: idx
+      }));
+      await supabase.from('property_images').insert(newImages);
+    } else if (validated.image && validated.image.trim() !== '') {
+      await supabase.from('property_images').delete().eq('property_id', prop.id);
+      await supabase.from('property_images').insert([{
+        property_id: prop.id,
+        image_url: validated.image,
+        is_cover: true,
+        display_order: 0
+      }]);
+    }
+
+    // Obtener propiedad actualizada completa desde Supabase
+    const { data: updatedData } = await supabase
+      .from('properties')
+      .select('*, property_images(image_url), profiles!properties_user_id_fkey(email, full_name)')
+      .eq('id', prop.id)
+      .single();
+
+    return c.json({
+      success: true,
+      message: 'Inmueble actualizado exitosamente en Supabase PostgreSQL',
+      property: updatedData ? mapDbProperty(updatedData) : null
+    });
+  } catch (err: any) {
+    if (err instanceof z.ZodError) {
+      return c.json({ success: false, error: 'Validación fallida', details: err.errors }, 400);
+    }
+    return c.json({ success: false, error: err.message || 'Error al actualizar inmueble' }, 500);
+  }
 });
 
 // 5. DELETE /api/properties/:id: Eliminar publicación

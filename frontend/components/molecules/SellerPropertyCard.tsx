@@ -7,6 +7,7 @@ export interface SellerProperty {
   id: string;
   title: string;
   zone: string;
+  address?: string;
   type: 'Anticrético' | 'Venta' | 'Alquiler';
   price: string;
   views: number;
@@ -15,8 +16,24 @@ export interface SellerProperty {
   folioReal: string;
   assignedAdvisor: string;
   image: string;
+  gallery?: string[];
   datePublished: string;
   authorEmail?: string;
+  authorName?: string;
+  category?: string;
+  isNegotiable?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
+  habitaciones?: number;
+  banos?: number;
+  metros?: number;
+  landAreaSqm?: number | null;
+  estacionamientos?: number;
+  parkingSpots?: number;
+  amenidades?: string[];
+  amenities?: string[];
+  description?: string;
+  href?: string;
 }
 
 interface SellerPropertyCardProps {

@@ -18,12 +18,28 @@ export async function fetchSellerProperties(email: string): Promise<SellerProper
   if (!email) return [];
   try {
     const res = await fetch(`${API_BASE}/properties/seller/${encodeURIComponent(email)}`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) return [];
     const data = await res.json();
     return data.properties || [];
-  } catch (error) {
-    console.error('Error fetching seller properties from backend:', error);
+  } catch {
     return [];
+  }
+}
+
+/**
+ * REQ-13: Actualizar información de un inmueble publicado directamente en Supabase PostgreSQL
+ */
+export async function updateSellerProperty(id: string, payload: Record<string, any>): Promise<{ success: boolean; property?: any; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/properties/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    return { success: res.ok && data.success, property: data.property, error: data.error };
+  } catch (error: any) {
+    return { success: false, error: error?.message || 'Error al conectar con backend' };
   }
 }
 
@@ -33,11 +49,10 @@ export async function fetchSellerProperties(email: string): Promise<SellerProper
 export async function fetchSellerOffers(): Promise<SellerOffer[]> {
   try {
     const res = await fetch(`${API_BASE}/offers`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) return [];
     const data = await res.json();
     return data.offers || [];
-  } catch (error) {
-    console.error('Error fetching offers from backend:', error);
+  } catch {
     return [];
   }
 }
@@ -95,11 +110,10 @@ export async function counterSellerOffer(id: string, counterAmount: string): Pro
 export async function fetchSellerAppointments(): Promise<SellerAppointment[]> {
   try {
     const res = await fetch(`${API_BASE}/appointments`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) return [];
     const data = await res.json();
     return data.appointments || [];
-  } catch (error) {
-    console.error('Error fetching appointments from backend:', error);
+  } catch {
     return [];
   }
 }
@@ -124,11 +138,10 @@ export async function createSellerAppointment(payload: {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) return null;
     const data = await res.json();
     return data.appointment || null;
-  } catch (error) {
-    console.error('Error creating appointment:', error);
+  } catch {
     return null;
   }
 }
@@ -139,11 +152,10 @@ export async function createSellerAppointment(payload: {
 export async function fetchSellerNotifications(): Promise<SellerNotificationItem[]> {
   try {
     const res = await fetch(`${API_BASE}/notifications`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) return [];
     const data = await res.json();
     return data.notifications || [];
-  } catch (error) {
-    console.error('Error fetching notifications from backend:', error);
+  } catch {
     return [];
   }
 }

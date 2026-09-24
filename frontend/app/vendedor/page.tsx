@@ -173,14 +173,14 @@ export default function SellerPortalPage() {
     }
   };
 
-  const handleUpdateProperty = (updated: SellerProperty) => {
-    updateManagedProperty({
+  const handleUpdateProperty = async (updated: SellerProperty) => {
+    await updateManagedProperty({
       ...updated,
       authorEmail: currentEmail,
       authorName: currentName
     });
     setProperties(getPropertiesByAuthor(currentEmail));
-    showToast(`Inmueble "${updated.title}" actualizado correctamente.`);
+    showToast(`Inmueble "${updated.title}" guardado en Supabase PostgreSQL.`);
   };
 
   // Manejo de Ofertas con persistencia real en Supabase
