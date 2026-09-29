@@ -16,6 +16,7 @@ import {
   FavoriteItem,
   HistoryItem
 } from '@/lib/frontendStore';
+import { addFavoriteApi, removeFavoriteApi } from '@/lib/favoritesApi';
 
 export interface PropertyCardProps {
   id?: string;
@@ -111,9 +112,19 @@ export const PropertyCard = ({
       };
       const cleaned = favorites.filter((item) => !matchesProperty(item));
       writeStoredList(FAVORITES_KEY, [...cleaned, newFav]);
+
+      // REQ-31: Guardar en Supabase PostgreSQL
+      if (session.email) {
+        addFavoriteApi(session.email, resolvedId || titulo);
+      }
     } else {
       const cleaned = favorites.filter((item) => !matchesProperty(item));
       writeStoredList(FAVORITES_KEY, cleaned);
+
+      // REQ-33: Eliminar de Supabase PostgreSQL
+      if (session.email) {
+        removeFavoriteApi(session.email, resolvedId || titulo);
+      }
     }
 
     onFavoriteToggle?.();

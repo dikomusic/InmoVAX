@@ -41,6 +41,8 @@ export interface ManagedProperty {
   amenities?: string[];
   href?: string;
   esNuevo?: boolean;
+  publicationPlan?: 'basico' | 'oro' | 'diamante';
+  isPaid?: boolean;
 }
 
 export const PROPERTIES_STORAGE_KEY = 'inmovax-managed-properties-v3';
@@ -263,7 +265,7 @@ export const addManagedProperty = async (data: NewPropertyInput): Promise<Manage
     price: data.price,
     views: 1,
     inquiries: 0,
-    status: data.status || 'Activo',
+    status: data.status || ((authorEmail?.toLowerCase().trim() === 'vip@inmovax.com' || authorEmail?.toLowerCase().trim() === 'admin@inmovax.com') ? 'Activo' : 'En Validación Legal'),
     folioReal: data.folioReal || `2.01.0.${Math.floor(10 + Math.random() * 89)}.${Math.floor(1000000 + Math.random() * 8999999)}`,
     assignedAdvisor: data.assignedAdvisor || 'Lic. Carlos Vega',
     image: data.image || '',

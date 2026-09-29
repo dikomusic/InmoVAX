@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { LegalDocItem, LegalProperty } from '../molecules/LegalDocItem';
 import { Modal } from '../atoms/Modal';
 
+import { ShieldCheck, Scale, CheckCircle2 } from 'lucide-react';
+
 interface AdminLegalSectionProps {
   legalItems: LegalProperty[];
   onApprove: (id: string) => void;
@@ -23,7 +25,7 @@ export const AdminLegalSection = ({
       <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-900 text-xs font-black uppercase tracking-wider mb-2">
-            <span>🛡️</span> Departamento Legal Notarial • InmoVax Legal
+            <ShieldCheck className="w-4 h-4 text-amber-800" /> Departamento Legal Notarial • InmoVax Legal
           </div>
           <h3 className="text-xl sm:text-2xl font-black text-amber-950">
             Auditoría de Folios Reales y Gravámenes
@@ -53,7 +55,9 @@ export const AdminLegalSection = ({
         </div>
       ) : (
         <div className="bg-white text-center py-20 rounded-3xl border border-gray-100 shadow-sm text-content-muted">
-          <span className="text-5xl block mb-3">⚖️</span>
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-3 text-amber-700">
+            <Scale className="w-8 h-8" />
+          </div>
           <h4 className="font-extrabold text-surface-dark text-lg">Todos los Folios Reales están auditados</h4>
           <p className="text-xs text-content-muted mt-1 max-w-md mx-auto font-medium">
             No existen anticréticos pendientes de validación documental. Todas las publicaciones vigentes cuentan con respaldo jurídico.

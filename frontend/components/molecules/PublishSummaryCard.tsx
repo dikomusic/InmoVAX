@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, MapPin, Scale } from 'lucide-react';
 
 export interface PropertyFormData {
   operacion: string;
@@ -84,8 +84,9 @@ export const PublishSummaryCard = ({
         <p className="font-bold text-white text-sm">{data.zona || 'Zona seleccionada en mapa'}</p>
         {data.calle && <p className="text-gray-300 text-xs">{data.calle}</p>}
         {data.coordenadas && (
-          <p className="text-[10px] text-emerald-400 font-mono">
-            📍 Coordenadas fijadas: {data.coordenadas.lat.toFixed(4)}, {data.coordenadas.lng.toFixed(4)}
+          <p className="text-[10px] text-emerald-400 font-mono flex items-center gap-1.5 mt-1">
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
+            <span>Coordenadas fijadas: {data.coordenadas.lat.toFixed(4)}, {data.coordenadas.lng.toFixed(4)}</span>
           </p>
         )}
       </div>
@@ -112,8 +113,8 @@ export const PublishSummaryCard = ({
           <span className="text-gray-400 text-[10px] uppercase font-bold block">Amenidades Incluidas</span>
           <div className="flex flex-wrap gap-1.5">
             {data.amenidades.map((am) => (
-              <span key={am} className="text-[11px] bg-white/10 text-gray-200 px-2 py-0.5 rounded-md">
-                ✓ {am}
+              <span key={am} className="text-[11px] bg-white/10 text-gray-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                <Check className="w-2.5 h-2.5 text-emerald-400" /> {am}
               </span>
             ))}
           </div>
@@ -128,9 +129,8 @@ export const PublishSummaryCard = ({
             {data.tieneFolio ? 'Cuenta con Folio Real Matriculado' : 'Documentación en trámite'}
           </span>
         </div>
-        <span className="text-lg">⚖️</span>
+        <Scale className="w-5 h-5 text-amber-300 shrink-0" />
       </div>
-
     </div>
   );
 };

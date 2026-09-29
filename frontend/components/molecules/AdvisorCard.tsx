@@ -1,4 +1,5 @@
 import React from 'react';
+import { Star, Edit3 } from 'lucide-react';
 
 export interface Advisor {
   id: string;
@@ -37,8 +38,9 @@ export const AdvisorCard = ({
       <h4 className="font-extrabold text-base text-surface-dark">{advisor.name}</h4>
       <p className="text-xs text-primary font-bold mt-0.5">{advisor.zone}</p>
       
-      <div className="flex items-center gap-1 my-3 bg-amber-50 px-3 py-1 rounded-full text-amber-800 text-xs font-black">
-        <span>⭐</span> {advisor.rating.toFixed(1)} / 5.0 (Excelente)
+      <div className="flex items-center gap-1.5 my-3 bg-amber-50 px-3 py-1 rounded-full text-amber-800 text-xs font-black">
+        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+        <span>{advisor.rating.toFixed(1)} / 5.0 (Excelente)</span>
       </div>
 
       <div className="w-full border-t border-gray-100 pt-4 mt-2 grid grid-cols-2 gap-2 text-left text-xs text-gray-600">
@@ -67,7 +69,7 @@ export const AdvisorCard = ({
             className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl transition-colors cursor-pointer"
             title="Editar Asesor"
           >
-            ✏️
+            <Edit3 className="w-4 h-4" />
           </button>
         )}
       </div>

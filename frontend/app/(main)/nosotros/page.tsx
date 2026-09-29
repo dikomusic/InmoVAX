@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/atoms/Button';
 import Link from 'next/link';
+import { Scale, Rocket, Handshake } from 'lucide-react';
 
 export default function NosotrosPage() {
   return (
@@ -25,20 +26,26 @@ export default function NosotrosPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          <div className="bg-surface-white p-8 rounded-2xl shadow-lg border border-gray-100 text-center">
-            <span className="text-4xl block mb-4">⚖️</span>
+          <div className="bg-surface-white p-8 rounded-2xl shadow-lg border border-gray-100 text-center flex flex-col items-center">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <Scale className="w-7 h-7" />
+            </div>
             <h3 className="text-xl font-extrabold text-content-main mb-2">Respaldo Legal</h3>
             <p className="text-content-muted text-sm font-medium">Verificamos Folios Reales, gravámenes e impuestos antes de publicar cualquier inmueble.</p>
           </div>
           
-          <div className="bg-surface-white p-8 rounded-2xl shadow-lg border border-gray-100 text-center">
-            <span className="text-4xl block mb-4">🚀</span>
+          <div className="bg-surface-white p-8 rounded-2xl shadow-lg border border-gray-100 text-center flex flex-col items-center">
+            <div className="w-14 h-14 rounded-2xl bg-accent/20 text-content-main flex items-center justify-center mb-4">
+              <Rocket className="w-7 h-7 text-primary" />
+            </div>
             <h3 className="text-xl font-extrabold text-content-main mb-2">Tecnología 3D</h3>
             <p className="text-content-muted text-sm font-medium">Filtramos clientes curiosos mediante recorridos virtuales para que las visitas presenciales sean efectivas.</p>
           </div>
           
-          <div className="bg-surface-white p-8 rounded-2xl shadow-lg border border-gray-100 text-center">
-            <span className="text-4xl block mb-4">🤝</span>
+          <div className="bg-surface-white p-8 rounded-2xl shadow-lg border border-gray-100 text-center flex flex-col items-center">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+              <Handshake className="w-7 h-7" />
+            </div>
             <h3 className="text-xl font-extrabold text-content-main mb-2">Asesoría Integral</h3>
             <p className="text-content-muted text-sm font-medium">Te acompañamos desde la primera visita hasta la firma en notaría de tu contrato.</p>
           </div>

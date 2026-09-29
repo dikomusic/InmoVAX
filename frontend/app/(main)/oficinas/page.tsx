@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/atoms/Button';
+import { MapPin, Clock, Phone } from 'lucide-react';
 
 export default function OficinasPage() {
   const sucursales = [
@@ -41,14 +42,17 @@ export default function OficinasPage() {
             <div className="w-full md:w-3/5 p-8 flex flex-col justify-center">
               <h2 className="text-2xl font-extrabold text-content-main mb-4">{oficina.nombre}</h2>
               <div className="space-y-3 mb-6">
-                <p className="flex items-center gap-3 text-content-muted font-medium">
-                  <span className="text-xl">📍</span> {oficina.direccion}
+                <p className="flex items-center gap-3 text-content-muted font-medium text-sm">
+                  <span className="p-2 rounded-lg bg-primary/10 text-primary shrink-0"><MapPin className="w-4 h-4" /></span>
+                  <span>{oficina.direccion}</span>
                 </p>
-                <p className="flex items-center gap-3 text-content-muted font-medium">
-                  <span className="text-xl">🕒</span> {oficina.horario}
+                <p className="flex items-center gap-3 text-content-muted font-medium text-sm">
+                  <span className="p-2 rounded-lg bg-primary/10 text-primary shrink-0"><Clock className="w-4 h-4" /></span>
+                  <span>{oficina.horario}</span>
                 </p>
-                <p className="flex items-center gap-3 text-content-muted font-medium">
-                  <span className="text-xl">📞</span> {oficina.telefono}
+                <p className="flex items-center gap-3 text-content-muted font-medium text-sm">
+                  <span className="p-2 rounded-lg bg-primary/10 text-primary shrink-0"><Phone className="w-4 h-4" /></span>
+                  <span>{oficina.telefono}</span>
                 </p>
               </div>
               <Button variant="outline" className="w-fit">Ver en Google Maps</Button>

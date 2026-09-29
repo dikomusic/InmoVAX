@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { CheckCircle2 } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { BrandLogo } from '../atoms/BrandLogo';
@@ -48,8 +49,9 @@ export const Footer = () => {
             Déjanos tu correo y un agente se contactará contigo hoy mismo.
           </p>
           {subscribed ? (
-            <div className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 p-4 rounded-xl text-sm font-semibold animate-in fade-in">
-              ✓ ¡Mensaje recibido! Un asesor de InmoVAX te contactará hoy mismo.
+            <div className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 p-4 rounded-xl text-sm font-semibold flex items-center gap-2.5 animate-in fade-in">
+              <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+              <span>¡Mensaje recibido! Un asesor de InmoVAX te contactará hoy mismo.</span>
             </div>
           ) : (
             <form onSubmit={handleSubscribe} className="flex flex-col gap-3">

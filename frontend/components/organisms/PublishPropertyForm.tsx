@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ImagePlus, UploadCloud, X } from 'lucide-react';
+import { ImagePlus, UploadCloud, X, Star, Trash2, CheckCircle2, AlertCircle, ShieldCheck, Lock } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
@@ -62,6 +62,8 @@ export const PublishPropertyForm = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Estado Google
   const [googleError, setGoogleError] = useState<string | null>(null);
@@ -129,9 +131,10 @@ export const PublishPropertyForm = ({
     const cleanName = authName.trim() || cleanEmail.split('@')[0];
 
     if (!cleanEmail || !cleanEmail.includes('@')) {
-      alert('Por favor ingresa un correo electrónico válido para vincular tu inmueble.');
+      setAuthError('Por favor ingresa un correo electrónico válido para vincular tu inmueble.');
       return;
     }
+    setAuthError(null);
 
     setIsLoading(true);
 
@@ -168,8 +171,8 @@ export const PublishPropertyForm = ({
   if (isCompleted) {
     return (
       <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100 max-w-3xl mx-auto text-center space-y-6 animate-in zoom-in-95 duration-200">
-        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto shadow-inner">
-          ✓
+        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+          <CheckCircle2 className="w-12 h-12 stroke-[2.5]" />
         </div>
         <div>
           <span className="text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
@@ -225,7 +228,9 @@ export const PublishPropertyForm = ({
         {/* ENCABEZADO DE REQUISITO */}
         <div className="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 sm:p-5 mb-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🔒</span>
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
             <div>
               <h4 className="font-extrabold text-sm text-surface-dark">Paso Final de Seguridad: Asigna tu Inmueble</h4>
               <p className="text-xs text-content-muted">Tus datos están guardados intactos. Inicia sesión o regístrate para publicarlo en tu cuenta.</p>
@@ -283,8 +288,16 @@ export const PublishPropertyForm = ({
             </button>
 
             {googleError && (
-              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-bold animate-in fade-in">
-                ⚠️ {googleError}
+              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                <span>{googleError}</span>
+              </div>
+            )}
+
+            {authError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                <span>{authError}</span>
               </div>
             )}
 
@@ -622,32 +635,75 @@ export const PublishPropertyForm = ({
               
               {formData.galeria.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
-                  {formData.galeria.map((url, idx) => (
-                    <div key={idx} className="relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 h-32 group shadow-sm">
-                      <img
-                        src={url}
-                        alt={`Vista previa ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newGaleria = formData.galeria.filter((_, i) => i !== idx);
-                            setFormData({ 
-                              ...formData, 
-                              galeria: newGaleria, 
-                              fotosCount: newGaleria.length,
-                              imagenUrl: newGaleria[0] || ''
-                            });
-                          }}
-                          className="bg-red-600 text-white p-2 rounded-xl hover:bg-red-700 transition-colors shadow-lg"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                  {formData.galeria.map((url, idx) => {
+                    const isCover = formData.imagenUrl === url || (!formData.imagenUrl && idx === 0);
+                    return (
+                      <div
+                        key={idx}
+                        className={`relative rounded-2xl overflow-hidden border-2 bg-gray-50 h-36 group shadow-sm transition-all ${
+                          isCover ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'
+                        }`}
+                      >
+                        <img
+                          src={url}
+                          alt={`Vista previa ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+
+                        {/* Badge de Portada */}
+                        {isCover && (
+                          <span className="absolute top-2 left-2 z-10 bg-primary text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md shadow-md flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-white" /> Portada
+                          </span>
+                        )}
+
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-between p-2">
+                          <div className="w-full flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newGaleria = formData.galeria.filter((_, i) => i !== idx);
+                                const newCover = isCover ? (newGaleria[0] || '') : formData.imagenUrl;
+                                setFormData({ 
+                                  ...formData, 
+                                  galeria: newGaleria, 
+                                  fotosCount: newGaleria.length,
+                                  imagenUrl: newCover
+                                });
+                              }}
+                              aria-label="Eliminar imagen"
+                              className="bg-red-600/90 text-white p-1.5 rounded-lg hover:bg-red-700 transition-colors shadow-lg cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          {!isCover && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  imagenUrl: url
+                                });
+                              }}
+                              className="w-full bg-white/95 hover:bg-white text-surface-dark font-extrabold text-[11px] py-1.5 px-2 rounded-lg shadow flex items-center justify-center gap-1 transition-transform active:scale-95 cursor-pointer"
+                            >
+                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                              <span>Fijar como Portada</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                </div>
+              )}
+
+              {uploadError && (
+                <div className="p-3 mb-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{uploadError}</span>
                 </div>
               )}
 
@@ -659,7 +715,7 @@ export const PublishPropertyForm = ({
                   Cargar fotografías desde tu dispositivo
                 </p>
                 <p className="text-xs text-content-muted mb-4 max-w-sm mx-auto">
-                  Formatos JPG o PNG. Selecciona uno o varios archivos a la vez.
+                  Formatos JPG o PNG. Selecciona uno o varios archivos a la vez. Puedes marcar cuál será la foto de portada.
                 </p>
                 
                 <label className="inline-flex items-center gap-2 cursor-pointer bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-sm">
@@ -673,11 +729,13 @@ export const PublishPropertyForm = ({
                     onChange={async (e) => {
                       const files = Array.from(e.target.files || []);
                       if (files.length > 0) {
+                        setUploadError(null);
                         const tempUrls = files.map(f => URL.createObjectURL(f));
                         setFormData(prev => ({ 
                           ...prev, 
                           galeria: [...prev.galeria, ...tempUrls],
-                          fotosCount: prev.galeria.length + files.length
+                          fotosCount: prev.galeria.length + files.length,
+                          imagenUrl: prev.imagenUrl || tempUrls[0] || ''
                         }));
                         
                         setIsUploadingImage(true);
@@ -703,13 +761,13 @@ export const PublishPropertyForm = ({
                             return {
                               ...prev,
                               galeria: newGaleria,
-                              imagenUrl: newGaleria[0] || '',
+                              imagenUrl: prev.imagenUrl && !prev.imagenUrl.startsWith('blob:') ? prev.imagenUrl : (newGaleria[0] || ''),
                               fotosCount: newGaleria.length
                             };
                           });
                         } catch (error) {
                           console.error('Error uploading images:', error);
-                          alert('Hubo un error de conexión al subir las imágenes.');
+                          setUploadError('Hubo un error de conexión al subir las imágenes. Intenta nuevamente.');
                           // Remueve las blobs que fallaron
                           setFormData(prev => {
                             const newGaleria = prev.galeria.filter(url => !url.startsWith('blob:'));

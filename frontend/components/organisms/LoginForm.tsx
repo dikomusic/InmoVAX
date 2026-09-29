@@ -5,8 +5,11 @@ import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Input2FA } from '../molecules/Input2FA';
 import { FormField } from '../molecules/FormField';
-import { User, Home, Shield } from 'lucide-react';
+import { User, Home, Shield, CheckCircle2, Search, Building2, AlertCircle } from 'lucide-react';
+import { ForgotPasswordModal } from '../molecules/ForgotPasswordModal';
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
+import { registerUser, loginUser } from '@/lib/authApi';
+import { saveStoredSession, FrontendSession } from '@/lib/frontendStore';
 
 export const LoginForm = () => {
   const router = useRouter();
@@ -14,15 +17,20 @@ export const LoginForm = () => {
   const [paso, setPaso] = useState<1 | 2>(1);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [verifiedSession, setVerifiedSession] = useState<FrontendSession | null>(null);
   
-  // Campos de Registro
+  // Campos de Registro (REQ-01 & REQ-06)
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [regRole, setRegRole] = useState<'comprador' | 'vendedor'>('comprador');
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
   // Flujo Google
@@ -44,57 +52,112 @@ export const LoginForm = () => {
     }
   }, []);
 
-  const manejarLogin = (e: React.FormEvent) => {
+  const manejarLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     const cleanEmail = email.trim().toLowerCase();
 
-    if (cleanEmail === 'admin@inmovax.com') {
-      if (password !== 'AdminInmoVAX#2026') {
-        setError('Contraseña de administrador incorrecta. Verifique sus credenciales.');
-        return;
-      }
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setError('Por favor ingresa un correo electrónico válido.');
+      return;
+    }
+
+    if (!password) {
+      setError('Por favor ingresa tu contraseña.');
+      return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      const result = await loginUser({
+        email: cleanEmail,
+        password: password
+      });
+
+      if (!result.success || !result.session) {
+        setError(result.error || 'Credenciales incorrectas: correo o contraseña inválidos.');
+        setIsLoading(false);
+        return;
+      }
+
+      setVerifiedSession({
+        name: result.session.name,
+        email: result.session.email,
+        hasPublishedProperties: result.session.hasPublishedProperties,
+        role: result.session.role,
+        phone: result.session.phone || undefined
+      });
+
       setIsLoading(false);
       setPaso(2);
-    }, 400);
+    } catch (err: any) {
+      setError(err?.message || 'Error al conectar con el servidor.');
+      setIsLoading(false);
+    }
   };
 
   const manejarRegistro = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
-    const cleanEmail = regEmail.trim().toLowerCase();
-    const cleanName = regName.trim() || 'Usuario InmoVAX';
+    setSuccessMsg(null);
 
-    try {
-      await fetch('http://127.0.0.1:4000/api/properties/register-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: cleanEmail,
-          full_name: cleanName,
-          phone: regPhone,
-          role_id: 2
-        })
-      });
-    } catch {
-      // Sigue adelante
+    const cleanName = regName.trim();
+    const cleanEmail = regEmail.trim().toLowerCase();
+
+    if (cleanName.length < 2) {
+      setError('Por favor ingresa tu nombre completo.');
+      return;
     }
 
-    setTimeout(() => {
-      setIsLoading(false);
-      window.localStorage.setItem('inmovax-session', JSON.stringify({
+    if (regPassword.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (regPassword !== regConfirmPassword) {
+      setError('Las contraseñas no coinciden. Por favor verifícalas.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await registerUser({
+        full_name: cleanName,
+        email: cleanEmail,
+        password: regPassword,
+        phone: regPhone.trim() || undefined,
+        role: regRole
+      });
+
+      if (!result.success) {
+        setError(result.error || 'No se pudo completar el registro.');
+        setIsLoading(false);
+        return;
+      }
+
+      setSuccessMsg('¡Cuenta creada exitosamente en InmoVAX! Iniciando sesión...');
+
+      saveStoredSession({
         name: cleanName,
         email: cleanEmail,
-        hasPublishedProperties: false,
-        role: 'comprador'
-      }));
-      router.push('/');
-    }, 400);
+        hasPublishedProperties: regRole === 'vendedor',
+        role: regRole
+      });
+
+      setTimeout(() => {
+        setIsLoading(false);
+        if (regRole === 'vendedor') {
+          router.push('/vendedor');
+        } else {
+          router.push(redirectUrl || '/');
+        }
+      }, 700);
+    } catch (err: any) {
+      setError(err?.message || 'Error al conectar con el servidor.');
+      setIsLoading(false);
+    }
   };
 
   const manejarGoogleOAuth = async () => {
@@ -133,15 +196,18 @@ export const LoginForm = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      const cleanEmail = email.trim().toLowerCase();
-      const isAdmin = cleanEmail === 'admin@inmovax.com';
-      window.localStorage.setItem('inmovax-session', JSON.stringify({
-        name: isAdmin ? 'Super Administrador InmoVAX' : (cleanEmail.split('@')[0] || 'Usuario InmoVAX'),
-        email: cleanEmail,
-        hasPublishedProperties: isAdmin,
-        role: isAdmin ? 'admin' : 'comprador'
-      }));
-      router.push(redirectUrl || (isAdmin ? '/admin' : '/'));
+      if (verifiedSession) {
+        saveStoredSession(verifiedSession);
+        if (verifiedSession.role === 'admin') {
+          router.push(redirectUrl || '/admin');
+        } else if (verifiedSession.role === 'vendedor' || verifiedSession.hasPublishedProperties) {
+          router.push(redirectUrl || '/vendedor');
+        } else {
+          router.push(redirectUrl || '/');
+        }
+      } else {
+        setPaso(1);
+      }
     }, 400);
   };
 
@@ -174,8 +240,9 @@ export const LoginForm = () => {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl animate-in fade-in">
-          ⚠️ {error}
+        <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -235,9 +302,13 @@ export const LoginForm = () => {
                 />
                 
                 <div className="text-right mt-2">
-                  <a href="#" onClick={(e) => { e.preventDefault(); alert("Contacte a soporte de sistemas para restablecer sus credenciales."); }} className="text-xs font-bold text-primary hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotModalOpen(true)}
+                    className="text-xs font-bold text-primary hover:underline cursor-pointer"
+                  >
                     ¿Olvidaste tu contraseña?
-                  </a>
+                  </button>
                 </div>
               </FormField>
 
@@ -254,7 +325,7 @@ export const LoginForm = () => {
             <form onSubmit={manejarVerificacion2FA} className="space-y-2">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center mb-2">
                 <p className="text-xs text-blue-900 font-medium">
-                  🔒 Ingrese el código generado por su aplicación autenticadora o presione verificar.
+                  Ingrese el código generado por su aplicación autenticadora o presione verificar.
                 </p>
               </div>
 
@@ -284,8 +355,58 @@ export const LoginForm = () => {
               Crea tu Cuenta
             </h2>
             <p className="text-content-muted text-sm">
-              Regístrate para guardar favoritos, agendar visitas y contactar propietarios.
+              Regístrate para buscar, guardar favoritos o publicar tus inmuebles con respaldo legal.
             </p>
+          </div>
+
+          {successMsg && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {/* REQ-06: Asignar rol al usuario durante su registro */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-surface-dark">
+              ¿Cómo deseas utilizar InmoVAX?
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setRegRole('comprador')}
+                className={`p-3 rounded-2xl border text-left flex flex-col items-start gap-1 transition-all cursor-pointer ${
+                  regRole === 'comprador'
+                    ? 'bg-blue-50 border-primary text-primary shadow-xs'
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-bold text-xs">
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Busco Inmueble</span>
+                </div>
+                <span className="text-[10px] text-gray-500 font-medium leading-tight">
+                  Alquilar, anticrético o comprar
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRegRole('vendedor')}
+                className={`p-3 rounded-2xl border text-left flex flex-col items-start gap-1 transition-all cursor-pointer ${
+                  regRole === 'vendedor'
+                    ? 'bg-blue-50 border-primary text-primary shadow-xs'
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-bold text-xs">
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Soy Propietario</span>
+                </div>
+                <span className="text-[10px] text-gray-500 font-medium leading-tight">
+                  Publicar y gestionar inmuebles
+                </span>
+              </button>
+            </div>
           </div>
 
           <FormField label="Nombre y Apellidos">
@@ -308,33 +429,56 @@ export const LoginForm = () => {
             />
           </FormField>
 
-          <FormField label="Celular / WhatsApp">
+          <FormField label="Celular / WhatsApp (Opcional)">
             <Input
               type="tel"
               value={regPhone}
               onChange={(e) => setRegPhone(e.target.value)}
               placeholder="+591 70012345"
-              required
             />
           </FormField>
 
-          <FormField label="Contraseña">
-            <Input
-              type="password"
-              value={regPassword}
-              onChange={(e) => setRegPassword(e.target.value)}
-              placeholder="Crea una contraseña segura"
-              required
-            />
-          </FormField>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FormField label="Contraseña">
+              <Input
+                type="password"
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                required
+              />
+            </FormField>
+
+            <FormField label="Confirmar Contraseña">
+              <Input
+                type="password"
+                value={regConfirmPassword}
+                onChange={(e) => setRegConfirmPassword(e.target.value)}
+                placeholder="Repite tu contraseña"
+                required
+              />
+            </FormField>
+          </div>
 
           <div className="pt-2">
             <Button type="submit" variant="accent" fullWidth disabled={isLoading}>
-              {isLoading ? 'Creando cuenta...' : 'Crear Cuenta e Ingresar'}
+              {isLoading ? 'Creando cuenta en InmoVAX...' : `Crear Cuenta como ${regRole === 'vendedor' ? 'Propietario' : 'Comprador'}`}
             </Button>
           </div>
         </form>
       )}
+
+      <ForgotPasswordModal
+        isOpen={isForgotModalOpen}
+        onClose={() => setIsForgotModalOpen(false)}
+        initialEmail={email}
+        onSuccessReset={(resEmail) => {
+          setEmail(resEmail);
+          setIsForgotModalOpen(false);
+          setModo('login');
+          setPaso(1);
+        }}
+      />
     </div>
   );
 };

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { AdvisorCard, Advisor } from '../molecules/AdvisorCard';
 import { Modal } from '../atoms/Modal';
+import { Plus, Calendar } from 'lucide-react';
 
 export interface AppointmentItem {
   id: string;
@@ -103,7 +104,7 @@ export const AdminAdvisorsSection = ({
             onClick={() => setIsAdvisorModalOpen(true)}
             className="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5 active:scale-95"
           >
-            <span>+</span> Registrar Nuevo Asesor
+            <Plus className="w-4 h-4" /> Registrar Nuevo Asesor
           </button>
         </div>
 
@@ -130,7 +131,7 @@ export const AdminAdvisorsSection = ({
             onClick={() => setIsAppointmentModalOpen(true)}
             className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-primary text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
           >
-            <span>📅</span> Agendar Nueva Visita
+            <Calendar className="w-4 h-4" /> Agendar Nueva Visita
           </button>
         </div>
 
@@ -197,7 +198,7 @@ export const AdminAdvisorsSection = ({
         isOpen={!!selectedAdvisor}
         onClose={() => setSelectedAdvisor(null)}
         title={`Agenda de Citas: ${selectedAdvisor?.name}`}
-        subtitle={`Zona: ${selectedAdvisor?.zone} • Calificación: ${selectedAdvisor?.rating} ⭐`}
+        subtitle={`Zona: ${selectedAdvisor?.zone} • Calificación: ${selectedAdvisor?.rating} / 5`}
       >
         {selectedAdvisor && (
           <div className="space-y-4">

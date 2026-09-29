@@ -557,3 +557,37 @@ consultationsRouter.get('/:id', async (c) => {
     return c.json({ success: false, error: err.message }, 500);
   }
 });
+
+// 6. GET /api/consultations: Obtener todas las consultas para el panel de administración
+consultationsRouter.get('/', async (c) => {
+  try {
+    const { data: consRows, error } = await supabase
+      .from('consultations')
+      .select('*')
+      .order('updated_at', { ascending: false });
+
+    if (error || !consRows) {
+      return c.json({ success: true, total: 0, consultations: [] });
+    }
+
+    const dtos = consRows.map((r: any) => ({
+      id: r.id,
+      propertyId: r.property_id,
+      propertyTitle: r.property_title,
+      propertyPrice: r.property_price,
+      sellerEmail: r.seller_email,
+      sellerName: r.seller_name,
+      buyerEmail: r.buyer_email,
+      buyerName: r.buyer_name,
+      buyerPhone: r.buyer_phone,
+      status: r.status,
+      lastMessage: r.last_message,
+      date: formatDate(r.updated_at)
+    }));
+
+    return c.json({ success: true, total: dtos.length, consultations: dtos });
+  } catch (err: any) {
+    return c.json({ success: false, error: err.message, consultations: [] }, 500);
+  }
+});
+

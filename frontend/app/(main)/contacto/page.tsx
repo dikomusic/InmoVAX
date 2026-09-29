@@ -1,4 +1,5 @@
 import React from 'react';
+import { MapPin, Phone } from 'lucide-react';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
 import { Textarea } from '@/components/atoms/Textarea';
@@ -35,11 +36,15 @@ export default function ContactoPage() {
           
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <span className="text-2xl">📍</span>
+              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <MapPin className="w-5 h-5" />
+              </div>
               <p className="font-bold text-content-main">Av. Ballivián, Edificio Torre Sur, Piso 5, Calacoto.</p>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-2xl">📱</span>
+              <div className="w-10 h-10 rounded-xl bg-accent/20 text-content-main flex items-center justify-center shrink-0">
+                <Phone className="w-5 h-5 text-primary" />
+              </div>
               <p className="font-bold text-content-main">+591 700-00000</p>
             </div>
           </div>

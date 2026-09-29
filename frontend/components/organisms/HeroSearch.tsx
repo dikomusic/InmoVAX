@@ -9,7 +9,7 @@ import { Select } from '../atoms/Select';
 import { PriceRangeField } from '../molecules/PriceRangeField';
 import { SearchModeTabs } from '../molecules/SearchModeTabs';
 
-const SEARCH_TABS = ['Quiero Comprar', 'Quiero Alquilar', 'Quiero Anticrético', 'Quiero Vender'];
+const SEARCH_TABS = ['Quiero Alquilar', 'Quiero Anticrético', 'Quiero Vender'];
 
 const CIUDADES_OPTIONS = [
   { value: 'lapaz', label: 'La Paz' },
@@ -95,7 +95,7 @@ export const HeroSearch = () => {
         {/* Buscador Principal Multipantalla */}
         <form
           onSubmit={handleSearch}
-          className="w-full bg-white/95 backdrop-blur-md rounded-2xl md:rounded-full p-2.5 sm:p-3 md:p-2 shadow-2xl border border-white/30 flex flex-col md:flex-row items-stretch md:items-center divide-y divide-gray-100 md:divide-y-0 md:divide-x md:divide-gray-200 transition-all"
+          className="w-full bg-white/95 backdrop-blur-md rounded-2xl md:rounded-full p-2 md:p-1.5 shadow-2xl border border-white/30 flex flex-col md:flex-row items-stretch md:items-center divide-y divide-gray-100 md:divide-y-0 md:divide-x md:divide-gray-200 transition-all"
         >
           {/* Campo 1: Ciudades */}
           <div className="flex-1 w-full px-2 sm:px-3 py-1.5 md:py-2">

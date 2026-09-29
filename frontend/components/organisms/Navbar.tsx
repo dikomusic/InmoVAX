@@ -30,7 +30,8 @@ import {
   FAVORITES_KEY,
   HISTORY_KEY,
   CONSULTATIONS_KEY,
-  saveStoredSession
+  saveStoredSession,
+  syncUserFavoritesFromCloud
 } from '@/lib/frontendStore';
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
 
@@ -60,8 +61,18 @@ export const Navbar = () => {
 
   useEffect(() => {
     syncState();
+    const curSession = readStoredSession();
+    if (curSession?.email) {
+      syncUserFavoritesFromCloud(curSession.email);
+    }
 
-    const handleSessionUpdated = () => syncState();
+    const handleSessionUpdated = () => {
+      syncState();
+      const updatedSess = readStoredSession();
+      if (updatedSess?.email) {
+        syncUserFavoritesFromCloud(updatedSess.email);
+      }
+    };
     const handleListUpdated = () => syncState();
 
     const handleRequireLogin = (e: Event) => {

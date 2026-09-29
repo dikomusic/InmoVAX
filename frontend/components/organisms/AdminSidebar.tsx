@@ -1,17 +1,18 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
-import { BarChart3, Building2, Scale, Users, Briefcase, Settings } from 'lucide-react';
+import { BarChart3, Building2, CreditCard, Users, MessageSquare, Settings, Globe, LogOut, X } from 'lucide-react';
 
-export type AdminTab = 'resumen' | 'propiedades' | 'legal' | 'asesores' | 'transacciones' | 'configuracion';
+export type AdminTab = 'resumen' | 'propiedades' | 'pagos' | 'usuarios' | 'mensajes' | 'configuracion';
 
 interface AdminSidebarProps {
   activeTab: AdminTab;
   onSelectTab: (tab: AdminTab) => void;
   isOpen: boolean;
   onClose: () => void;
-  pendingLegalCount?: number;
+  pendingPaymentsCount?: number;
   propertiesCount?: number;
+  unreadMessagesCount?: number;
 }
 
 export const AdminSidebar = ({
@@ -19,16 +20,29 @@ export const AdminSidebar = ({
   onSelectTab,
   isOpen,
   onClose,
-  pendingLegalCount = 3,
-  propertiesCount = 14
+  pendingPaymentsCount = 0,
+  propertiesCount = 0,
+  unreadMessagesCount = 0
 }: AdminSidebarProps) => {
   const menuItems: { id: AdminTab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string; badgeColor?: string }[] = [
     { id: 'resumen', label: 'Dashboard & Métricas', icon: BarChart3 },
-    { id: 'propiedades', label: 'Gestión de Inmuebles', icon: Building2, badge: String(propertiesCount) },
-    { id: 'legal', label: 'Revisión Legal / Folio Real', icon: Scale, badge: String(pendingLegalCount), badgeColor: 'bg-amber-500' },
-    { id: 'asesores', label: 'Asesores & Citas', icon: Users, badge: '3' },
-    { id: 'transacciones', label: 'Transacciones & Anticréticos', icon: Briefcase },
-    { id: 'configuracion', label: 'Configuración del Portal', icon: Settings },
+    { id: 'propiedades', label: 'Gestión de Inmuebles', icon: Building2, badge: propertiesCount > 0 ? String(propertiesCount) : undefined },
+    { 
+      id: 'pagos', 
+      label: 'Planes y Pagos QR', 
+      icon: CreditCard, 
+      badge: pendingPaymentsCount > 0 ? String(pendingPaymentsCount) : undefined, 
+      badgeColor: 'bg-amber-500' 
+    },
+    { id: 'usuarios', label: 'Directorio de Usuarios', icon: Users },
+    { 
+      id: 'mensajes', 
+      label: 'Mensajes y Consultas', 
+      icon: MessageSquare, 
+      badge: unreadMessagesCount > 0 ? String(unreadMessagesCount) : undefined, 
+      badgeColor: 'bg-blue-500' 
+    },
+    { id: 'configuracion', label: 'Configuración Global', icon: Settings }
   ];
 
   return (
@@ -63,7 +77,7 @@ export const AdminSidebar = ({
               onClick={onClose}
               className="lg:hidden text-gray-400 hover:text-white p-1 cursor-pointer"
             >
-              ✕
+              <X className="h-5 w-5" />
             </button>
           </div>
 
@@ -133,14 +147,16 @@ export const AdminSidebar = ({
             href="/"
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white/10 hover:bg-white/15 text-xs font-bold text-white rounded-xl transition-all border border-white/10"
           >
-            <span>🌐</span> Ver Portal Web
+            <Globe className="h-4 w-4" />
+            <span>Ver Portal Web</span>
           </Link>
 
           <Link
             href="/"
             className="w-full flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 rounded-xl transition-colors"
           >
-            <span>🚪</span> Cerrar Portal
+            <LogOut className="h-4 w-4" />
+            <span>Cerrar Portal</span>
           </Link>
         </div>
       </aside>

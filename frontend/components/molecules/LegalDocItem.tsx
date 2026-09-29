@@ -1,4 +1,5 @@
 import React from 'react';
+import { Scale, Check, CheckCircle2, XCircle } from 'lucide-react';
 
 export interface LegalProperty {
   id: string;
@@ -37,11 +38,17 @@ export const LegalDocItem = ({
         </div>
 
         <div className="flex gap-4 mb-4">
-          <img 
-            src={property.image} 
-            alt={property.title} 
-            className="w-20 h-20 rounded-xl object-cover border border-gray-100 shrink-0" 
-          />
+          {property.image && property.image.trim() !== '' ? (
+            <img 
+              src={property.image} 
+              alt={property.title} 
+              className="w-20 h-20 rounded-xl object-cover border border-gray-100 shrink-0" 
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-2xl shrink-0 text-amber-700">
+              <Scale className="w-8 h-8 text-amber-700" />
+            </div>
+          )}
           <div className="min-w-0">
             <h4 className="font-extrabold text-surface-dark text-sm truncate">{property.title}</h4>
             <p className="text-xs text-content-muted mt-0.5 truncate">{property.zone}</p>
@@ -57,14 +64,14 @@ export const LegalDocItem = ({
           </div>
           <div className="flex items-center justify-between text-xs font-medium text-gray-600">
             <span>Certificado Alodial (DDRR):</span>
-            <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
-              ✓ {property.alodialStatus}
+            <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded text-[11px] inline-flex items-center gap-1">
+              <Check className="w-3 h-3 text-emerald-600" /> {property.alodialStatus}
             </span>
           </div>
           <div className="flex items-center justify-between text-xs font-medium text-gray-600">
             <span>Impuestos Municipales:</span>
-            <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
-              ✓ Gestión {property.taxesYear} Cancelada
+            <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded text-[11px] inline-flex items-center gap-1">
+              <Check className="w-3 h-3 text-emerald-600" /> Gestión {property.taxesYear} Cancelada
             </span>
           </div>
           <div className="flex items-center justify-between text-xs font-medium text-gray-600">
@@ -78,16 +85,18 @@ export const LegalDocItem = ({
         <button
           type="button"
           onClick={() => onApprove(property.id)}
-          className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow cursor-pointer text-center active:scale-95"
+          className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow cursor-pointer text-center active:scale-95 inline-flex items-center justify-center gap-1.5"
         >
-          ✓ Validar y Habilitar
+          <CheckCircle2 className="w-4 h-4" />
+          <span>Validar y Habilitar</span>
         </button>
         <button
           type="button"
           onClick={() => onReject(property.id)}
-          className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs rounded-xl transition-colors cursor-pointer active:scale-95"
+          className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs rounded-xl transition-colors cursor-pointer active:scale-95 inline-flex items-center justify-center gap-1.5"
         >
-          ✕ Observar
+          <XCircle className="w-4 h-4" />
+          <span>Observar</span>
         </button>
       </div>
     </div>

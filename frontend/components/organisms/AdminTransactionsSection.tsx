@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { TransactionRow, Transaction } from '../molecules/TransactionRow';
 import { StatCard } from '../atoms/StatCard';
 import { Modal } from '../atoms/Modal';
+import { Briefcase, TrendingUp, ScrollText, CheckCircle2 } from 'lucide-react';
 
 export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
@@ -77,7 +78,7 @@ export const AdminTransactionsSection = () => {
           title="Capital Total Gestionado"
           value="$us 441,200"
           subtitle="Transacciones activas en Bolivia"
-          icon="💼"
+          icon={<Briefcase className="h-5 w-5" />}
           trend="+22.5% vs mes anterior"
           trendType="positive"
           bgColor="bg-emerald-50 text-emerald-700"
@@ -87,7 +88,7 @@ export const AdminTransactionsSection = () => {
           title="Comisiones Inmobiliarias"
           value="$us 14,400"
           subtitle="3% por corretaje y minutas"
-          icon="📈"
+          icon={<TrendingUp className="h-5 w-5" />}
           trend="Recaudación mensual"
           trendType="neutral"
           bgColor="bg-blue-50 text-primary"
@@ -97,7 +98,7 @@ export const AdminTransactionsSection = () => {
           title="Contratos Notariados"
           value={transactions.length}
           subtitle="100% de operaciones registradas"
-          icon="📜"
+          icon={<ScrollText className="h-5 w-5" />}
           trend="Respaldo Legal Total"
           trendType="positive"
           bgColor="bg-purple-50 text-purple-700"
@@ -187,8 +188,9 @@ export const AdminTransactionsSection = () => {
               </div>
             </div>
 
-            <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 font-medium">
-              ✓ Documentación protocolizada con reconocimiento de firmas y depósito en custodia verificado.
+            <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 font-medium flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Documentación protocolizada con reconocimiento de firmas y depósito en custodia verificado.</span>
             </div>
 
             <div className="flex justify-end pt-4 border-t border-gray-100">

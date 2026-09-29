@@ -29,6 +29,7 @@ interface SellerPropertiesSectionProps {
   onUpdateProperty: (property: SellerProperty) => void | Promise<void>;
   onDeleteProperty?: (id: string) => void;
   onRequestDeleteProperty?: (property: SellerProperty) => void;
+  onOpenPlanModal?: (property: SellerProperty) => void;
 }
 
 const AVAILABLE_AMENITIES = [
@@ -62,7 +63,8 @@ export const SellerPropertiesSection = ({
   onOpenPublishModal,
   onUpdateProperty,
   onDeleteProperty,
-  onRequestDeleteProperty
+  onRequestDeleteProperty,
+  onOpenPlanModal
 }: SellerPropertiesSectionProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('todos');
@@ -236,6 +238,7 @@ export const SellerPropertiesSection = ({
             onViewStats={(property) => setSelectedProperty(property)}
             onDelete={onDeleteProperty}
             onRequestDelete={onRequestDeleteProperty}
+            onOpenPlanModal={onOpenPlanModal}
           />
         ))}
       </div>

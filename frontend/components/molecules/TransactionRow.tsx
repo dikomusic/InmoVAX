@@ -1,4 +1,5 @@
 import React from 'react';
+import { FileText } from 'lucide-react';
 
 export interface Transaction {
   id: string;
@@ -66,9 +67,10 @@ export const TransactionRow = ({
         <button
           type="button"
           onClick={() => onViewContract(transaction)}
-          className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-surface-dark font-bold rounded-lg transition-colors cursor-pointer text-[11px]"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-surface-dark font-bold rounded-lg transition-colors cursor-pointer text-[11px]"
         >
-          📄 Ver Respaldo
+          <FileText className="w-3.5 h-3.5 text-gray-500" />
+          <span>Ver Respaldo</span>
         </button>
       </td>
     </tr>

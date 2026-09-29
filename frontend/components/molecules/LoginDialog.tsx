@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { LogIn, Heart, UserPlus, Phone, Mail, Lock, User } from 'lucide-react';
+import { LogIn, Heart, UserPlus, Phone, Mail, Lock, User, Building2, Search, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Modal } from '../atoms/Modal';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { FormField } from './FormField';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { FrontendSession, saveStoredSession, hasUserPublishedProperties } from '@/lib/frontendStore';
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
+import { registerUser, loginUser } from '@/lib/authApi';
 import { DEMO_USERS } from '@/lib/propertiesStore';
 
 interface LoginDialogProps {
@@ -56,13 +58,16 @@ export const LoginDialog = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Register fields
+  // Register fields (REQ-01 & REQ-06)
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [regRole, setRegRole] = useState<'comprador' | 'vendedor'>('comprador');
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -117,29 +122,41 @@ export const LoginDialog = ({
     }
   };
 
-  const handleLoginSubmit = (event: React.FormEvent) => {
+  const handleLoginSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setAuthError(null);
     const cleanEmail = email.trim().toLowerCase();
 
-    // Verificación de credenciales de Administrador
-    if (cleanEmail === 'admin@inmovax.com') {
-      if (password !== 'AdminInmoVAX#2026') {
-        setAuthError('Contraseña de administrador incorrecta. Ingrese la clave maestra.');
-        return;
-      }
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setAuthError('Por favor ingresa un correo electrónico válido.');
+      return;
+    }
+
+    if (!password) {
+      setAuthError('Por favor ingresa tu contraseña.');
+      return;
     }
 
     setIsLoading(true);
-    window.setTimeout(() => {
-      const userName = cleanEmail ? cleanEmail.split('@')[0] : 'Usuario InmoVAX';
-      const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
-      
-      const session: FrontendSession = {
-        name: cleanEmail === 'admin@inmovax.com' ? 'Super Administrador InmoVAX' : formattedName,
+
+    try {
+      const result = await loginUser({
         email: cleanEmail,
-        hasPublishedProperties: false,
-        role: cleanEmail === 'admin@inmovax.com' ? 'admin' : 'comprador'
+        password: password
+      });
+
+      if (!result.success || !result.session) {
+        setAuthError(result.error || 'Credenciales incorrectas: correo o contraseña inválidos.');
+        setIsLoading(false);
+        return;
+      }
+
+      const session: FrontendSession = {
+        name: result.session.name,
+        email: result.session.email,
+        hasPublishedProperties: result.session.hasPublishedProperties,
+        role: result.session.role,
+        phone: result.session.phone || undefined
       };
 
       if (hasUserPublishedProperties(session)) {
@@ -151,46 +168,63 @@ export const LoginDialog = ({
       setIsLoading(false);
       onLogin(session);
       onClose();
-    }, 350);
+    } catch (err: any) {
+      setAuthError(err?.message || 'Error de conexión con el servidor de autenticación.');
+      setIsLoading(false);
+    }
   };
 
   const handleRegisterSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsLoading(true);
     setAuthError(null);
+
+    if (regPassword !== regConfirmPassword) {
+      setAuthError('Las contraseñas no coinciden. Por favor verifícalas.');
+      return;
+    }
+    if (regPassword.length < 6) {
+      setAuthError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    setIsLoading(true);
     const cleanEmail = regEmail.trim().toLowerCase();
     const cleanName = regName.trim() || 'Usuario InmoVAX';
 
     try {
-      // Registrar usuario nuevo en Supabase PostgreSQL
-      await fetch('http://127.0.0.1:4000/api/properties/register-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: cleanEmail,
-          full_name: cleanName,
-          phone: regPhone,
-          role_id: 2
-        })
+      const result = await registerUser({
+        full_name: cleanName,
+        email: cleanEmail,
+        phone: regPhone,
+        password: regPassword,
+        role: regRole,
       });
-    } catch {
-      // Continúa
+
+      if (!result.success) {
+        setAuthError(result.error || 'Error al registrar usuario');
+        setIsLoading(false);
+        return;
+      }
+
+      const session: FrontendSession = {
+        name: cleanName,
+        email: cleanEmail,
+        hasPublishedProperties: regRole === 'vendedor',
+        role: regRole,
+      };
+
+      saveStoredSession(session);
+      setIsLoading(false);
+      onLogin(session);
+      onClose();
+    } catch (err: any) {
+      setAuthError(err?.message || 'Error inesperado durante el registro');
+      setIsLoading(false);
     }
-
-    const session: FrontendSession = {
-      name: cleanName,
-      email: cleanEmail,
-      hasPublishedProperties: false,
-      role: 'comprador'
-    };
-
-    saveStoredSession(session);
-    setIsLoading(false);
-    onLogin(session);
-    onClose();
   };
 
   return (
+    <>
     <Modal isOpen={isOpen} onClose={onClose} title={title} subtitle={subtitle} maxWidth="md">
       <div className="space-y-4">
         {reason === 'favorites' && (
@@ -227,8 +261,9 @@ export const LoginDialog = ({
         </div>
 
         {authError && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl animate-in fade-in">
-            ⚠️ {authError}
+          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl flex items-center gap-2 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+            <span>{authError}</span>
           </div>
         )}
 
@@ -274,14 +309,63 @@ export const LoginDialog = ({
               />
             </FormField>
 
+            <div className="flex justify-end pt-0.5">
+              <button
+                type="button"
+                onClick={() => setIsForgotModalOpen(true)}
+                className="text-xs font-bold text-primary hover:underline cursor-pointer"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+
             <Button type="submit" variant="primary" fullWidth disabled={isLoading}>
               <LogIn aria-hidden="true" className="h-4 w-4" />
               {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </form>
         ) : (
-          /* FORMULARIO DE REGISTRO */
+          /* FORMULARIO DE REGISTRO (REQ-01 y REQ-06) */
           <form onSubmit={handleRegisterSubmit} className="space-y-3">
+            {/* Selección de Rol - REQ-06 */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-surface-dark">
+                ¿Cuál es tu objetivo principal?
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRegRole('comprador')}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    regRole === 'comprador'
+                      ? 'border-primary bg-primary/5 text-primary shadow-xs ring-1 ring-primary'
+                      : 'border-gray-200 hover:border-gray-300 text-content-main bg-white'
+                  }`}
+                >
+                  <Search className="h-4 w-4 shrink-0 text-primary" />
+                  <div>
+                    <p className="text-xs font-bold leading-none">Busco Inmueble</p>
+                    <p className="text-[10px] text-content-muted mt-0.5">Comprar o Alquilar</p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRegRole('vendedor')}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    regRole === 'vendedor'
+                      ? 'border-accent bg-accent/5 text-accent shadow-xs ring-1 ring-accent'
+                      : 'border-gray-200 hover:border-gray-300 text-content-main bg-white'
+                  }`}
+                >
+                  <Building2 className="h-4 w-4 shrink-0 text-accent" />
+                  <div>
+                    <p className="text-xs font-bold leading-none">Soy Propietario</p>
+                    <p className="text-[10px] text-content-muted mt-0.5">Publicar propiedades</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
             <FormField label="Nombre y Apellidos">
               <Input
                 type="text"
@@ -314,15 +398,27 @@ export const LoginDialog = ({
               </FormField>
             </div>
 
-            <FormField label="Contraseña">
-              <Input
-                type="password"
-                value={regPassword}
-                onChange={(event) => setRegPassword(event.target.value)}
-                placeholder="Mínimo 6 caracteres"
-                required
-              />
-            </FormField>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FormField label="Contraseña">
+                <Input
+                  type="password"
+                  value={regPassword}
+                  onChange={(event) => setRegPassword(event.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                />
+              </FormField>
+
+              <FormField label="Confirmar Contraseña">
+                <Input
+                  type="password"
+                  value={regConfirmPassword}
+                  onChange={(event) => setRegConfirmPassword(event.target.value)}
+                  placeholder="Repite la contraseña"
+                  required
+                />
+              </FormField>
+            </div>
 
             <Button type="submit" variant="accent" fullWidth disabled={isLoading}>
               <UserPlus aria-hidden="true" className="h-4 w-4" />
@@ -358,6 +454,17 @@ export const LoginDialog = ({
         </div>
       </div>
     </Modal>
+
+    <ForgotPasswordModal
+      isOpen={isForgotModalOpen}
+      onClose={() => setIsForgotModalOpen(false)}
+      initialEmail={email}
+      onSuccessReset={(resEmail) => {
+        setEmail(resEmail);
+        setIsForgotModalOpen(false);
+      }}
+    />
+    </>
   );
 };
 

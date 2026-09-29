@@ -8,6 +8,7 @@ import { SellerPropertiesSection } from '@/components/organisms/SellerProperties
 import { SellerOffersSection } from '@/components/organisms/SellerOffersSection';
 import { SellerAppointmentsSection, SellerAppointment } from '@/components/organisms/SellerAppointmentsSection';
 import { SellerDocumentsSection } from '@/components/organisms/SellerDocumentsSection';
+import { SellerSettingsSection } from '@/components/organisms/SellerSettingsSection';
 import { SellerDeleteConfirmModal } from '@/components/molecules/SellerDeleteConfirmModal';
 import { SellerProperty } from '@/components/molecules/SellerPropertyCard';
 import { SellerOffer } from '@/components/molecules/SellerOfferItem';
@@ -32,12 +33,12 @@ import {
   fetchSellerAppointments,
   fetchSellerNotifications
 } from '@/lib/sellerApi';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { CheckCircle2, Lock, Loader2, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, Lock, Loader2 } from 'lucide-react';
+import { Error403Forbidden } from '@/components/organisms/Error403Forbidden';
+import { PublicationPlansModal } from '@/components/organisms/PublicationPlansModal';
+import { linkPropertyToOrder, PaymentOrderResponse } from '@/lib/paymentsApi';
 
 export default function SellerPortalPage() {
-  const router = useRouter();
   // Estado inicial uniforme para evitar errores de hidratación SSR
   const [authStatus, setAuthStatus] = useState<'checking' | 'authorized' | 'unauthenticated'>('checking');
   const [activeTab, setActiveTab] = useState<SellerTab>('resumen');
@@ -47,8 +48,13 @@ export default function SellerPortalPage() {
   // Modal de eliminación segura (reemplazo de window.confirm)
   const [propertyToDelete, setPropertyToDelete] = useState<SellerProperty | null>(null);
 
-  // Modal para publicar nueva propiedad
+  // Flujo invertido de publicación: primero plan, luego formulario
+  const [isPlanSelectionOpen, setIsPlanSelectionOpen] = useState(false);
+  const [confirmedPlanOrder, setConfirmedPlanOrder] = useState<PaymentOrderResponse['order'] | null>(null);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+
+  // Modal para cambiar plan de propiedad existente
+  const [propertyForPlan, setPropertyForPlan] = useState<SellerProperty | null>(null);
 
   // Sesión actual
   const [session, setSession] = useState<{ email: string; name: string } | null>(null);
@@ -72,10 +78,7 @@ export default function SellerPortalPage() {
     const current = readStoredSession();
     if (!current || !current.email) {
       setAuthStatus('unauthenticated');
-      const timer = setTimeout(() => {
-        router.replace('/login?redirect=/vendedor&error=auth_required');
-      }, 1800);
-      return () => clearTimeout(timer);
+      return;
     }
 
     setAuthStatus('authorized');
@@ -232,36 +235,12 @@ export default function SellerPortalPage() {
 
   if (authStatus === 'unauthenticated') {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-white">
-        <div className="bg-slate-900 border border-amber-500/30 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
-          <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
-            <Lock className="w-8 h-8" />
-          </div>
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-              Sesión Requerida
-            </span>
-            <h2 className="text-2xl font-black text-white mt-3">Portal de Propietario</h2>
-            <p className="text-xs text-gray-400 mt-2 font-medium">
-              Debes iniciar sesión con tu cuenta para gestionar tus publicaciones, recibir ofertas y coordinar visitas.
-            </p>
-          </div>
-          <div className="pt-2 flex flex-col gap-2.5">
-            <Link
-              href="/login?redirect=/vendedor"
-              className="w-full py-3 bg-accent hover:brightness-110 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg transition-all text-center"
-            >
-              Iniciar Sesión en InmoVAX
-            </Link>
-            <Link
-              href="/"
-              className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs rounded-xl transition-all text-center flex items-center justify-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" /> Volver a la Página Principal
-            </Link>
-          </div>
-        </div>
-      </div>
+      <Error403Forbidden
+        title="403 - Portal del Propietario"
+        description="Esta sección está reservada exclusivamente para propietarios y vendedores registrados en InmoVAX. No cuentas con una sesión activa para gestionar este portal."
+        buttonText="Volver a la página principal"
+        buttonHref="/"
+      />
     );
   }
 
@@ -306,26 +285,40 @@ export default function SellerPortalPage() {
             onConfirm={handleConfirmDelete}
           />
 
-          {/* MODAL PUBLICACIÓN RÁPIDA CON FOLIO REAL */}
+          {/* PASO 1: MODAL FLOTANTE DE PLANES Y PAGO QR PREVIO */}
+          <PublicationPlansModal
+            isOpen={isPlanSelectionOpen}
+            onClose={() => setIsPlanSelectionOpen(false)}
+            propertyId="nueva-publicacion"
+            propertyTitle="Nueva Publicación InmoVAX"
+            onPlanConfirmed={(order) => {
+              setConfirmedPlanOrder(order);
+              setIsPlanSelectionOpen(false);
+              setIsPublishModalOpen(true);
+            }}
+            ctaText="Comprobante Enviado - Llenar Formulario de Inmueble →"
+          />
+
+          {/* PASO 2: MODAL CON ASISTENTE DE PUBLICACIÓN */}
           <Modal
             isOpen={isPublishModalOpen}
             onClose={() => setIsPublishModalOpen(false)}
-            title="Publicar Nuevo Inmueble (Asistente Oficial InmoVAX)"
-            subtitle="Registra tu propiedad con geolocalización y Folio Real verificado"
+            title="Publicar Nuevo Inmueble (Paso 2: Datos de la Propiedad)"
+            subtitle={confirmedPlanOrder ? `Plan Asignado: ${confirmedPlanOrder.planName} • Orden #${confirmedPlanOrder.id}` : "Registra tu propiedad con geolocalización y Folio Real verificado"}
             maxWidth="3xl"
           >
             <div className="pt-2">
               <PublishPropertyForm
                 isLoggedInSeller={true}
-                onSuccessCallback={(data) => {
-                  addManagedProperty({
+                onSuccessCallback={async (data) => {
+                  const newProp = await addManagedProperty({
                     title: `${data.tipoInmueble.toUpperCase()} en ${data.zona}`,
                     zone: data.zona,
                     address: data.calle || data.zona,
                     description: data.descripcion || `${data.tipoInmueble.toUpperCase()} en ${data.zona}`,
                     type: (data.operacion.charAt(0).toUpperCase() + data.operacion.slice(1)) as ManagedProperty['type'],
                     price: `${data.moneda === 'usd' ? '$us' : 'Bs.'} ${data.precio}`,
-                    status: 'Activo',
+                    status: currentEmail.toLowerCase().trim() === 'vip@inmovax.com' ? 'Activo' : 'En Validación Legal',
                     folioReal: data.folioReal || `2.01.0.99.00${Math.floor(1000 + Math.random() * 9000)}`,
                     assignedAdvisor: 'Lic. Carlos Vega',
                     image: data.imagenUrl || '',
@@ -337,14 +330,38 @@ export default function SellerPortalPage() {
                     estacionamientos: Number(data.parqueos) || 0,
                     amenidades: data.amenidades || []
                   });
+
+                  if (confirmedPlanOrder && newProp) {
+                    await linkPropertyToOrder(confirmedPlanOrder.id, newProp.id, newProp.title);
+                  }
+
                   setProperties(getPropertiesByAuthor(currentEmail));
                   setIsPublishModalOpen(false);
-                  showToast('¡Inmueble registrado con éxito! Nuestro equipo legal auditará el Folio Real en menos de 2 horas.');
+                  showToast(
+                    currentEmail.toLowerCase().trim() === 'vip@inmovax.com'
+                      ? '¡Inmueble publicado y activo en la página principal (VIP Exento)!'
+                      : `¡Inmueble registrado y enviado a validación legal con Plan ${confirmedPlanOrder?.planName || 'Básico'}!`
+                  );
                   setActiveTab('inmuebles');
                 }}
               />
             </div>
           </Modal>
+
+          {/* MODAL PANTALLA FLOTANTE COMPARATIVA DE PLANES Y PAGO QR */}
+          {propertyForPlan && (
+            <PublicationPlansModal
+              isOpen={!!propertyForPlan}
+              onClose={() => setPropertyForPlan(null)}
+              propertyId={propertyForPlan.id}
+              propertyTitle={propertyForPlan.title}
+              onSuccess={() => {
+                showToast(`¡Plan de publicación activado para ${propertyForPlan.title}!`);
+                setPropertyForPlan(null);
+                setProperties(getPropertiesByAuthor(currentEmail));
+              }}
+            />
+          )}
         </>
       }
     >
@@ -356,7 +373,7 @@ export default function SellerPortalPage() {
           notifications={notifications}
           onNavigateTab={(tab) => setActiveTab(tab)}
           onRequestDeleteProperty={handleRequestDelete}
-          onOpenPublishModal={() => setIsPublishModalOpen(true)}
+          onOpenPublishModal={() => setIsPlanSelectionOpen(true)}
           userName={currentName}
         />
       )}
@@ -365,9 +382,10 @@ export default function SellerPortalPage() {
         <SellerPropertiesSection
           properties={properties}
           onTogglePause={handleTogglePause}
-          onOpenPublishModal={() => setIsPublishModalOpen(true)}
+          onOpenPublishModal={() => setIsPlanSelectionOpen(true)}
           onUpdateProperty={handleUpdateProperty}
           onRequestDeleteProperty={handleRequestDelete}
+          onOpenPlanModal={(prop) => setPropertyForPlan(prop)}
         />
       )}
 
@@ -389,6 +407,17 @@ export default function SellerPortalPage() {
 
       {activeTab === 'documentos' && (
         <SellerDocumentsSection />
+      )}
+
+      {activeTab === 'configuracion' && (
+        <SellerSettingsSection
+          userEmail={currentEmail}
+          userName={currentName}
+          onProfileUpdated={(updatedName) => {
+            setSession(prev => prev ? { ...prev, name: updatedName } : null);
+            showToast('Perfil comercial actualizado.');
+          }}
+        />
       )}
     </SellerPortalTemplate>
   );

@@ -5,6 +5,7 @@ export interface FrontendSession {
   email: string;
   hasPublishedProperties: boolean;
   role?: 'visitante' | 'comprador' | 'vendedor' | 'admin';
+  phone?: string | null;
 }
 
 export interface FavoriteItem {
@@ -133,6 +134,26 @@ export const writeStoredList = <T,>(key: string, value: T[], emitEvent: boolean 
   if (emitEvent) {
     emitStoreEvent('list-updated', { key });
   }
+};
+
+/**
+ * REQ-32: Sincronizar favoritos del usuario desde Supabase PostgreSQL
+ */
+export const syncUserFavoritesFromCloud = async (userEmailOrId: string) => {
+  if (typeof window === 'undefined' || !userEmailOrId) return;
+  try {
+    const apiBase = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
+      ? process.env.NEXT_PUBLIC_API_URL
+      : 'http://localhost:4000/api';
+    const clean = encodeURIComponent(userEmailOrId.trim().toLowerCase());
+    const res = await fetch(`${apiBase}/favorites?userId=${clean}`, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.favorites)) {
+        writeStoredList(FAVORITES_KEY, data.favorites);
+      }
+    }
+  } catch {}
 };
 
 /**

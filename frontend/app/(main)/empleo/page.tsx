@@ -1,4 +1,5 @@
 import React from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
 import { Textarea } from '@/components/atoms/Textarea';
@@ -46,13 +47,16 @@ export default function TrabajaConNosotrosPage() {
           
           <ul className="space-y-4">
             <li className="flex items-center gap-3 font-bold text-content-main">
-              <span className="text-primary text-xl">✓</span> Altas comisiones por ventas y anticréticos.
+              <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+              <span>Altas comisiones por ventas y anticréticos.</span>
             </li>
             <li className="flex items-center gap-3 font-bold text-content-main">
-              <span className="text-primary text-xl">✓</span> Horarios flexibles e independencia.
+              <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+              <span>Horarios flexibles e independencia.</span>
             </li>
             <li className="flex items-center gap-3 font-bold text-content-main">
-              <span className="text-primary text-xl">✓</span> Cartera de clientes verificada.
+              <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+              <span>Cartera de clientes verificada.</span>
             </li>
           </ul>
         </div>

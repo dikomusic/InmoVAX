@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { Eye, MessageCircle, Pencil, Trash2, PauseCircle, PlayCircle, BarChart3, Building2 } from 'lucide-react';
+import { Eye, MessageCircle, Pencil, Trash2, PauseCircle, PlayCircle, BarChart3, Building2, CreditCard } from 'lucide-react';
 import { SellerStatusBadge, SellerPropertyStatus } from '../atoms/SellerStatusBadge';
 
 export interface SellerProperty {
@@ -34,6 +34,8 @@ export interface SellerProperty {
   amenities?: string[];
   description?: string;
   href?: string;
+  publicationPlan?: 'basico' | 'oro' | 'diamante';
+  isPaid?: boolean;
 }
 
 interface SellerPropertyCardProps {
@@ -43,6 +45,7 @@ interface SellerPropertyCardProps {
   onViewStats: (property: SellerProperty) => void;
   onDelete?: (id: string) => void;
   onRequestDelete?: (property: SellerProperty) => void;
+  onOpenPlanModal?: (property: SellerProperty) => void;
 }
 
 export const SellerPropertyCard = ({
@@ -51,7 +54,8 @@ export const SellerPropertyCard = ({
   onEdit,
   onViewStats,
   onDelete,
-  onRequestDelete
+  onRequestDelete,
+  onOpenPlanModal
 }: SellerPropertyCardProps) => {
   const handleDeleteClick = () => {
     if (onRequestDelete) {
@@ -157,11 +161,23 @@ export const SellerPropertyCard = ({
         <button
           type="button"
           onClick={() => onViewStats(property)}
-          className="flex-1 min-w-[120px] py-2 px-3 bg-white hover:bg-gray-100 text-surface-dark font-extrabold text-xs rounded-xl border border-gray-200 transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5 shadow-2xs"
+          className="flex-1 min-w-[110px] py-2 px-3 bg-white hover:bg-gray-100 text-surface-dark font-extrabold text-xs rounded-xl border border-gray-200 transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5 shadow-2xs"
         >
           <BarChart3 className="h-3.5 w-3.5 text-primary" />
           <span>Rendimiento</span>
         </button>
+
+        {onOpenPlanModal && (
+          <button
+            type="button"
+            onClick={() => onOpenPlanModal(property)}
+            className="flex-1 min-w-[110px] py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-xl border border-amber-200 transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5 shadow-2xs"
+            title="Ver planes de publicación y pago QR"
+          >
+            <CreditCard className="h-3.5 w-3.5 text-amber-600" />
+            <span>Plan y Pago</span>
+          </button>
+        )}
 
         <div className="flex items-center gap-1.5 shrink-0">
           <button

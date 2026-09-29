@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Menu, Bell, AlertTriangle, Calendar, Briefcase, Plus } from 'lucide-react';
 
 interface AdminHeaderProps {
   onToggleSidebar: () => void;
@@ -22,7 +23,7 @@ export const AdminHeader = ({
           onClick={onToggleSidebar}
           className="lg:hidden p-2 rounded-lg bg-gray-100 text-content-main hover:bg-gray-200 cursor-pointer"
         >
-          ☰
+          <Menu className="w-5 h-5" />
         </button>
         <div>
           <h1 className="text-lg sm:text-xl font-black text-surface-dark flex items-center gap-2">
@@ -44,7 +45,7 @@ export const AdminHeader = ({
             className="relative p-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors cursor-pointer"
             title="Notificaciones operativas"
           >
-            <span>🔔</span>
+            <Bell className="w-4 h-4 text-gray-700" />
             <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white"></span>
           </button>
 
@@ -61,7 +62,7 @@ export const AdminHeader = ({
               </div>
               <div className="divide-y divide-gray-100 max-h-72 overflow-y-auto">
                 <div className="py-3 flex items-start gap-3">
-                  <span className="text-xl">⚠️</span>
+                  <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-bold text-gray-900">Folio Real requiere verificación</p>
                     <p className="text-[11px] text-gray-500">Anticrético en Sopocachi ($us 45,000)</p>
@@ -69,7 +70,7 @@ export const AdminHeader = ({
                   </div>
                 </div>
                 <div className="py-3 flex items-start gap-3">
-                  <span className="text-xl">📅</span>
+                  <Calendar className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-bold text-gray-900">Nueva Cita de Visita Confirmada</p>
                     <p className="text-[11px] text-gray-500">Casa en Achumani con Asesor Carlos Vega</p>
@@ -77,7 +78,7 @@ export const AdminHeader = ({
                   </div>
                 </div>
                 <div className="py-3 flex items-start gap-3">
-                  <span className="text-xl">💼</span>
+                  <Briefcase className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-bold text-gray-900">Contrato Notariado Registrado</p>
                     <p className="text-[11px] text-gray-500">Anticrético Calacoto (Comisión $us 1,500)</p>
@@ -96,14 +97,16 @@ export const AdminHeader = ({
             onClick={onQuickPublish}
             className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
           >
-            <span>+</span> Publicar Inmueble
+            <Plus className="w-4 h-4" />
+            <span>Publicar Inmueble</span>
           </button>
         ) : (
           <Link
             href="/publicar"
             className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition-all shadow-sm active:scale-95"
           >
-            <span>+</span> Publicar Inmueble
+            <Plus className="w-4 h-4" />
+            <span>Publicar Inmueble</span>
           </Link>
         )}
       </div>

@@ -1,10 +1,10 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
-import { CalendarDays, ClipboardList, FileText, Home, LogOut, MessageCircle, Plus, X, ArrowLeft } from 'lucide-react';
+import { CalendarDays, ClipboardList, FileText, Home, LogOut, MessageCircle, Settings, Plus, X, ArrowLeft } from 'lucide-react';
 import { BrandLogo } from '../atoms/BrandLogo';
 
-export type SellerTab = 'resumen' | 'favoritos' | 'historial' | 'consultas' | 'inmuebles' | 'citas' | 'documentos';
+export type SellerTab = 'resumen' | 'favoritos' | 'historial' | 'consultas' | 'inmuebles' | 'citas' | 'documentos' | 'configuracion';
 
 interface SellerSidebarProps {
   activeTab: SellerTab;
@@ -59,7 +59,8 @@ export const SellerSidebar = ({
       badge: appointmentsCount !== undefined ? String(appointmentsCount) : undefined,
       badgeColor: 'bg-blue-500'
     },
-    { id: 'documentos', label: 'Folio Real y Minutas', Icon: FileText }
+    { id: 'documentos', label: 'Folio Real y Minutas', Icon: FileText },
+    { id: 'configuracion', label: 'Mi Configuración', Icon: Settings }
   ];
 
   const initials = userName

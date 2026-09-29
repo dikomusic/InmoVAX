@@ -11,8 +11,10 @@ import {
   MessageCircle,
   UserRound,
   ShieldCheck,
-  Building2
+  Building2,
+  UserCog
 } from 'lucide-react';
+import { UserProfileModal } from './UserProfileModal';
 import {
   FrontendSession,
   hasUserPublishedProperties,
@@ -33,6 +35,7 @@ interface AccountMenuProps {
 
 export const AccountMenu = ({ session, onLogout, onOpenActivity }: AccountMenuProps) => {
   const [open, setOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Dynamic counts for badges
@@ -126,6 +129,26 @@ export const AccountMenu = ({ session, onLogout, onOpenActivity }: AccountMenuPr
           </div>
 
           <div className="space-y-0.5 py-1">
+            {/* Gestión de Perfil - Disponible para todos los usuarios autenticados (REQ-05) */}
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setIsProfileOpen(true);
+              }}
+              className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold text-content-main hover:bg-surface-light group transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="p-1 rounded-lg bg-primary/10 text-primary">
+                  <UserCog aria-hidden="true" className="h-4 w-4" />
+                </span>
+                <span>Mi Perfil</span>
+              </div>
+              <span className="text-[10px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-gray-100 text-content-muted">
+                Configurar
+              </span>
+            </button>
+
             {/* CONDICIÓN CLAVE: "Mi cuenta" SOLO si tiene 1 o más propiedades publicadas */}
             {hasPublished && (
               <Link
@@ -247,6 +270,13 @@ export const AccountMenu = ({ session, onLogout, onOpenActivity }: AccountMenuPr
         </div>
       </>
     )}
+
+    {/* Modal de Configuración de Perfil (REQ-05) */}
+    <UserProfileModal
+      isOpen={isProfileOpen}
+      onClose={() => setIsProfileOpen(false)}
+      onProfileUpdated={() => updateCounts()}
+    />
   </div>
   );
 };

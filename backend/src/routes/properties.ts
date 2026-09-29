@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { supabase } from '../config/supabase';
 import { config } from '../config/env';
+import { inMemoryOrders } from './payments';
 
 export const propertiesRouter = new Hono();
 
@@ -31,7 +32,7 @@ const propertyInputSchema = z.object({
   gallery: z.array(z.string()).optional(),
   authorEmail: z.string().email('Correo de autor inválido'),
   authorName: z.string().min(2),
-  assignedAdvisor: z.string().optional().default('Lic. Carlos Vega'),
+  assignedAdvisor: z.string().optional().default('Propietario InmoVAX'),
   bedrooms: z.number().int().nonnegative().optional().default(3),
   bathrooms: z.number().int().nonnegative().optional().default(2),
   areaSqm: z.number().positive().optional().default(120),
@@ -86,11 +87,15 @@ function mapDbProperty(dbProp: any) {
     4: 'Cerrado'
   };
 
+  const coverImg = Array.isArray(dbProp.property_images)
+    ? dbProp.property_images.find((img: any) => img.is_cover)?.image_url
+    : null;
+
   const gallery: string[] = Array.isArray(dbProp.property_images)
     ? dbProp.property_images.map((img: any) => img.image_url).filter(Boolean)
     : [];
 
-  const image = gallery[0] || dbProp.image || '';
+  const image = coverImg || gallery[0] || dbProp.image || '';
 
   const pricePrefix = dbProp.currency === 'USD' ? '$us ' : 'Bs. ';
   const price = `${pricePrefix}${Number(dbProp.price_amount).toLocaleString()}`;
@@ -108,7 +113,10 @@ function mapDbProperty(dbProp: any) {
     inquiries: dbProp.inquiries_count ?? 0,
     status: statusMap[dbProp.status_id] || 'Activo',
     folioReal: dbProp.folio_real,
-    assignedAdvisor: 'Lic. Carlos Vega',
+    assignedAdvisor: dbProp.profiles?.full_name || 'Propietario',
+    sellerName: dbProp.profiles?.full_name || 'Propietario InmoVAX',
+    sellerPhone: dbProp.profiles?.phone || '',
+    sellerEmail: dbProp.profiles?.email || 'vendedor@inmovax.com',
     image,
     gallery,
     category: dbProp.category || 'Departamento',
@@ -182,11 +190,12 @@ propertiesRouter.get('/', async (c) => {
       .select('*, property_images(image_url), profiles!properties_user_id_fkey(email, full_name)')
       .order('created_at', { ascending: false });
 
-    if (statusParam === 'active') {
-      query = query.eq('status_id', 1);
-    } else {
-      // Devuelve activos, en validación legal y pausados para mantener sincronizado el store
+    if (statusParam === 'all') {
+      // Devuelve activos, en validación y pausados solo cuando se solicita explícitamente (ej: panel admin)
       query = query.in('status_id', [1, 2, 3]);
+    } else {
+      // Catálogo público: Solo inmuebles aprobados y activos por el administrador
+      query = query.eq('status_id', 1);
     }
 
     const { data, error } = await query;
@@ -298,7 +307,13 @@ propertiesRouter.post('/', async (c) => {
       'Pausado': 3,
       'Cerrado': 4
     };
-    const statusId = validated.status ? (statusMap[validated.status] || 1) : 1;
+    
+    // Si es usuario VIP o Administrador, se aprueba de inmediato.
+    // De lo contrario, queda "En Validación Legal" (status_id: 2) hasta que el admin lo apruebe.
+    const isVipOrAdmin = (validated.authorEmail?.toLowerCase().trim() === 'vip@inmovax.com') ||
+                         (validated.authorEmail?.toLowerCase().trim() === 'admin@inmovax.com');
+    const defaultStatus = isVipOrAdmin ? 1 : 2;
+    const statusId = validated.status ? (statusMap[validated.status] || defaultStatus) : defaultStatus;
 
     // Evitar colisión de clave única de Folio Real
     let folioRealToInsert = validated.folioReal;
@@ -353,7 +368,8 @@ propertiesRouter.post('/', async (c) => {
       const imageRecords = imagesToInsert.map((imgUrl, index) => ({
         property_id: inserted.id,
         image_url: imgUrl,
-        is_cover: index === 0
+        is_cover: validated.image ? imgUrl === validated.image : index === 0,
+        display_order: index
       }));
       await supabase.from('property_images').insert(imageRecords);
     }
@@ -361,7 +377,7 @@ propertiesRouter.post('/', async (c) => {
     return c.json({
       success: true,
       message: 'Inmueble registrado exitosamente en Supabase para auditoría legal con Folio Real',
-      property: inserted
+      property: mapDbProperty(inserted)
     }, 201);
   } catch (error) {
     console.error('POST /api/properties error details:', error);
@@ -431,6 +447,66 @@ propertiesRouter.patch('/:id/toggle-pause', async (c) => {
     message: `Inmueble cambiado a estado: ${nextStatusText}`,
     status: nextStatusText
   });
+});
+
+// 4.1 PATCH /api/properties/:id/status: Actualizar estado de aprobación por el Administrador
+propertiesRouter.patch('/:id/status', async (c) => {
+  const idOrCode = c.req.param('id');
+  const prop = await findPropertySafely(idOrCode);
+
+  if (!prop) {
+    return c.json({ success: false, error: 'Inmueble no encontrado' }, 404);
+  }
+
+  try {
+    const body = await c.req.json();
+    const statusMap: Record<string, number> = {
+      'Activo': 1,
+      'Publicado': 1,
+      'En Validación Legal': 2,
+      'En Revisión Legal': 2,
+      'Pendiente': 2,
+      'Pausado': 3,
+      'Cerrado': 4
+    };
+
+    const targetStatus = body.status || 'Activo';
+    const nextStatusId = statusMap[targetStatus] || 1;
+
+    const { error } = await supabase
+      .from('properties')
+      .update({ 
+        status_id: nextStatusId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', prop.id);
+
+    if (error) {
+      return c.json({ success: false, error: error.message }, 500);
+    }
+
+    // Sincronizar en memoria órdenes de pago si coinciden con esta propiedad
+    for (const [orderId, order] of inMemoryOrders.entries()) {
+      if (order.propertyId === prop.id || (prop.code && order.propertyId === prop.code)) {
+        if (nextStatusId === 1) {
+          order.status = 'aprobado';
+          order.reviewedAt = new Date().toISOString();
+        } else if (nextStatusId === 3 || nextStatusId === 4) {
+          order.status = 'rechazado';
+        }
+        inMemoryOrders.set(orderId, order);
+      }
+    }
+
+    return c.json({
+      success: true,
+      message: `Inmueble actualizado exitosamente a: ${targetStatus}`,
+      status: targetStatus,
+      statusId: nextStatusId
+    });
+  } catch (err: any) {
+    return c.json({ success: false, error: err?.message || 'Error al actualizar estado' }, 500);
+  }
 });
 
 // 4.5 PATCH /api/properties/:id: REQ-13 - Editar información de un inmueble publicado
@@ -503,7 +579,7 @@ propertiesRouter.patch('/:id', async (c) => {
       const newImages = validated.gallery.map((url, idx) => ({
         property_id: prop.id,
         image_url: url,
-        is_cover: idx === 0,
+        is_cover: validated.image ? url === validated.image : idx === 0,
         display_order: idx
       }));
       await supabase.from('property_images').insert(newImages);

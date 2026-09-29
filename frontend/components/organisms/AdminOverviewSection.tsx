@@ -2,21 +2,26 @@
 import React from 'react';
 import { StatCard } from '../atoms/StatCard';
 import { AdminTab } from './AdminSidebar';
-import { Building2, Scale, CircleDollarSign, Users } from 'lucide-react';
+import { 
+  Building2, CreditCard, CheckCircle2, Clock, 
+  ArrowRight, ShieldCheck, DollarSign, Sparkles 
+} from 'lucide-react';
 
 interface AdminOverviewSectionProps {
   propertiesCount: number;
-  pendingLegalCount: number;
-  advisorsCount: number;
-  transactionsVolume: string;
+  publishedCount: number;
+  pendingPaymentsCount: number;
+  approvedPaymentsCount: number;
+  revenueTotal: number;
   onNavigateTab: (tab: AdminTab) => void;
 }
 
 export const AdminOverviewSection = ({
   propertiesCount,
-  pendingLegalCount,
-  advisorsCount,
-  transactionsVolume,
+  publishedCount,
+  pendingPaymentsCount,
+  approvedPaymentsCount,
+  revenueTotal,
   onNavigateTab
 }: AdminOverviewSectionProps) => {
   return (
@@ -26,184 +31,109 @@ export const AdminOverviewSection = ({
       <div className="bg-gradient-to-r from-surface-dark via-[#0C1A4A] to-surface-dark rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl border border-gray-800">
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/20 border border-accent/40 text-accent text-xs font-black uppercase tracking-wider mb-3">
-            <span>🛡️</span> Centro de Operaciones Inmobiliarias
+            <ShieldCheck className="w-4 h-4 text-accent" /> Panel Central InmoVax
           </div>
           <h2 className="text-2xl sm:text-4xl font-black tracking-tight mb-2">
-            Panel Central, <span className="text-accent">Daniel Catari</span>
+            Control Operativo de la <span className="text-accent">Plataforma Web</span>
           </h2>
           <p className="text-sm text-gray-300 leading-relaxed font-medium">
-            Supervisión integral del mercado inmobiliario, validación notarial de Folio Real y gestión de contratos en La Paz, Bolivia.
+            Supervisa en tiempo real las publicaciones de inmuebles, comprobantes de pago QR y la actividad de los usuarios.
           </p>
         </div>
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/30 via-transparent to-transparent pointer-events-none"></div>
       </div>
 
-      {/* TARJETAS KPI */}
+      {/* TARJETAS KPI ESENCIALES */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           title="Inmuebles en Catálogo"
           value={propertiesCount}
-          subtitle="14 en venta • 8 anticréticos • 6 alquiler"
+          subtitle="Inventario total registrado"
           icon={<Building2 className="h-5 w-5" />}
-          trend="+12% este mes"
+          trend={`${publishedCount} activos en web`}
           trendType="positive"
           bgColor="bg-blue-50 text-primary"
         />
 
         <StatCard
-          title="Revisión Folio Real"
-          value={pendingLegalCount}
-          subtitle="Documentos alodiales pendientes"
-          icon={<Scale className="h-5 w-5" />}
-          trend={pendingLegalCount > 0 ? "Prioridad Alta" : "Al día"}
-          trendType={pendingLegalCount > 0 ? "urgent" : "positive"}
-          bgColor="bg-amber-50 text-amber-600"
+          title="Comprobantes por Aprobar"
+          value={pendingPaymentsCount}
+          subtitle="Pagos QR pendientes de revisión"
+          icon={<Clock className="h-5 w-5" />}
+          trend={pendingPaymentsCount > 0 ? "Requiere acción inmediata" : "Al día"}
+          trendType={pendingPaymentsCount > 0 ? "urgent" : "positive"}
+          bgColor={pendingPaymentsCount > 0 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}
         />
 
         <StatCard
-          title="Volumen Transaccional"
-          value={transactionsVolume}
-          subtitle="Capital en anticréticos gestionados"
-          icon={<CircleDollarSign className="h-5 w-5" />}
-          trend="+18.4%"
+          title="Publicaciones Aprobadas"
+          value={approvedPaymentsCount}
+          subtitle="Planes confirmados por QR"
+          icon={<CheckCircle2 className="h-5 w-5" />}
+          trend="Publicaciones validadas"
           trendType="positive"
           bgColor="bg-emerald-50 text-emerald-600"
         />
 
         <StatCard
-          title="Equipo de Asesores"
-          value={advisorsCount}
-          subtitle="Calificación promedio: 4.86 / 5"
-          icon={<Users className="h-5 w-5" />}
-          trend="100% operativos"
+          title="Ingresos Recaudados"
+          value={`$us ${revenueTotal.toLocaleString()}`}
+          subtitle="Total por venta de planes de publicación"
+          icon={<CreditCard className="h-5 w-5" />}
+          trend="Ingreso directo a cuenta"
           trendType="neutral"
           bgColor="bg-purple-50 text-purple-600"
         />
       </div>
 
-      {/* GRÁFICOS Y ESTADÍSTICAS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* ACCIONES RÁPIDAS Y ENLACES DIRECTOS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* DEMANDA POR ZONAS */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="font-extrabold text-base text-surface-dark">Demanda Inmobiliaria por Zona (La Paz)</h3>
-              <p className="text-xs text-content-muted">Consultas y transacciones registradas en los últimos 30 días</p>
+        {/* MÓDULO 1: GESTIÓN DE INMUEBLES */}
+        <div 
+          onClick={() => onNavigateTab('propiedades')}
+          className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer group flex flex-col justify-between"
+        >
+          <div>
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-primary flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+              <Building2 className="w-6 h-6" />
             </div>
-            <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">
-              Estadísticas Reales
-            </span>
+            <h3 className="font-extrabold text-lg text-surface-dark mb-1 group-hover:text-primary transition-colors">
+              Gestión de Inmuebles
+            </h3>
+            <p className="text-xs text-content-muted leading-relaxed mb-4">
+              Visualiza el inventario completo, publica o pausa inmuebles, edita precios y zonas, o elimina propiedades obsoletas.
+            </p>
           </div>
-
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-xs font-bold mb-1">
-                <span className="text-content-main">Sopocachi (Anticréticos y Departamentos)</span>
-                <span className="text-primary font-black">42% (128 solicitudes)</span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-3">
-                <div className="bg-primary h-3 rounded-full" style={{ width: '42%' }}></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs font-bold mb-1">
-                <span className="text-content-main">Calacoto & San Miguel (Ventas de Casas y Penthouses)</span>
-                <span className="text-accent font-black">28% (84 solicitudes)</span>
-              </div>
-              <div className="w-full bg-accent h-3 rounded-full" style={{ width: '28%' }}></div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs font-bold mb-1">
-                <span className="text-content-main">Achumani & Los Pinos (Casas familiares)</span>
-                <span className="text-emerald-500 font-black">18% (55 solicitudes)</span>
-              </div>
-              <div className="w-full bg-emerald-500 h-3 rounded-full" style={{ width: '18%' }}></div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs font-bold mb-1">
-                <span className="text-content-main">Centro & San Jorge (Oficinas y Monoambientes)</span>
-                <span className="text-purple-500 font-black">12% (36 solicitudes)</span>
-              </div>
-              <div className="w-full bg-purple-500 h-3 rounded-full" style={{ width: '12%' }}></div>
-            </div>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4 text-xs text-content-muted font-medium">
-            <span>💡 InmoVax Intelligence: El 65% del tráfico busca anticréticos con respaldo de Folio Real.</span>
-            <button 
-              type="button"
-              onClick={() => onNavigateTab('propiedades')} 
-              className="font-bold text-primary hover:underline cursor-pointer"
-            >
-              Ver catálogo completo →
-            </button>
+          <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs font-bold text-primary">
+            <span>Administrar Catálogo ({propertiesCount} propiedades)</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
 
-        {/* ACCIONES RÁPIDAS Y CITAS */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+        {/* MÓDULO 2: PLANES Y PAGOS QR */}
+        <div 
+          onClick={() => onNavigateTab('pagos')}
+          className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-xs hover:shadow-md hover:border-amber-100 transition-all cursor-pointer group flex flex-col justify-between"
+        >
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-extrabold text-base text-surface-dark">Módulos Directos</h3>
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+              <CreditCard className="w-6 h-6" />
             </div>
-            
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => onNavigateTab('legal')}
-                className="w-full p-3.5 bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200 rounded-xl text-left transition-colors cursor-pointer flex items-center justify-between"
-              >
-                <div>
-                  <h4 className="text-xs font-black text-amber-900 flex items-center gap-1.5">
-                    <span>⚖️</span> Auditoría de Folios Reales
-                  </h4>
-                  <p className="text-[11px] text-amber-800 mt-0.5">Validar certificados alodiales pendientes</p>
-                </div>
-                <span className="text-xs font-bold text-amber-800">→</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onNavigateTab('transacciones')}
-                className="w-full p-3.5 bg-blue-50/70 hover:bg-blue-100/70 border border-blue-200 rounded-xl text-left transition-colors cursor-pointer flex items-center justify-between"
-              >
-                <div>
-                  <h4 className="text-xs font-black text-blue-900 flex items-center gap-1.5">
-                    <span>💼</span> Libro de Transacciones
-                  </h4>
-                  <p className="text-[11px] text-blue-800 mt-0.5">Registro notarial y liquidación de comisiones</p>
-                </div>
-                <span className="text-xs font-bold text-primary">→</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onNavigateTab('asesores')}
-                className="w-full p-3.5 bg-purple-50/70 hover:bg-purple-100/70 border border-purple-200 rounded-xl text-left transition-colors cursor-pointer flex items-center justify-between"
-              >
-                <div>
-                  <h4 className="text-xs font-black text-purple-900 flex items-center gap-1.5">
-                    <span>👥</span> Asignación de Asesores
-                  </h4>
-                  <p className="text-[11px] text-purple-800 mt-0.5">Coordinar visitas y cobertura de zonas</p>
-                </div>
-                <span className="text-xs font-bold text-purple-800">→</span>
-              </button>
-            </div>
+            <h3 className="font-extrabold text-lg text-surface-dark mb-1 group-hover:text-amber-700 transition-colors">
+              Planes y Pagos QR
+            </h3>
+            <p className="text-xs text-content-muted leading-relaxed mb-4">
+              Revisa los comprobantes bancarios subidos por los propietarios, aprueba órdenes para publicar automáticamente y configura los precios de los planes.
+            </p>
           </div>
-
-          <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-            <button
-              type="button"
-              onClick={() => onNavigateTab('configuracion')}
-              className="text-xs font-bold text-content-muted hover:text-primary transition-colors cursor-pointer"
-            >
-              ⚙️ Ajustar parámetros del portal
-            </button>
+          <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs font-bold text-amber-700">
+            <span>
+              {pendingPaymentsCount > 0 
+                ? `Revisar ${pendingPaymentsCount} pago(s) pendiente(s)` 
+                : 'Ver historial de pagos y configuración'}
+            </span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
 

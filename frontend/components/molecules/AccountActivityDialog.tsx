@@ -26,8 +26,10 @@ import {
   ConsultationItem,
   getStoredConsultations,
   readStoredList,
-  writeStoredList
+  writeStoredList,
+  readStoredSession
 } from '@/lib/frontendStore';
+import { fetchUserFavorites, removeFavoriteApi } from '@/lib/favoritesApi';
 
 interface AccountActivityDialogProps {
   activity: AccountActivity | null;
@@ -50,11 +52,21 @@ export const AccountActivityDialog = ({ activity, onClose }: AccountActivityDial
   }, [activity]);
 
   // Load lists
-  const loadData = () => {
+  const loadData = async () => {
     if (typeof window === 'undefined') return;
+    const session = readStoredSession();
     setFavorites(readStoredList<FavoriteItem>(FAVORITES_KEY));
     setHistory(readStoredList<HistoryItem>(HISTORY_KEY));
     setConsultations(getStoredConsultations());
+
+    // REQ-32: Sincronizar favoritos del usuario desde Supabase en la nube
+    if (session?.email) {
+      const cloudRes = await fetchUserFavorites(session.email);
+      if (cloudRes.success && cloudRes.favorites) {
+        setFavorites(cloudRes.favorites);
+        writeStoredList(FAVORITES_KEY, cloudRes.favorites, false);
+      }
+    }
   };
 
   useEffect(() => {
@@ -65,12 +77,18 @@ export const AccountActivityDialog = ({ activity, onClose }: AccountActivityDial
   }, []);
 
   const handleRemoveFavorite = (identifier: string) => {
+    const session = readStoredSession();
     const updated = favorites.filter((item) => {
       const key = item.id || item.href || item.title;
       return key !== identifier && item.title !== identifier;
     });
     setFavorites(updated);
     writeStoredList(FAVORITES_KEY, updated);
+
+    // REQ-33: Eliminar de Supabase PostgreSQL
+    if (session?.email) {
+      removeFavoriteApi(session.email, identifier);
+    }
   };
 
   const handleRemoveHistory = (identifier: string) => {

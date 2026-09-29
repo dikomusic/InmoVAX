@@ -10,6 +10,10 @@ import { notificationsRouter } from './routes/notifications';
 import { advisorsRouter } from './routes/advisors';
 import { legalRouter } from './routes/legal';
 import { consultationsRouter } from './routes/consultations';
+import { authRouter } from './routes/auth';
+import { paymentsRouter } from './routes/payments';
+import { settingsRouter } from './routes/settings';
+import { favoritesRouter } from './routes/favorites';
 
 export const app = new Hono();
 
@@ -37,6 +41,7 @@ app.use('*', auditMiddleware);
 
 // 4. RUTAS DEL SISTEMA
 app.route('/health', healthRouter);
+app.route('/api/auth', authRouter);
 app.route('/api/properties', propertiesRouter);
 app.route('/api/offers', offersRouter);
 app.route('/api/appointments', appointmentsRouter);
@@ -44,6 +49,9 @@ app.route('/api/notifications', notificationsRouter);
 app.route('/api/advisors', advisorsRouter);
 app.route('/api/legal-audits', legalRouter);
 app.route('/api/consultations', consultationsRouter);
+app.route('/api/payments', paymentsRouter);
+app.route('/api/settings', settingsRouter);
+app.route('/api/favorites', favoritesRouter);
 
 // 5. RUTA RAÍZ INFORMATIVA
 app.get('/', (c) => {

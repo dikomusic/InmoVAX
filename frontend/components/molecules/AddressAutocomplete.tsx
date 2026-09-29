@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 
 // Interfaz ampliada para recibir los detalles de la dirección
 interface NominatimResult {
@@ -101,9 +102,10 @@ export const AddressAutocomplete = ({ onAddressSelect, placeholder }: AddressAut
           <button 
             type="button" 
             onClick={limpiarBusqueda}
-            className="absolute right-3 text-gray-400 hover:text-gray-600 font-bold"
+            aria-label="Limpiar búsqueda"
+            className="absolute right-3 p-1 text-gray-400 hover:text-gray-600 rounded-md transition-colors"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         )}
       </div>

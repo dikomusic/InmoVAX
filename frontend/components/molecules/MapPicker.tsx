@@ -5,8 +5,8 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-const emojiIcon = L.divIcon({
-  html: '<div style="font-size: 32px; margin-top:-32px; margin-left:-16px; text-shadow: 2px 2px 4px rgba(0,0,0,0.4);">📍</div>',
+const customPinIcon = L.divIcon({
+  html: `<div style="margin-top:-32px; margin-left:-16px;"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#E11D48" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" fill="#FFFFFF"/></svg></div>`,
   className: 'bg-transparent',
   iconSize: [32, 32],
   iconAnchor: [16, 32]
@@ -53,7 +53,7 @@ const LocationMarker = ({ onLocationSelect, externalCenter, readOnly }: MapPicke
       draggable={!readOnly} 
       eventHandlers={eventHandlers} 
       position={externalCenter} 
-      icon={emojiIcon} 
+      icon={customPinIcon} 
     />
   ) : null;
 };
