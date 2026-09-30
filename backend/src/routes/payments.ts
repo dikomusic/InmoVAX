@@ -308,10 +308,19 @@ paymentsRouter.post('/admin/:id/approve', requireAdmin, async (c) => {
     await activatePropertyInDb(order.propertyId);
   }
 
+  // REGLA CLAVE: Promover al usuario a Vendedor (role_id: 3) tras verificar y aprobar el pago
+  if (order.sellerEmail) {
+    const emailClean = order.sellerEmail.toLowerCase().trim();
+    await supabase
+      .from('profiles')
+      .update({ role_id: 3, is_verified: true })
+      .eq('email', emailClean);
+  }
+
   return c.json({
     success: true,
     order,
-    message: `Pago ${orderId} aprobado. La publicación ha sido activada con plan ${order.planName}.`
+    message: `Pago ${orderId} aprobado. La publicación ha sido activada y el usuario promovido a Vendedor.`
   });
 });
 

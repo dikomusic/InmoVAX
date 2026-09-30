@@ -132,16 +132,21 @@ export default function AdminPage() {
   };
 
   const handleDeleteProperty = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar permanentemente esta propiedad?')) return;
-    
     setProperties(prev => prev.filter(p => p.id !== id));
     deleteManagedProperty(id);
     
     try {
-      await fetch(`http://localhost:4000/api/properties/${id}`, {
-        method: 'DELETE'
+      const res = await fetch(`http://localhost:4000/api/properties/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-key': 'AdminInmoVAX#2026'
+        }
       });
-      showNotification(`Propiedad ${id} eliminada permanentemente del sistema.`);
+      if (res.ok) {
+        showNotification(`Propiedad eliminada permanentemente del sistema.`);
+      } else {
+        showNotification(`Propiedad eliminada localmente.`);
+      }
       loadPropertiesAndMetrics();
     } catch {
       showNotification(`Propiedad eliminada localmente.`);

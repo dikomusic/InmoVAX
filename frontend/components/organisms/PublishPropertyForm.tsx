@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ImagePlus, UploadCloud, X, Star, Trash2, CheckCircle2, AlertCircle, ShieldCheck, Lock } from 'lucide-react';
+import { ImagePlus, UploadCloud, X, Star, Trash2, CheckCircle2, AlertCircle, ShieldCheck, Lock, Clock } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
@@ -146,7 +146,7 @@ export const PublishPropertyForm = ({
         body: JSON.stringify({
           email: cleanEmail,
           full_name: cleanName,
-          role_id: 3 // Vendedor
+          role_id: 2 // Comprador / Usuario regular hasta que el administrador verifique el pago
         })
       });
     } catch (err) {
@@ -156,8 +156,8 @@ export const PublishPropertyForm = ({
     const userSession = {
       name: cleanName,
       email: cleanEmail,
-      hasPublishedProperties: true,
-      role: 'vendedor' as const
+      hasPublishedProperties: false, // Requiere aprobación previa del Administrador
+      role: 'comprador' as const
     };
     saveStoredSession(userSession);
     setIsLoading(false);
@@ -171,18 +171,18 @@ export const PublishPropertyForm = ({
   if (isCompleted) {
     return (
       <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100 max-w-3xl mx-auto text-center space-y-6 animate-in zoom-in-95 duration-200">
-        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-          <CheckCircle2 className="w-12 h-12 stroke-[2.5]" />
+        <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+          <Clock className="w-12 h-12 stroke-[2.5]" />
         </div>
         <div>
-          <span className="text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
-            Inmueble Vinculado a tu Cuenta
+          <span className="text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+            Pendiente de Aprobación del Administrador
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-surface-dark mt-3">
-            ¡Publicación Registrada Exitosamente!
+            ¡Comprobante y Propiedad Enviados!
           </h2>
           <p className="text-sm text-content-muted mt-2 max-w-lg mx-auto font-medium">
-            Tu inmueble en <strong>{formData.zona}</strong> ({formData.operacion}) ha sido guardado y enviado al departamento notarial de InmoVax para habilitar el sello de verificación.
+            Tu inmueble en <strong>{formData.zona}</strong> ({formData.operacion}) y tu comprobante de pago han sido enviados a revisión. Una vez que el Administrador verifique el pago, se habilitará tu cuenta de Vendedor y tu propiedad será visible públicamente.
           </p>
         </div>
 
@@ -199,21 +199,18 @@ export const PublishPropertyForm = ({
             <span className="text-gray-500 font-bold">Folio Real Registrado:</span>
             <span className="font-mono font-bold text-gray-700">{formData.folioReal}</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500 font-bold">Estado Actual:</span>
+            <span className="font-bold text-amber-600">En Verificación de Pago</span>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => router.push('/vendedor')}
-            className="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
-          >
-            Ir a Mi Panel de Vendedor →
-          </button>
           <Link
             href="/"
-            className="w-full sm:w-auto px-6 py-3 bg-gray-100 hover:bg-gray-200 text-surface-dark text-xs font-extrabold rounded-xl transition-colors text-center"
+            className="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl transition-all shadow-md active:scale-95 cursor-pointer text-center"
           >
-            Ver Portal Público
+            Volver a la Página Principal
           </Link>
         </div>
       </div>

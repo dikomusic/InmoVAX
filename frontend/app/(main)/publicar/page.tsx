@@ -23,16 +23,21 @@ export default function PublicarPage() {
 
   const handlePublished = async (data: Parameters<NonNullable<React.ComponentProps<typeof PublishPropertyForm>['onSuccessCallback']>>[0]) => {
     let currentSession = readStoredSession();
+    const isVipUser = currentSession?.email?.toLowerCase().trim() === 'vip@inmovax.com';
     if (!currentSession || !currentSession.email) {
       currentSession = {
-        name: 'Propietario InmoVAX',
-        email: 'propietario@inmovax.com',
-        hasPublishedProperties: true,
-        role: 'vendedor'
+        name: 'Usuario InmoVAX',
+        email: 'usuario@inmovax.com',
+        hasPublishedProperties: isVipUser,
+        role: isVipUser ? 'vendedor' : 'comprador'
       };
       saveStoredSession(currentSession);
     } else {
-      saveStoredSession({ ...currentSession, hasPublishedProperties: true, role: 'vendedor' });
+      saveStoredSession({ 
+        ...currentSession, 
+        hasPublishedProperties: isVipUser, 
+        role: isVipUser ? 'vendedor' : (currentSession.role || 'comprador') 
+      });
     }
 
     const newProp = await addManagedProperty({

@@ -47,6 +47,9 @@ export const AdminPropertiesSection = ({
   // Modal de detalle/inspección
   const [selectedProperty, setSelectedProperty] = useState<PropertyItem | null>(null);
   
+  // Modal de confirmación para eliminar
+  const [propertyToDelete, setPropertyToDelete] = useState<PropertyItem | null>(null);
+
   // Modal de creación/edición
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -433,9 +436,9 @@ export const AdminPropertiesSection = ({
                       {/* Botón Eliminar */}
                       <button
                         type="button"
-                        onClick={() => onDeleteProperty(prop.id)}
+                        onClick={() => setPropertyToDelete(prop)}
                         className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                        title="Eliminar Registro"
+                        title="Eliminar Inmueble"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -547,42 +550,106 @@ export const AdminPropertiesSection = ({
               </div>
             )}
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-100">
               <button
                 type="button"
-                onClick={() => setSelectedProperty(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 cursor-pointer"
+                onClick={() => setPropertyToDelete(selectedProperty)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 cursor-pointer transition-colors"
               >
-                Cerrar
+                <Trash2 className="w-4 h-4" />
+                <span>Eliminar Inmueble</span>
               </button>
-              {selectedProperty.status !== 'Publicado' ? (
+
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    onUpdateStatus(selectedProperty.id, 'Publicado');
-                    setSelectedProperty(prev => prev ? { ...prev, status: 'Publicado' } : null);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer transition-all shadow-xs"
+                  onClick={() => setSelectedProperty(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 cursor-pointer"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Publicar Inmueble</span>
+                  Cerrar
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onUpdateStatus(selectedProperty.id, 'Pausado');
-                    setSelectedProperty(prev => prev ? { ...prev, status: 'Pausado' } : null);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white cursor-pointer transition-all shadow-xs"
-                >
-                  <PauseCircle className="w-4 h-4" />
-                  <span>Pausar Publicación</span>
-                </button>
-              )}
+                {selectedProperty.status !== 'Publicado' ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUpdateStatus(selectedProperty.id, 'Publicado');
+                      setSelectedProperty(prev => prev ? { ...prev, status: 'Publicado' } : null);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer transition-all shadow-xs"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Publicar Inmueble</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUpdateStatus(selectedProperty.id, 'Pausado');
+                      setSelectedProperty(prev => prev ? { ...prev, status: 'Pausado' } : null);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white cursor-pointer transition-all shadow-xs"
+                  >
+                    <PauseCircle className="w-4 h-4" />
+                    <span>Pausar Publicación</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE INMUEBLE */}
+      <Modal
+        isOpen={!!propertyToDelete}
+        onClose={() => setPropertyToDelete(null)}
+        title="Confirmar Eliminación de Inmueble"
+        subtitle="Esta acción es irreversible y eliminará el registro de la base de datos"
+        maxWidth="md"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="text-xs text-rose-900 leading-relaxed font-medium">
+              <p className="font-bold mb-1">¿Estás seguro de eliminar este inmueble?</p>
+              <p>Esta acción removerá permanentemente el registro de Supabase PostgreSQL, incluyendo sus fotografías y vinculaciones legales.</p>
+            </div>
+          </div>
+
+          {propertyToDelete && (
+            <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs space-y-1">
+              <p className="font-black text-surface-dark">{propertyToDelete.title}</p>
+              <p className="text-gray-600">{propertyToDelete.zone} • <span className="font-bold text-primary">{propertyToDelete.price}</span></p>
+              <p className="text-[11px] font-mono text-gray-400">ID: {propertyToDelete.id}</p>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={() => setPropertyToDelete(null)}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (propertyToDelete) {
+                  onDeleteProperty(propertyToDelete.id);
+                  if (selectedProperty?.id === propertyToDelete.id) {
+                    setSelectedProperty(null);
+                  }
+                  setPropertyToDelete(null);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white cursor-pointer transition-all shadow-xs"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Sí, Eliminar Inmueble</span>
+            </button>
+          </div>
+        </div>
       </Modal>
 
       {/* MODAL DE CREACIÓN / EDICIÓN */}

@@ -277,13 +277,14 @@ propertiesRouter.post('/', async (c) => {
       userId = profile.id;
     } else {
       const newUserId = crypto.randomUUID();
+      const isVipOrAdminUser = (emailLower === 'vip@inmovax.com') || (emailLower === 'admin@inmovax.com');
       const { data: newProfile, error: profileErr } = await supabase
         .from('profiles')
         .insert({
           id: newUserId,
           email: emailLower,
-          full_name: validated.authorName || 'Vendedor InmoVAX',
-          role_id: 3, // 3 = Vendedor
+          full_name: validated.authorName || 'Usuario InmoVAX',
+          role_id: isVipOrAdminUser ? 3 : 2, // 2 = Comprador / Usuario regular hasta aprobación de pago por admin
           is_verified: true
         })
         .select('id')
@@ -622,8 +623,23 @@ propertiesRouter.delete('/:id', async (c) => {
     return c.json({ success: false, error: 'Inmueble no encontrado' }, 404);
   }
 
-  // Eliminar imágenes y el inmueble (las demás tablas tienen ON DELETE CASCADE)
+  // 1. Eliminar imágenes asociadas
   await supabase.from('property_images').delete().eq('property_id', prop.id);
+
+  // 2. Eliminar favoritos asociados para evitar errores de clave foránea
+  await supabase.from('favorites').delete().eq('property_id', prop.id);
+
+  // 3. Eliminar auditorías legales asociadas si existen
+  await supabase.from('legal_audits').delete().eq('property_id', prop.id);
+
+  // 4. Limpiar órdenes de pago asociadas en memoria
+  for (const [orderId, order] of inMemoryOrders.entries()) {
+    if (order.propertyId === prop.id || order.propertyId === prop.code || order.propertyId === idOrCode) {
+      inMemoryOrders.delete(orderId);
+    }
+  }
+
+  // 5. Eliminar el registro del inmueble en Supabase
   const { error } = await supabase.from('properties').delete().eq('id', prop.id);
 
   if (error) {
