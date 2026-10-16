@@ -25,7 +25,7 @@ export const SellerStatusBadge = ({
       pulse: true
     },
     'En Validación Legal': {
-      label: 'Validación Legal DDRR',
+      label: 'En revisión',
       bg: 'bg-amber-50 border border-amber-200/80',
       text: 'text-amber-800',
       dot: 'bg-amber-500',

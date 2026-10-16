@@ -4,6 +4,7 @@ import {
   Users, UserCheck, ShieldAlert, Search, MessageSquare, 
   Ban, CheckCircle2, Building2, Phone, Mail, Sparkles 
 } from 'lucide-react';
+import { Modal } from '../atoms/Modal';
 
 export interface UserItem {
   id: string;
@@ -23,6 +24,7 @@ export const AdminUsersSection: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState('todos');
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [userToToggle, setUserToToggle] = useState<UserItem | null>(null);
 
   const getAdminHeaders = (): Record<string, string> => {
     const token = typeof window !== 'undefined' ? window.localStorage.getItem('inmovax-token') : null;
@@ -111,9 +113,11 @@ export const AdminUsersSection: React.FC = () => {
     loadUsers();
   }, []);
 
-  const handleToggleStatus = async (user: UserItem) => {
+  const confirmToggleStatus = async () => {
+    if (!userToToggle) return;
+    const user = userToToggle;
     const nextStatus = user.status === 'Activo' ? 'Suspendido' : 'Activo';
-    if (!confirm(`¿Deseas cambiar el estado de ${user.fullName} a ${nextStatus}?`)) return;
+    setUserToToggle(null);
 
     setActionLoading(user.id);
     // Optimista
@@ -240,129 +244,127 @@ export const AdminUsersSection: React.FC = () => {
         </div>
       </div>
 
-      {/* TABLA DE USUARIOS */}
+      {/* LISTADO DE USUARIOS (RESPONSIVE: TABLA EN DESKTOP, TARJETAS EN MÓVIL) */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        
+        {/* VISTA DESKTOP / TABLET (>= 768px): TABLA COMPACTA SIN SCROLL HORIZONTAL */}
+        <div className="hidden md:block overflow-x-hidden">
+          <table className="w-full text-left text-xs table-fixed">
             <thead className="bg-slate-50/90 border-b border-gray-200/80 text-gray-500 font-black uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="py-4 px-4">Usuario</th>
-                <th className="py-4 px-4">Contacto</th>
-                <th className="py-4 px-4">Rol en Web</th>
-                <th className="py-4 px-4 text-center">Inmuebles</th>
-                <th className="py-4 px-4">Estado</th>
-                <th className="py-4 px-4 text-right">Acciones</th>
+                <th className="py-3.5 px-4 w-[38%]">Usuario y Rol</th>
+                <th className="py-3.5 px-3 w-[26%]">Contacto</th>
+                <th className="py-3.5 px-3 text-center w-[12%]">Inmuebles</th>
+                <th className="py-3.5 px-2 text-center w-[10%]">Estado</th>
+                <th className="py-3.5 px-4 text-right w-[14%]">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium">
               {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-50/70 transition-colors">
                   
-                  {/* Celda Nombre */}
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center font-black text-white text-xs shrink-0 shadow-2xs">
+                  {/* Columna 1: Usuario & Rol */}
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center font-black text-white text-xs shrink-0 shadow-2xs">
                         {user.fullName.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <div className="font-black text-surface-dark text-xs">{user.fullName}</div>
-                        <div className="text-[10px] text-gray-400 font-mono">ID: {user.id.slice(0, 12)}</div>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-extrabold text-surface-dark text-xs block truncate" title={user.fullName}>
+                          {user.fullName}
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <span className={`px-2 py-0.2 rounded-md text-[10px] font-black border ${
+                            user.role === 'Administrador'
+                              ? 'bg-purple-50 text-purple-800 border-purple-200'
+                              : user.role === 'Vendedor'
+                              ? 'bg-blue-50 text-primary border-blue-200'
+                              : 'bg-gray-100 text-gray-700 border-gray-200'
+                          }`}>
+                            {user.role}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-mono">
+                            ID: {user.id.slice(0, 8)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </td>
 
-                  {/* Celda Contacto */}
-                  <td className="py-4 px-4">
-                    <div className="space-y-0.5">
-                      <div className="text-gray-800 font-bold flex items-center gap-1.5">
-                        <Mail className="w-3 h-3 text-gray-400" />
-                        <span>{user.email}</span>
+                  {/* Columna 2: Contacto (Email + Celular con WhatsApp) */}
+                  <td className="py-3 px-3">
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="text-gray-900 font-semibold text-xs flex items-center gap-1.5 truncate" title={user.email}>
+                        <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className="truncate">{user.email}</span>
                       </div>
-                      <div className="text-gray-500 text-[11px] flex items-center gap-1.5">
-                        <Phone className="w-3 h-3 text-gray-400" />
-                        <span>{user.phone}</span>
+                      <div className="text-gray-500 text-[11px] flex items-center gap-1.5 truncate">
+                        <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className="truncate">{user.phone}</span>
+                        {user.phone && user.phone !== 'Sin registrar' && (
+                          <a
+                            href={`https://wa.me/${user.phone.replace(/[^0-9]/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-0.5 text-emerald-600 hover:text-emerald-700"
+                            title="Abrir WhatsApp"
+                          >
+                            <MessageSquare className="w-3 h-3" />
+                          </a>
+                        )}
                       </div>
                     </div>
                   </td>
 
-                  {/* Celda Rol */}
-                  <td className="py-4 px-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-black border ${
-                      user.role === 'Administrador'
-                        ? 'bg-purple-50 text-purple-800 border-purple-200'
-                        : user.role === 'Vendedor'
-                        ? 'bg-blue-50 text-primary border-blue-200'
-                        : 'bg-gray-100 text-gray-700 border-gray-200'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </td>
-
-                  {/* Celda Inmuebles */}
-                  <td className="py-4 px-4 text-center whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1 font-bold text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg text-xs">
-                      <Building2 className="w-3.5 h-3.5 text-gray-500" />
+                  {/* Columna 3: Inmuebles Publicados */}
+                  <td className="py-3 px-3 text-center">
+                    <span className="inline-flex items-center gap-1 font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded-lg text-xs">
+                      <Building2 className="w-3 h-3 text-gray-500" />
                       <span>{user.propertiesCount}</span>
                     </span>
                   </td>
 
-                  {/* Celda Estado */}
-                  <td className="py-4 px-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border ${
+                  {/* Columna 4: Estado */}
+                  <td className="py-3 px-2 text-center">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
                       user.status === 'Activo'
                         ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                         : 'bg-rose-50 text-rose-800 border-rose-200'
                     }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${user.status === 'Activo' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                      {user.status}
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${user.status === 'Activo' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                      <span>{user.status}</span>
                     </span>
                   </td>
 
-                  {/* Celda Acciones */}
-                  <td className="py-4 px-4 text-right whitespace-nowrap">
-                    <div className="flex items-center justify-end gap-1.5">
-                      
-                      {/* WhatsApp directo si tiene teléfono */}
-                      {user.phone && user.phone !== 'Sin registrar' && (
-                        <a
-                          href={`https://wa.me/${user.phone.replace(/[^0-9]/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
-                          title="Contactar por WhatsApp"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-
-                      {/* Botón Bloquear / Desbloquear */}
-                      {user.role !== 'Administrador' && (
-                        <button
-                          type="button"
-                          disabled={actionLoading === user.id}
-                          onClick={() => handleToggleStatus(user)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                            user.status === 'Activo'
-                              ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
-                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
-                          }`}
-                          title={user.status === 'Activo' ? 'Suspender acceso' : 'Reactivar usuario'}
-                        >
-                          {user.status === 'Activo' ? (
-                            <>
-                              <Ban className="w-3.5 h-3.5" />
-                              <span>Suspender</span>
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Reactivar</span>
-                            </>
-                          )}
-                        </button>
-                      )}
-
-                    </div>
+                  {/* Columna 5: Acciones */}
+                  <td className="py-3 px-4 text-right">
+                    {user.role !== 'Administrador' ? (
+                      <button
+                        type="button"
+                        disabled={actionLoading === user.id}
+                        onClick={() => setUserToToggle(user)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                          user.status === 'Activo'
+                            ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                            : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                        }`}
+                        title={user.status === 'Activo' ? 'Suspender acceso' : 'Reactivar usuario'}
+                      >
+                        {user.status === 'Activo' ? (
+                          <>
+                            <Ban className="w-3 h-3" />
+                            <span>Suspender</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Reactivar</span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-gray-400 italic">Protegido</span>
+                    )}
                   </td>
 
                 </tr>
@@ -371,13 +373,166 @@ export const AdminUsersSection: React.FC = () => {
           </table>
         </div>
 
+        {/* VISTA MÓVIL (< 768px): TARJETAS TÁCTILES LIMPIAS Y ERGONÓMICAS */}
+        <div className="block md:hidden divide-y divide-gray-100">
+          {filteredUsers.map((user) => (
+            <div key={user.id} className="p-4 space-y-3 hover:bg-gray-50/60 transition-colors">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center font-black text-white text-xs shrink-0 shadow-2xs">
+                    {user.fullName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-extrabold text-xs text-surface-dark truncate">
+                      {user.fullName}
+                    </h4>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      ID: {user.id.slice(0, 10)}
+                    </span>
+                  </div>
+                </div>
+
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black border shrink-0 ${
+                  user.status === 'Activo'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-rose-50 text-rose-800 border-rose-200'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${user.status === 'Activo' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                  {user.status}
+                </span>
+              </div>
+
+              {/* Fila de Datos Clave en Móvil */}
+              <div className="grid grid-cols-2 gap-2 text-xs bg-gray-50/80 p-2.5 rounded-xl border border-gray-100">
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 block uppercase">Rol en Plataforma</span>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black border mt-0.5 ${
+                    user.role === 'Administrador'
+                      ? 'bg-purple-50 text-purple-800 border-purple-200'
+                      : user.role === 'Vendedor'
+                      ? 'bg-blue-50 text-primary border-blue-200'
+                      : 'bg-gray-100 text-gray-700 border-gray-200'
+                  }`}>
+                    {user.role}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 block uppercase">Inmuebles</span>
+                  <span className="font-bold text-xs text-surface-dark flex items-center gap-1 mt-0.5">
+                    <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                    {user.propertiesCount} publicados
+                  </span>
+                </div>
+                <div className="col-span-2 pt-1 border-t border-gray-200/50 space-y-1 text-[11px]">
+                  <div className="flex items-center gap-1.5 text-gray-700 truncate">
+                    <Mail className="w-3 h-3 text-gray-400 shrink-0" />
+                    <span className="truncate">{user.email}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-gray-700 truncate">
+                    <Phone className="w-3 h-3 text-gray-400 shrink-0" />
+                    <span className="truncate">{user.phone}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botonera de Acción Táctil para Móvil */}
+              <div className="flex items-center gap-2 pt-1">
+                {user.phone && user.phone !== 'Sin registrar' && (
+                  <a
+                    href={`https://wa.me/${user.phone.replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>WhatsApp</span>
+                  </a>
+                )}
+                {user.role !== 'Administrador' ? (
+                  <button
+                    type="button"
+                    disabled={actionLoading === user.id}
+                    onClick={() => setUserToToggle(user)}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border ${
+                      user.status === 'Activo'
+                        ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    {user.status === 'Activo' ? (
+                      <>
+                        <Ban className="w-3.5 h-3.5" />
+                        <span>Suspender</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Reactivar</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-gray-400 italic text-center w-full py-1">Cuenta Administrador Protegida</span>
+                )}
+              </div>
+
+            </div>
+          ))}
+        </div>
+
+        {/* Estado Vacío */}
         {filteredUsers.length === 0 && (
           <div className="text-center py-12 text-content-muted">
             <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
             <p className="font-bold text-xs text-surface-dark">No se encontraron usuarios</p>
           </div>
         )}
+
       </div>
+
+      {/* MODAL DE CONFIRMACIÓN PARA SUSPENSIÓN / REACTIVACIÓN (SIN CONFIRM NATIVO) */}
+      {userToToggle && (
+        <Modal
+          isOpen={!!userToToggle}
+          onClose={() => setUserToToggle(null)}
+          title={userToToggle.status === 'Activo' ? 'Suspender Usuario' : 'Reactivar Usuario'}
+          subtitle={`${userToToggle.fullName} • ${userToToggle.email}`}
+          maxWidth="md"
+        >
+          <div className="space-y-4 pt-2">
+            <div className={`p-3.5 rounded-xl border text-xs font-medium ${
+              userToToggle.status === 'Activo'
+                ? 'bg-rose-50 border-rose-200 text-rose-900'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+            }`}>
+              {userToToggle.status === 'Activo'
+                ? 'Al suspender a este usuario, no podrá iniciar sesión ni gestionar publicaciones en la plataforma.'
+                : 'Al reactivar a este usuario, se restaurará su acceso completo a la plataforma.'}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setUserToToggle(null)}
+                className="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold text-content-muted hover:text-surface-dark cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmToggleStatus}
+                className={`px-4 py-2 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                  userToToggle.status === 'Activo'
+                    ? 'bg-rose-600 hover:bg-rose-700'
+                    : 'bg-emerald-600 hover:bg-emerald-700'
+                }`}
+              >
+                {userToToggle.status === 'Activo' ? 'Confirmar Suspensión' : 'Confirmar Reactivación'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
     </div>
   );

@@ -1,8 +1,6 @@
 import { MiddlewareHandler } from 'hono';
 import { supabase } from '../config/supabase';
-
-// Clave maestra de contingencia para el entorno de desarrollo y pruebas seguras
-const MASTER_ADMIN_KEY = 'AdminInmoVAX#2026';
+import { config } from '../config/env';
 
 /**
  * Middleware para requerir autenticación general mediante JWT de Supabase
@@ -11,12 +9,21 @@ export const requireAuth: MiddlewareHandler = async (c, next) => {
   const authHeader = c.req.header('authorization') || c.req.header('Authorization');
   const adminKey = c.req.header('x-admin-key');
 
-  // Acceso de contingencia con clave maestra
-  if (adminKey === MASTER_ADMIN_KEY) {
-    c.set('user', { id: 'b0000000-0000-0000-0000-000000000003', email: 'admin@inmovax.com' });
-    c.set('profile', { id: 'b0000000-0000-0000-0000-000000000003', email: 'admin@inmovax.com', role_id: 4, is_verified: true });
-    await next();
-    return;
+  // Acceso de administración mediante clave de entorno segura (sin credenciales hardcodeadas)
+  if (config.adminKey && adminKey === config.adminKey) {
+    const { data: adminProfile } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, role_id, is_verified')
+      .eq('role_id', 4)
+      .limit(1)
+      .maybeSingle();
+
+    if (adminProfile) {
+      c.set('user', { id: adminProfile.id, email: adminProfile.email });
+      c.set('profile', adminProfile);
+      await next();
+      return;
+    }
   }
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -70,12 +77,21 @@ export const requireAdmin: MiddlewareHandler = async (c, next) => {
   const authHeader = c.req.header('authorization') || c.req.header('Authorization');
   const adminKey = c.req.header('x-admin-key');
 
-  // 1. Acceso de contingencia con clave maestra
-  if (adminKey === MASTER_ADMIN_KEY) {
-    c.set('user', { id: 'b0000000-0000-0000-0000-000000000003', email: 'admin@inmovax.com' });
-    c.set('profile', { id: 'b0000000-0000-0000-0000-000000000003', email: 'admin@inmovax.com', role_id: 4, is_verified: true });
-    await next();
-    return;
+  // 1. Acceso de administración mediante clave de entorno segura (sin credenciales hardcodeadas)
+  if (config.adminKey && adminKey === config.adminKey) {
+    const { data: adminProfile } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, role_id, is_verified')
+      .eq('role_id', 4)
+      .limit(1)
+      .maybeSingle();
+
+    if (adminProfile) {
+      c.set('user', { id: adminProfile.id, email: adminProfile.email });
+      c.set('profile', adminProfile);
+      await next();
+      return;
+    }
   }
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -97,16 +113,13 @@ export const requireAdmin: MiddlewareHandler = async (c, next) => {
       }, 403);
     }
 
-    // Comprobar si es admin por email directo
-    const isDirectAdmin = user.email?.toLowerCase().trim() === 'admin@inmovax.com';
-
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, email, full_name, role_id, is_verified')
       .or(`id.eq.${user.id},email.eq.${user.email?.toLowerCase().trim()}`)
       .maybeSingle();
 
-    const isAdmin = isDirectAdmin || profile?.role_id === 4;
+    const isAdmin = profile?.role_id === 4;
 
     if (!isAdmin) {
       return c.json({

@@ -1,33 +1,25 @@
+/**
+ * Entrypoint Principal - InmoVAX Backend API
+ * Arquitectura Limpia por Capas | Runtime: Bun + Hono
+ */
+
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { config } from './config/env';
 import { auditMiddleware } from './middleware/audit';
-import { healthRouter } from './routes/health';
-import { propertiesRouter } from './routes/properties';
-import { offersRouter } from './routes/offers';
-import { appointmentsRouter } from './routes/appointments';
-import { notificationsRouter } from './routes/notifications';
-import { advisorsRouter } from './routes/advisors';
-import { legalRouter } from './routes/legal';
-import { consultationsRouter } from './routes/consultations';
-import { authRouter } from './routes/auth';
-import { paymentsRouter } from './routes/payments';
-import { settingsRouter } from './routes/settings';
-import { favoritesRouter } from './routes/favorites';
+import { registerRoutes } from './routes';
 
 export const app = new Hono();
 
-// 1. CONFIGURACIÓN DE CORS RESTRINGIDO (Solo localhost:3000)
+// 1. Configuración de CORS Restringido
 app.use('*', cors({
   origin: [config.corsOrigin, 'http://localhost:3000', 'http://127.0.0.1:3000'],
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'x-user-email'],
-  exposeHeaders: ['Content-Length'],
-  maxAge: 86400,
+  allowHeaders: ['Content-Type', 'Authorization', 'x-user-email', 'x-admin-key', 'X-Admin-Key'],
   credentials: true,
 }));
 
-// 2. HEADERS DE SEGURIDAD
+// 2. Cabeceras de Seguridad HTTP
 app.use('*', async (c, next) => {
   await next();
   c.res.headers.set('X-Content-Type-Options', 'nosniff');
@@ -36,54 +28,29 @@ app.use('*', async (c, next) => {
   c.res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 });
 
-// 3. MIDDLEWARE DE AUDITORÍA Y TRAZABILIDAD
+// 3. Auditoría y Trazabilidad
 app.use('*', auditMiddleware);
 
-// 4. RUTAS DEL SISTEMA
-app.route('/health', healthRouter);
-app.route('/api/auth', authRouter);
-app.route('/api/properties', propertiesRouter);
-app.route('/api/offers', offersRouter);
-app.route('/api/appointments', appointmentsRouter);
-app.route('/api/notifications', notificationsRouter);
-app.route('/api/advisors', advisorsRouter);
-app.route('/api/legal-audits', legalRouter);
-app.route('/api/consultations', consultationsRouter);
-app.route('/api/payments', paymentsRouter);
-app.route('/api/settings', settingsRouter);
-app.route('/api/favorites', favoritesRouter);
+// 4. Montaje Modular de Rutas
+registerRoutes(app);
 
-// 5. RUTA RAÍZ INFORMATIVA
-app.get('/', (c) => {
-  return c.json({
-    name: 'InmoVAX Backend API',
-    runtime: 'Bun',
-    version: '1.0.0',
-    database: 'Supabase (PostgreSQL)',
-    endpoints: {
-      health: '/health',
-      properties: '/api/properties',
-      offers: '/api/offers',
-      appointments: '/api/appointments',
-      notifications: '/api/notifications',
-      advisors: '/api/advisors',
-      legalAudits: '/api/legal-audits',
-      audit: '/health/audit-logs'
-    }
-  });
+// 5. Manejo Centralizado de Errores y Rutas No Encontradas
+app.notFound((c) => {
+  return c.json({ success: false, error: 'Endpoint no encontrado' }, 404);
 });
 
-// 6. INICIO DEL SERVIDOR NATIVO BUN
-console.log(`
-======================================================
-  INMOVAX BACKEND API (Bun + Hono)
-======================================================
-  Puerto:        http://localhost:${config.port}
-  Healthcheck:   http://localhost:${config.port}/health
-  CORS Permitido: ${config.corsOrigin}
-  Runtime:       Bun v${Bun.version}
-======================================================
-`);
+app.onError((err, c) => {
+  console.error('[GLOBAL ERROR]:', err);
+  return c.json({
+    success: false,
+    error: err.message || 'Error interno del servidor',
+  }, 500);
+});
+
+// 6. Estado y Versión
+app.get('/', (c) => c.json({ name: 'InmoVAX API', version: '1.0.0', runtime: 'Bun' }));
+
+console.log(`\n=== INMOVAX API ===\nPuerto: http://localhost:${config.port}\nRuntime: Bun v${Bun.version}\n`);
 
 export default {
   port: config.port,

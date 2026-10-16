@@ -106,6 +106,7 @@ export const SellerPropertiesSection = ({
   });
 
   const startEditing = (prop: SellerProperty) => {
+    if (prop.status === 'En Validación Legal') return;
     setEditingProperty(prop);
     setActiveTab('general');
     setSaveSuccessMsg(null);

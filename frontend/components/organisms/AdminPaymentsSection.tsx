@@ -16,6 +16,7 @@ import {
   AdminPendingOrder
 } from '@/lib/paymentsApi';
 import { getAllManagedProperties, saveManagedProperties } from '@/lib/propertiesStore';
+import { Modal } from '../atoms/Modal';
 
 export const AdminPaymentsSection: React.FC = () => {
   const [plans, setPlans] = useState<Record<string, PublicationPlanItem>>({});
@@ -26,6 +27,10 @@ export const AdminPaymentsSection: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Estados para modal de rechazo seguro (sin window.prompt)
+  const [orderToReject, setOrderToReject] = useState<AdminPendingOrder | null>(null);
+  const [rejectReason, setRejectReason] = useState<string>('Comprobante no legible o monto incorrecto');
 
   // Estados para editar precios configurables
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
@@ -106,20 +111,25 @@ export const AdminPaymentsSection: React.FC = () => {
     setActionLoading(null);
   };
 
-  const handleReject = async (orderId: string) => {
-    const reason = prompt('Indica el motivo del rechazo del comprobante:', 'Comprobante no legible o monto incorrecto');
-    if (!reason) return;
+  const handleOpenRejectModal = (order: AdminPendingOrder) => {
+    setOrderToReject(order);
+    setRejectReason('Comprobante no legible o monto incorrecto');
+  };
 
+  const handleConfirmReject = async () => {
+    if (!orderToReject) return;
+    const orderId = orderToReject.id;
     setActionLoading(orderId);
     const targetOrder = pendingOrders.find(o => o.id === orderId);
 
     // Eliminación visual inmediata de la lista de pendientes
     setPendingOrders(prev => prev.filter(o => o.id !== orderId));
     if (targetOrder) {
-      setHistoryOrders(prev => [{ ...targetOrder, status: 'rechazado' }, ...prev]);
+      setHistoryOrders(prev => [{ ...targetOrder, status: 'rechazado', rejectionReason: rejectReason }, ...prev]);
     }
+    setOrderToReject(null);
 
-    const ok = await rejectPaymentOrder(orderId, reason);
+    const ok = await rejectPaymentOrder(orderId, rejectReason);
     if (ok) {
       showToast(`Pago ${orderId} rechazado.`);
       loadData();
@@ -355,7 +365,7 @@ export const AdminPaymentsSection: React.FC = () => {
                         <button
                           type="button"
                           disabled={actionLoading === order.id}
-                          onClick={() => handleReject(order.id)}
+                          onClick={() => handleOpenRejectModal(order)}
                           className="px-2.5 py-1.5 border border-rose-300 text-rose-600 hover:bg-rose-50 font-bold text-[11px] rounded-lg transition-all cursor-pointer disabled:opacity-50"
                         >
                           Rechazar
@@ -483,6 +493,51 @@ export const AdminPaymentsSection: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Modal de Rechazo de Comprobante */}
+      {orderToReject && (
+        <Modal
+          isOpen={!!orderToReject}
+          onClose={() => setOrderToReject(null)}
+          title="Rechazar Comprobante de Pago"
+          subtitle={`Orden ${orderToReject.id} • ${orderToReject.propertyTitle || 'Inmueble'}`}
+          maxWidth="md"
+        >
+          <div className="space-y-4 pt-2">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 font-medium">
+              Indica el motivo del rechazo. Este mensaje quedará registrado en el historial de la auditoría.
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-surface-dark mb-1">
+                Motivo del Rechazo:
+              </label>
+              <textarea
+                rows={3}
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                className="w-full p-2.5 bg-white border border-gray-300 rounded-xl text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:outline-hidden"
+                placeholder="Ej: Monto transferido no coincide con el plan seleccionado..."
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setOrderToReject(null)}
+                className="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold text-content-muted hover:text-surface-dark cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmReject}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                Confirmar Rechazo
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
     </div>

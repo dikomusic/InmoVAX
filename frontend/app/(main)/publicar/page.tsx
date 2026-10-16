@@ -7,7 +7,7 @@ import { readStoredSession, saveStoredSession } from '@/lib/frontendStore';
 import { addManagedProperty, ManagedProperty } from '@/lib/propertiesStore';
 import { PublicationPlansModal } from '@/components/organisms/PublicationPlansModal';
 import { linkPropertyToOrder, PaymentOrderResponse } from '@/lib/paymentsApi';
-import { ShieldCheck, CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Sparkles, ArrowRight, Clock, Home } from 'lucide-react';
 
 export default function PublicarPage() {
   const router = useRouter();
@@ -28,15 +28,15 @@ export default function PublicarPage() {
       currentSession = {
         name: 'Usuario InmoVAX',
         email: 'usuario@inmovax.com',
-        hasPublishedProperties: isVipUser,
-        role: isVipUser ? 'vendedor' : 'comprador'
+        hasPublishedProperties: true,
+        role: 'vendedor'
       };
       saveStoredSession(currentSession);
     } else {
       saveStoredSession({ 
         ...currentSession, 
-        hasPublishedProperties: isVipUser, 
-        role: isVipUser ? 'vendedor' : (currentSession.role || 'comprador') 
+        hasPublishedProperties: true, 
+        role: currentSession.role === 'admin' ? 'admin' : 'vendedor' 
       });
     }
 
@@ -74,7 +74,9 @@ export default function PublicarPage() {
     }
 
     setCreatedProp(newProp);
-    router.push(`/propiedad/${newProp.id}`);
+    if (isVipUser) {
+      router.push(`/propiedad/${newProp.id}`);
+    }
   };
 
   return (
@@ -156,12 +158,76 @@ export default function PublicarPage() {
         </div>
       )}
 
-      {/* FORMULARIO DE PUBLICACIÓN: SE MUESTRA RECIÉN TRAS CONFIRMAR EL PLAN / PAGO */}
-      {confirmedOrder && (
+      {/* FORMULARIO O CONFIRMACIÓN TRAS PUBLICAR */}
+      {createdProp ? (
+        <div className="max-w-2xl mx-auto bg-white border border-emerald-100 rounded-3xl p-8 sm:p-10 shadow-lg text-center space-y-6 animate-in zoom-in-95 duration-300">
+          <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+            <CheckCircle2 className="w-10 h-10" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
+              <Clock className="w-3.5 h-3.5 text-amber-600" /> En Validación Legal por Administrador
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-content-main">
+              ¡Inmueble Registrado Exitosamente!
+            </h2>
+            <p className="text-sm text-content-muted max-w-lg mx-auto">
+              Tu publicación con Folio Real <span className="font-mono font-bold text-content-main">{createdProp.folioReal}</span> y comprobante de pago QR han sido enviados a revisión por el equipo administrativo y legal.
+            </p>
+          </div>
+
+          {/* TARJETA RESUMEN DEL INMUEBLE */}
+          <div className="bg-surface-light rounded-2xl p-4 sm:p-5 border border-gray-100 text-left space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="text-[11px] font-bold text-accent uppercase tracking-wider">
+                  {createdProp.type} • {createdProp.category || 'Inmueble'}
+                </span>
+                <h4 className="font-extrabold text-base text-content-main mt-0.5">
+                  {createdProp.title}
+                </h4>
+                <p className="text-xs text-content-muted mt-0.5">
+                  {createdProp.zone}
+                </p>
+              </div>
+              <span className="text-lg font-black text-content-main shrink-0">
+                {createdProp.price}
+              </span>
+            </div>
+
+            <div className="border-t border-gray-200/60 pt-3 flex flex-wrap items-center justify-between text-xs text-content-muted">
+              <span>Folio Real: <strong className="text-content-main font-mono">{createdProp.folioReal}</strong></span>
+              <span>Estado: <strong className="text-amber-700 font-bold">En Validación Legal</strong></span>
+            </div>
+          </div>
+
+          {/* ACCIONES */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => router.push('/vendedor?tab=inmuebles')}
+              className="w-full sm:w-auto px-6 py-3.5 bg-accent hover:bg-accent/90 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center justify-center gap-2"
+            >
+              <Home className="w-4 h-4" /> Ir a Mis Inmuebles Publicados
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCreatedProp(null);
+                setConfirmedOrder(null);
+              }}
+              className="w-full sm:w-auto px-5 py-3.5 bg-surface-light hover:bg-gray-100 text-content-main font-bold text-xs uppercase tracking-wider rounded-xl border border-gray-200 transition-all cursor-pointer"
+            >
+              Publicar Otro Inmueble
+            </button>
+          </div>
+        </div>
+      ) : confirmedOrder ? (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
           <PublishPropertyForm onSuccessCallback={handlePublished} />
         </div>
-      )}
+      ) : null}
 
       {/* PANTALLA FLOTANTE / MODAL DE PLANES Y PAGO QR */}
       <PublicationPlansModal

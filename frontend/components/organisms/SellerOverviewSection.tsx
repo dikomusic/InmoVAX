@@ -89,11 +89,11 @@ export const SellerOverviewSection = ({
       {/* KPIS DEL PROPIETARIO */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <StatCard
-          title="Mis Inmuebles Activos"
+          title="Mis Inmuebles"
           value={properties.length}
-          subtitle="En catálogo con Folio Real"
+          subtitle={`${properties.filter(p => p.status === 'Activo').length} activos • ${properties.filter(p => p.status === 'Pausado').length} pausados`}
           icon={<Building2 className="h-5 w-5" />}
-          trend="100% Verificados"
+          trend="En Catálogo"
           trendType="positive"
           bgColor="bg-blue-50 text-primary"
         />
@@ -195,9 +195,14 @@ export const SellerOverviewSection = ({
                     {(onRequestDeleteProperty || onDeleteProperty) && (
                       <button
                         type="button"
-                        onClick={() => handleDelete(prop)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 border border-gray-200 hover:border-rose-200 transition-colors shrink-0 cursor-pointer"
-                        title="Eliminar publicación"
+                        disabled={prop.status === 'En Validación Legal'}
+                        onClick={() => prop.status !== 'En Validación Legal' && handleDelete(prop)}
+                        className={`p-1.5 rounded-lg border transition-colors shrink-0 ${
+                          prop.status === 'En Validación Legal'
+                            ? 'text-gray-300 border-gray-100 cursor-not-allowed opacity-40'
+                            : 'text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200 hover:border-rose-200 cursor-pointer'
+                        }`}
+                        title={prop.status === 'En Validación Legal' ? 'Acciones restringidas mientras está en revisión' : 'Eliminar publicación'}
                         aria-label={`Eliminar publicación ${prop.title}`}
                       >
                         <Trash2 className="h-4 w-4" />

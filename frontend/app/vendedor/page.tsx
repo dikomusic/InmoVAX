@@ -86,13 +86,26 @@ export default function SellerPortalPage() {
     const userName = current.name || userEmail.split('@')[0];
     setSession({ email: userEmail, name: userName });
 
+    // Soporte para pestañas directas desde URL (ej: /vendedor?tab=inmuebles)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab') as SellerTab;
+      if (tabParam && ['resumen', 'inmuebles', 'consultas', 'citas', 'documentos', 'configuracion'].includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+    }
+
     // 1. Inmuebles sincronizados (Carga rápida local + actualización desde Supabase)
     const localProps = getPropertiesByAuthor(userEmail);
     setProperties(localProps);
 
     fetchSellerProperties(userEmail).then((cloudProps) => {
       if (cloudProps && cloudProps.length > 0) {
-        setProperties(cloudProps);
+        setProperties((prev) => {
+          const cloudIds = new Set(cloudProps.map(p => p.id));
+          const onlyLocal = prev.filter(p => !cloudIds.has(p.id));
+          return [...cloudProps, ...onlyLocal];
+        });
       }
     });
 

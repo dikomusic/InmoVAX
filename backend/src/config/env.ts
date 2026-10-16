@@ -19,6 +19,7 @@ export const config = {
     anonKey: process.env.SUPABASE_ANON_KEY || DEFAULT_ANON_KEY,
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || DEFAULT_SERVICE_ROLE,
   },
+  adminKey: process.env.ADMIN_KEY || '',
   isConfigured: () => {
     const url = process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL;
     return !!url && !url.includes('your-project.supabase.co');

@@ -91,7 +91,7 @@ const getBackendPropertiesUrl = () => {
   const base = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
     ? process.env.NEXT_PUBLIC_API_URL
     : 'http://localhost:4000/api';
-  return `${base}/properties`;
+  return `${base}/properties?status=all`;
 };
 
 export const syncPropertiesWithCloudBackend = async () => {
@@ -326,13 +326,25 @@ export const addManagedProperty = async (data: NewPropertyInput): Promise<Manage
       });
       
       if (res.ok) {
-        const fetchRes = await fetch('http://127.0.0.1:4000/api/properties');
+        const resData = await res.json().catch(() => null);
+        if (resData?.property) {
+          const allCurrent = getAllManagedProperties();
+          const merged = allCurrent.map(p => p.id === newProperty.id ? { ...p, ...resData.property } : p);
+          if (!merged.some(p => p.id === resData.property.id)) {
+            merged.unshift(resData.property);
+          }
+          saveManagedProperties(merged);
+        }
+
+        const fetchRes = await fetch('http://127.0.0.1:4000/api/properties?status=all');
         if (fetchRes.ok) {
           const json = await fetchRes.json();
-          if (json.properties) saveManagedProperties(json.properties);
+          if (json.properties && Array.isArray(json.properties) && json.properties.length > 0) {
+            saveManagedProperties(json.properties);
+          }
         }
       } else {
-        const errData = await res.json();
+        const errData = await res.json().catch(() => ({}));
         console.error("Backend error on POST:", errData);
       }
     } catch (err) {
@@ -340,9 +352,13 @@ export const addManagedProperty = async (data: NewPropertyInput): Promise<Manage
     }
   }
 
-  // Actualizar sesión si es el usuario actual para activar "Mi cuenta"
+  // Actualizar sesión si es el usuario actual para activar "Mi cuenta" / Portal Vendedor
   if (currentSession && isMatchingSellerEmail(currentSession.email, authorEmail)) {
-    saveStoredSession({ ...currentSession, hasPublishedProperties: true });
+    saveStoredSession({ 
+      ...currentSession, 
+      hasPublishedProperties: true,
+      role: currentSession.role === 'admin' ? 'admin' : 'vendedor'
+    });
   }
 
   return newProperty;
@@ -454,6 +470,10 @@ export const togglePauseManagedProperty = (propertyId: string): string => {
   let nextStatus = 'Activo';
   const next = all.map((p) => {
     if (p.id === propertyId) {
+      if (p.status === 'En Validación Legal') {
+        nextStatus = p.status;
+        return p;
+      }
       nextStatus = p.status === 'Activo' ? 'Pausado' : 'Activo';
       return { ...p, status: nextStatus as ManagedProperty['status'] };
     }
