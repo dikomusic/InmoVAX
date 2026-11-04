@@ -9,7 +9,9 @@ import { SellerAppointment } from '@/components/organisms/SellerAppointmentsSect
 import { SellerNotificationItem } from '@/components/molecules/SellerNotifications';
 import { SellerProperty } from '@/components/molecules/SellerPropertyCard';
 
-const API_BASE = 'http://localhost:4000/api';
+const API_BASE = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
+  ? process.env.NEXT_PUBLIC_API_URL
+  : 'http://localhost:4000/api';
 
 /**
  * Obtener publicaciones del vendedor en vivo desde Supabase

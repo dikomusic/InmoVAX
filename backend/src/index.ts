@@ -11,9 +11,16 @@ import { registerRoutes } from './routes';
 
 export const app = new Hono();
 
-// 1. Configuración de CORS Restringido
+// 1. Configuración de CORS Restringido y Soporte para Producción
 app.use('*', cors({
-  origin: [config.corsOrigin, 'http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: (origin) => {
+    if (!origin) return '*';
+    const allowed = [config.corsOrigin, 'http://localhost:3000', 'http://127.0.0.1:3000'];
+    if (allowed.includes(origin) || origin.endsWith('.vercel.app') || origin.includes('localhost')) {
+      return origin;
+    }
+    return allowed[0];
+  },
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'x-user-email', 'x-admin-key', 'X-Admin-Key'],
   credentials: true,
