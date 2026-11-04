@@ -116,6 +116,18 @@ export class UserRepository {
   }
 
   /**
+   * Modificar el rol de un usuario (ej. promover a vendedor)
+   */
+  static async updateRole(id: string, roleId: number) {
+    return await supabase
+      .from('profiles')
+      .update({ role_id: roleId, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('id, email, full_name, role_id, is_verified')
+      .single();
+  }
+
+  /**
    * Modificar el estado de activación/suspensión de un usuario
    */
   static async updateStatus(id: string, isVerified: boolean) {

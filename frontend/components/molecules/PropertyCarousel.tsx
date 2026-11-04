@@ -113,6 +113,7 @@ export const PropertyCarousel = ({ properties }: PropertyCarouselProps) => {
               esNuevo={prop.esNuevo ?? true}
               href={`/propiedad/${prop.id}`}
               imagenUrl={prop.image}
+              isVerified={prop.isVerified}
             />
           </div>
         ))}

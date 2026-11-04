@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Users, UserCheck, ShieldAlert, Search, MessageSquare, 
-  Ban, CheckCircle2, Building2, Phone, Mail, Sparkles 
+  Ban, CheckCircle2, Building2, Phone, Mail, Sparkles, Download 
 } from 'lucide-react';
 import { Modal } from '../atoms/Modal';
 
@@ -147,6 +147,39 @@ export const AdminUsersSection: React.FC = () => {
   const activeClients = users.filter(u => u.role === 'Cliente').length;
   const suspendedUsers = users.filter(u => u.status === 'Suspendido').length;
 
+  const exportUsersToCsv = () => {
+    if (filteredUsers.length === 0) {
+      alert('No hay usuarios para exportar con los filtros actuales.');
+      return;
+    }
+    const headers = ['ID Usuario', 'Nombre Completo', 'Email', 'Telefono / WhatsApp', 'Rol', 'Estado', 'Propiedades Publicadas', 'Fecha de Registro'];
+    const rows = filteredUsers.map(u => [
+      u.id,
+      u.fullName,
+      u.email,
+      u.phone,
+      u.role,
+      u.status,
+      u.propertiesCount,
+      u.createdAt || ''
+    ]);
+
+    const csvContent = '\uFEFF' + [
+      headers.join(','),
+      ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `InmoVAX_Usuarios_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       
@@ -241,6 +274,15 @@ export const AdminUsersSection: React.FC = () => {
             <option value="Activo">Activos</option>
             <option value="Suspendido">Suspendidos</option>
           </select>
+
+          <button
+            onClick={exportUsersToCsv}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+            title="Descargar base de datos de usuarios en Excel / CSV"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Exportar Usuarios (Excel)</span>
+          </button>
         </div>
       </div>
 

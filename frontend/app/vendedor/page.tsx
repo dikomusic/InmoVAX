@@ -350,18 +350,14 @@ export default function SellerPortalPage() {
 
                   setProperties(getPropertiesByAuthor(currentEmail));
                   setIsPublishModalOpen(false);
-                  showToast(
-                    currentEmail.toLowerCase().trim() === 'vip@inmovax.com'
-                      ? '¡Inmueble publicado y activo en la página principal (VIP Exento)!'
-                      : `¡Inmueble registrado y enviado a validación legal con Plan ${confirmedPlanOrder?.planName || 'Básico'}!`
-                  );
+                  showToast('¡Inmueble publicado y activo en el catálogo (Plan Gratuito)!');
                   setActiveTab('inmuebles');
                 }}
               />
             </div>
           </Modal>
 
-          {/* MODAL PANTALLA FLOTANTE COMPARATIVA DE PLANES Y PAGO QR */}
+          {/* MODAL PANTALLA FLOTANTE COMPARATIVA DE SERVICIOS PREMIUM Y PAGO QR */}
           {propertyForPlan && (
             <PublicationPlansModal
               isOpen={!!propertyForPlan}
@@ -369,7 +365,7 @@ export default function SellerPortalPage() {
               propertyId={propertyForPlan.id}
               propertyTitle={propertyForPlan.title}
               onSuccess={() => {
-                showToast(`¡Plan de publicación activado para ${propertyForPlan.title}!`);
+                showToast(`¡Solicitud enviada para ${propertyForPlan.title}! En breve el Administrador verificará el comprobante.`);
                 setPropertyForPlan(null);
                 setProperties(getPropertiesByAuthor(currentEmail));
               }}
@@ -386,7 +382,7 @@ export default function SellerPortalPage() {
           notifications={notifications}
           onNavigateTab={(tab) => setActiveTab(tab)}
           onRequestDeleteProperty={handleRequestDelete}
-          onOpenPublishModal={() => setIsPlanSelectionOpen(true)}
+          onOpenPublishModal={() => setIsPublishModalOpen(true)}
           userName={currentName}
         />
       )}
@@ -395,7 +391,7 @@ export default function SellerPortalPage() {
         <SellerPropertiesSection
           properties={properties}
           onTogglePause={handleTogglePause}
-          onOpenPublishModal={() => setIsPlanSelectionOpen(true)}
+          onOpenPublishModal={() => setIsPublishModalOpen(true)}
           onUpdateProperty={handleUpdateProperty}
           onRequestDeleteProperty={handleRequestDelete}
           onOpenPlanModal={(prop) => setPropertyForPlan(prop)}

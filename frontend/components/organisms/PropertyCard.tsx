@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, MapPin, ArrowUpRight, Building2 } from 'lucide-react';
+import { Heart, MapPin, ArrowUpRight, Building2, ShieldCheck } from 'lucide-react';
 import { Badge } from '../atoms/Badge';
 import { PropertyStats } from '../molecules/PropertyStats';
 import {
@@ -28,6 +28,7 @@ export interface PropertyCardProps {
   metros?: number;
   tipoContrato: 'Venta' | 'Alquiler' | 'Anticrético';
   esNuevo?: boolean;
+  isVerified?: boolean;
   imagenUrl?: string;
   href?: string;
   isFavorite?: boolean;
@@ -45,6 +46,7 @@ export const PropertyCard = ({
   metros = 0,
   tipoContrato,
   esNuevo = false,
+  isVerified = false,
   imagenUrl = '',
   href = '#',
   isFavorite = false,
@@ -167,7 +169,13 @@ export const PropertyCard = ({
           </Link>
         )}
         <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4 pointer-events-none">
-          <div className="flex flex-wrap gap-2 pointer-events-auto">
+          <div className="flex flex-wrap gap-2 pointer-events-auto items-center">
+            {isVerified && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-emerald-600 text-white shadow-md shadow-emerald-950/25 backdrop-blur-md">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Verificado Legalmente</span>
+              </span>
+            )}
             {esNuevo && <Badge text="Nuevo" variant="accent" />}
             <Badge text={tipoContrato} variant="primary" />
           </div>

@@ -3,8 +3,8 @@
  * Arquitectura en Capas - Capa de Interfaces
  */
 
-export type PlanId = 'basico' | 'oro' | 'diamante';
-export type PaymentStatus = 'pending' | 'submitted' | 'approved' | 'rejected';
+export type PlanId = 'priorizacion' | 'fotografo' | 'abogado' | 'duo' | 'premium' | 'basico' | 'oro' | 'diamante';
+export type PaymentStatus = 'pending' | 'submitted' | 'approved' | 'rejected' | 'pendiente' | 'aprobado' | 'rechazado';
 
 export interface IPublicationPlan {
   id: PlanId;
@@ -15,9 +15,15 @@ export interface IPublicationPlan {
   price: number;
   currency: 'USD' | 'BOB';
   exposure: string;
+  isPopular?: boolean;
+  description?: string;
   features: {
     canalesInmoVAX: boolean;
     soporte: string;
+    priorizacion?: boolean;
+    fotografo?: boolean;
+    abogado?: boolean;
+    selloVerificado?: boolean;
   };
 }
 export type PublicationPlan = IPublicationPlan;
@@ -28,6 +34,7 @@ export interface PropertyPaymentOrder {
   propertyTitle?: string;
   sellerEmail: string;
   sellerName?: string;
+  sellerPhone?: string;
   planId: string;
   planName: string;
   amount: number;
@@ -35,6 +42,9 @@ export interface PropertyPaymentOrder {
   qrCodeData?: string;
   qrData?: string;
   receiptUrl?: string | null;
+  folioDocumentUrl?: string | null;
+  lawyerStatus?: 'pendiente' | 'aprobado' | 'rechazado';
+  photographerStatus?: 'no_aplica' | 'pendiente' | 'completado';
   status: 'pendiente' | 'aprobado' | 'rechazado' | 'exento_vip' | PaymentStatus;
   rejectionReason?: string | null;
   createdAt: string;
@@ -65,12 +75,15 @@ export interface ICreatePaymentOrderDTO {
   propertyTitle?: string;
   sellerEmail: string;
   sellerName?: string;
+  sellerPhone?: string;
   planId: PlanId;
 }
 
 export interface IConfirmPaymentDTO {
   orderId: string;
   receiptUrl: string;
+  folioDocumentUrl?: string;
+  sellerPhone?: string;
 }
 
 export interface IReviewPaymentDTO {
@@ -78,4 +91,6 @@ export interface IReviewPaymentDTO {
   decision?: 'approve' | 'reject';
   reason?: string;
   notes?: string;
+  lawyerStatus?: 'pendiente' | 'aprobado' | 'rechazado';
+  photographerStatus?: 'no_aplica' | 'pendiente' | 'completado';
 }

@@ -66,7 +66,12 @@ export function mapDbPropertyToDto(dbProp: any): IProperty {
     href: `/propiedad/${code}`,
     datePublished: dbProp.created_at ? 'Publicado recientemente' : 'Publicado hace 4 días',
     authorEmail: dbProp.profiles?.email || '',
-    authorName: dbProp.profiles?.full_name || 'Propietario'
+    authorName: dbProp.profiles?.full_name || 'Propietario',
+    isVerified: Boolean(
+      (Array.isArray(dbProp.legal_audits) && dbProp.legal_audits.length > 0) ||
+      dbProp.is_verified === true ||
+      dbProp.isVerified === true
+    )
   };
 }
 

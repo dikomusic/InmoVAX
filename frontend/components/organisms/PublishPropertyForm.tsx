@@ -156,8 +156,8 @@ export const PublishPropertyForm = ({
     const userSession = {
       name: cleanName,
       email: cleanEmail,
-      hasPublishedProperties: false, // Requiere aprobación previa del Administrador
-      role: 'comprador' as const
+      hasPublishedProperties: true, // Acceso inmediato al portal de vendedor
+      role: 'vendedor' as const
     };
     saveStoredSession(userSession);
     setIsLoading(false);
@@ -167,48 +167,64 @@ export const PublishPropertyForm = ({
     }
   };
 
-  // PANTALLA DE ÉXITO FINAL
+  // PANTALLA DE ÉXITO FINAL (MODELO FREEMIUM)
   if (isCompleted) {
     return (
-      <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100 max-w-3xl mx-auto text-center space-y-6 animate-in zoom-in-95 duration-200">
-        <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-          <Clock className="w-12 h-12 stroke-[2.5]" />
+      <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-emerald-100 max-w-3xl mx-auto text-center space-y-6 animate-in zoom-in-95 duration-200">
+        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+          <CheckCircle2 className="w-12 h-12 stroke-[2.5]" />
         </div>
         <div>
-          <span className="text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
-            Pendiente de Aprobación del Administrador
+          <span className="text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3.5 py-1 rounded-full border border-emerald-200">
+            Plan Gratuito Activo • En Línea
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-surface-dark mt-3">
-            ¡Comprobante y Propiedad Enviados!
+            ¡Felicidades, tu inmueble está publicado!
           </h2>
           <p className="text-sm text-content-muted mt-2 max-w-lg mx-auto font-medium">
-            Tu inmueble en <strong>{formData.zona}</strong> ({formData.operacion}) y tu comprobante de pago han sido enviados a revisión. Una vez que el Administrador verifique el pago, se habilitará tu cuenta de Vendedor y tu propiedad será visible públicamente.
+            Tu inmueble en <strong>{formData.zona}</strong> ({formData.operacion}) ya se encuentra activo y visible públicamente para miles de compradores e inquilinos en Bolivia.
+          </p>
+        </div>
+
+        {/* RECUADRO DE AHORRO ESTIMADO */}
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-emerald-500/10 border border-emerald-200 rounded-2xl max-w-md mx-auto text-left text-xs space-y-2">
+          <div className="flex items-center gap-2 font-black text-emerald-900 text-sm">
+            <span>Ahorro Estimado: ~$4,000 USD en Comisiones</span>
+          </div>
+          <p className="text-emerald-800/90 leading-relaxed font-medium">
+            Al publicar directamente y sin intermediarios inmobiliarios, no regalas del 3% al 7% de tu patrimonio en comisiones.
           </p>
         </div>
 
         <div className="p-4 bg-gray-50 rounded-2xl max-w-md mx-auto text-left text-xs space-y-1.5 border border-gray-100">
           <div className="flex justify-between">
             <span className="text-gray-500 font-bold">Propietario:</span>
-            <span className="font-extrabold text-surface-dark">{authName}</span>
+            <span className="font-extrabold text-surface-dark">{authName || 'Propietario'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500 font-bold">Precio Fijado:</span>
-            <span className="font-black text-primary">$us {formData.precio}</span>
+            <span className="font-black text-emerald-600">$us {formData.precio}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500 font-bold">Folio Real Registrado:</span>
-            <span className="font-mono font-bold text-gray-700">{formData.folioReal}</span>
+            <span className="font-mono font-bold text-gray-700">{formData.folioReal || 'No provisto'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500 font-bold">Estado Actual:</span>
-            <span className="font-bold text-amber-600">En Verificación de Pago</span>
+            <span className="font-bold text-emerald-700">Activo y Visible (Gratuito)</span>
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
           <Link
+            href="/vendedor?tab=inmuebles"
+            className="w-full sm:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer text-center"
+          >
+            Ir a Mi Portal de Vendedor →
+          </Link>
+          <Link
             href="/"
-            className="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl transition-all shadow-md active:scale-95 cursor-pointer text-center"
+            className="w-full sm:w-auto px-5 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
           >
             Volver a la Página Principal
           </Link>

@@ -54,13 +54,16 @@ export class PropertyService {
 
     if (profile) {
       userId = profile.id;
+      if (profile.role_id === 2) {
+        await UserRepository.updateRole(profile.id, 3); // Promover a vendedor
+      }
     } else {
       const newUserId = crypto.randomUUID();
       const { data: newProfile } = await UserRepository.upsertProfile({
         id: newUserId,
         email: emailLower,
         full_name: validated.authorName || 'Usuario InmoVAX',
-        role_id: 2, // Rol base cliente/comprador
+        role_id: 3, // Vendedor
         is_verified: true
       });
       userId = newProfile?.id || newUserId;
@@ -80,8 +83,8 @@ export class PropertyService {
       'Cerrado': 4
     };
 
-    // Todo inmueble nuevo ingresa por defecto en Validación Legal (status_id: 2)
-    const defaultStatus = 2;
+    // En el modelo Freemium, el inmueble nuevo se publica inmediatamente en estado Activo (status_id: 1)
+    const defaultStatus = 1;
     const statusId = validated.status ? (statusMap[validated.status] || defaultStatus) : defaultStatus;
 
     // 3. Evitar colisión de Folio Real

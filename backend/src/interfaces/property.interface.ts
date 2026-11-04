@@ -40,6 +40,7 @@ export interface IProperty {
   datePublished?: string;
   authorEmail?: string;
   authorName?: string;
+  isVerified?: boolean;
 }
 
 export interface ICreatePropertyDTO {

@@ -8,13 +8,110 @@ import { IPublicationPlan, PropertyPaymentOrder, IReviewPaymentDTO } from '../in
 
 // Configuración predeterminada de planes
 let publicationPlans: Record<string, IPublicationPlan> = {
+  priorizacion: {
+    id: 'priorizacion',
+    name: 'Priorización de Anuncio',
+    badgeColor: 'blue',
+    durationLabel: 'Primeros lugares en búsquedas',
+    durationDays: 30,
+    price: 15,
+    currency: 'USD',
+    exposure: 'Alta',
+    description: 'Coloca tu inmueble en la parte superior de las búsquedas para generar tráfico y llamadas inmediatas.',
+    features: {
+      canalesInmoVAX: true,
+      soporte: 'Online',
+      priorizacion: true,
+      fotografo: false,
+      abogado: false,
+      selloVerificado: false,
+    }
+  },
+  fotografo: {
+    id: 'fotografo',
+    name: 'Fotógrafo Profesional',
+    badgeColor: 'purple',
+    durationLabel: 'Sesión a domicilio',
+    durationDays: null,
+    price: 60,
+    currency: 'USD',
+    exposure: 'Alta',
+    description: 'Sesión fotográfica HD a domicilio y edición profesional que multiplica por 3 las visitas de interesados.',
+    features: {
+      canalesInmoVAX: true,
+      soporte: 'Coordinación telefónica',
+      priorizacion: false,
+      fotografo: true,
+      abogado: false,
+      selloVerificado: false,
+    }
+  },
+  abogado: {
+    id: 'abogado',
+    name: 'Servicio de Abogado (DDRR)',
+    badgeColor: 'emerald',
+    durationLabel: 'Auditoría legal completa',
+    durationDays: null,
+    price: 75,
+    currency: 'USD',
+    exposure: 'Alta',
+    description: 'Revisión minuciosa del Folio Real en Derechos Reales + Sello verde "Verificado Legalmente".',
+    features: {
+      canalesInmoVAX: true,
+      soporte: 'Asesor Notarial dedicado',
+      priorizacion: false,
+      fotografo: false,
+      abogado: true,
+      selloVerificado: true,
+    }
+  },
+  duo: {
+    id: 'duo',
+    name: 'Plan Dúo (Priorización + Fotos)',
+    badgeColor: 'indigo',
+    durationLabel: 'Priorización + Sesión HD',
+    durationDays: 45,
+    price: 85,
+    currency: 'USD',
+    exposure: 'Muy Alta',
+    description: 'Combina máxima visibilidad en búsquedas y fotografías profesionales de alto impacto visual.',
+    features: {
+      canalesInmoVAX: true,
+      soporte: 'Online y telefónico',
+      priorizacion: true,
+      fotografo: true,
+      abogado: false,
+      selloVerificado: false,
+    }
+  },
+  premium: {
+    id: 'premium',
+    name: 'Plan Premium (Todo Incluido)',
+    badgeColor: 'amber',
+    durationLabel: 'Priorización + Abogado + Fotos',
+    durationDays: null,
+    price: 120,
+    currency: 'USD',
+    exposure: 'Máxima',
+    isPopular: true,
+    description: 'El paquete definitivo: Priorización en búsquedas + Fotógrafo profesional HD + Sello verde de Verificación Legal.',
+    features: {
+      canalesInmoVAX: true,
+      soporte: 'Asesor dedicado y telefónico',
+      priorizacion: true,
+      fotografo: true,
+      abogado: true,
+      selloVerificado: true,
+    }
+  },
+  // Retrocompatibilidad
   basico: {
     id: 'basico',
     name: 'Básico',
     badgeColor: 'gray',
     durationLabel: '30 días',
     durationDays: 30,
-    price: 25,
+    price: 15,
     currency: 'USD',
     exposure: 'Buena',
     features: {
@@ -47,7 +144,7 @@ let publicationPlans: Record<string, IPublicationPlan> = {
     exposure: 'Máxima',
     features: {
       canalesInmoVAX: true,
-      soporte: 'Asesor dedicado y telefónico'
+      soporte: 'Asesor dedicado'
     }
   }
 };

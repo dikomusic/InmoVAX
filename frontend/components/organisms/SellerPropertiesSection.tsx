@@ -301,8 +301,8 @@ export const SellerPropertiesSection = ({
 
             <div className="p-4 bg-gray-50 rounded-2xl space-y-2 text-xs border border-gray-100">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 font-bold">Asesor Oficial InmoVAX:</span>
-                <span className="font-extrabold text-surface-dark">{selectedProperty.assignedAdvisor}</span>
+                <span className="text-gray-600 font-bold">Modalidad de Venta:</span>
+                <span className="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 text-[11px]">Trato Directo (0% comisiones)</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600 font-bold">Precio Oficial:</span>
@@ -710,8 +710,8 @@ export const SellerPropertiesSection = ({
                       <span className="font-mono font-black text-gray-800">{editingProperty.folioReal}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500 font-bold block">Asesor Legal Designado:</span>
-                      <span className="font-black text-gray-800">{editingProperty.assignedAdvisor || 'Lic. Carlos Vega'}</span>
+                      <span className="text-gray-500 font-bold block">Gestión del Inmueble:</span>
+                      <span className="font-black text-emerald-700">Directa por el Propietario</span>
                     </div>
                   </div>
                 </div>

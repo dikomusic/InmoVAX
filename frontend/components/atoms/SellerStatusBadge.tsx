@@ -19,28 +19,28 @@ export const SellerStatusBadge = ({
   > = {
     Activo: {
       label: 'Activo en Catálogo',
-      bg: 'bg-emerald-50 border border-emerald-200/80',
+      bg: 'bg-white/95 backdrop-blur-md border border-emerald-300/80 shadow-xs',
       text: 'text-emerald-800',
       dot: 'bg-emerald-500',
       pulse: true
     },
     'En Validación Legal': {
-      label: 'En revisión',
-      bg: 'bg-amber-50 border border-amber-200/80',
+      label: 'En revisión legal',
+      bg: 'bg-white/95 backdrop-blur-md border border-amber-300/80 shadow-xs',
       text: 'text-amber-800',
       dot: 'bg-amber-500',
       pulse: true
     },
     Pausado: {
-      label: 'Pausado Temporal',
-      bg: 'bg-gray-100 border border-gray-200',
-      text: 'text-gray-700',
-      dot: 'bg-gray-400',
+      label: 'Pausado',
+      bg: 'bg-white/95 backdrop-blur-md border border-slate-300 shadow-xs',
+      text: 'text-slate-700',
+      dot: 'bg-slate-400',
       pulse: false
     },
     Cerrado: {
-      label: 'Cerrado / Concluido',
-      bg: 'bg-purple-50 border border-purple-200/80',
+      label: 'Cerrado',
+      bg: 'bg-white/95 backdrop-blur-md border border-purple-300 shadow-xs',
       text: 'text-purple-800',
       dot: 'bg-purple-500',
       pulse: false

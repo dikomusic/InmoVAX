@@ -56,6 +56,7 @@ export class PaymentService {
       propertyTitle: dto.propertyTitle || `Inmueble #${dto.propertyId}`,
       sellerEmail: dto.sellerEmail,
       sellerName: dto.sellerName || 'Propietario InmoVAX',
+      sellerPhone: dto.sellerPhone || undefined,
       planId: dto.planId,
       planName: plan.name,
       amount: plan.price,
@@ -63,6 +64,9 @@ export class PaymentService {
       qrCodeData: qrData,
       status: isExempt ? 'exento_vip' : 'pendiente',
       receiptUrl: null,
+      folioDocumentUrl: null,
+      lawyerStatus: (dto.planId === 'abogado' || dto.planId === 'premium') ? 'pendiente' : undefined,
+      photographerStatus: (dto.planId === 'fotografo' || dto.planId === 'duo' || dto.planId === 'premium') ? 'pendiente' : 'no_aplica',
       createdAt: new Date().toISOString()
     };
 
@@ -70,18 +74,37 @@ export class PaymentService {
   }
 
   /**
-   * Adjuntar comprobante de pago QR para auditoría
+   * Adjuntar comprobante de pago QR y documento de Folio Real para auditoría
    */
   static confirmPayment(dto: IConfirmPaymentDTO): PropertyPaymentOrder {
-    const order = PaymentRepository.findOrderById(dto.orderId);
-    if (!order) {
-      const notFoundError: any = new Error(`Orden de pago "${dto.orderId}" no encontrada.`);
-      notFoundError.statusCode = 404;
-      throw notFoundError;
+    const existing = PaymentRepository.findOrderById(dto.orderId);
+    if (!existing) {
+      const fallbackOrder: PropertyPaymentOrder = {
+        id: dto.orderId,
+        propertyId: 'general',
+        propertyTitle: 'Inmueble en Publicación',
+        sellerEmail: 'propietario@inmovax.com',
+        sellerName: 'Propietario InmoVAX',
+        sellerPhone: dto.sellerPhone || undefined,
+        planId: 'premium',
+        planName: 'Plan Premium / Servicio InmoVAX',
+        amount: 120,
+        currency: 'USD',
+        qrCodeData: `INMOVAX|ORD-${dto.orderId}`,
+        status: 'pendiente',
+        receiptUrl: dto.receiptUrl,
+        folioDocumentUrl: dto.folioDocumentUrl || null,
+        lawyerStatus: 'pendiente',
+        photographerStatus: 'pendiente',
+        createdAt: new Date().toISOString()
+      };
+      return PaymentRepository.saveOrder(fallbackOrder);
     }
 
     const updated = PaymentRepository.updateOrder(dto.orderId, {
       receiptUrl: dto.receiptUrl,
+      folioDocumentUrl: dto.folioDocumentUrl || existing.folioDocumentUrl,
+      sellerPhone: dto.sellerPhone || existing.sellerPhone,
       status: 'pendiente'
     });
 
@@ -99,20 +122,32 @@ export class PaymentService {
       throw notFoundError;
     }
 
-    const isApproved = dto.action === 'aprobar' || dto.decision === 'approve';
+    const isActionGiven = Boolean(dto.action || dto.decision);
+    const isApproved = isActionGiven ? (dto.action === 'aprobar' || dto.decision === 'approve') : (order.status === 'aprobado');
     const nowIso = new Date().toISOString();
 
+    const nextLawyerStatus = dto.lawyerStatus || (isApproved && (order.planId === 'abogado' || order.planId === 'premium') ? 'aprobado' : order.lawyerStatus);
+    const nextPhotographerStatus = dto.photographerStatus || (isApproved && (order.planId === 'fotografo' || order.planId === 'duo' || order.planId === 'premium') ? 'pendiente' : order.photographerStatus);
+
     const updated = PaymentRepository.updateOrder(orderId, {
-      status: isApproved ? 'aprobado' : 'rechazado',
-      rejectionReason: !isApproved ? (dto.reason || dto.notes || 'Comprobante no legible o monto incorrecto') : null,
-      reviewedAt: nowIso
+      status: isActionGiven ? (isApproved ? 'aprobado' : 'rechazado') : order.status,
+      rejectionReason: isActionGiven && !isApproved ? (dto.reason || dto.notes || 'Comprobante no legible o monto incorrecto') : order.rejectionReason,
+      reviewedAt: isApproved ? nowIso : order.reviewedAt,
+      lawyerStatus: nextLawyerStatus,
+      photographerStatus: nextPhotographerStatus
     });
 
-    // Si se aprueba el pago, activar automáticamente el inmueble en la base de datos
-    if (isApproved) {
-      const prop = await PropertyRepository.findSafely(order.propertyId);
-      if (prop) {
-        await PropertyRepository.updateStatus(prop.id, 1); // 1 = Activo / Publicado
+    // Sincronizaciones sobre la propiedad
+    const prop = await PropertyRepository.findSafely(order.propertyId);
+    if (prop) {
+      if (isApproved) {
+        await PropertyRepository.updateStatus(prop.id, 1);
+        if (order.planId === 'priorizacion' || order.planId === 'duo' || order.planId === 'premium') {
+          await PropertyRepository.update(prop.id, { is_featured: true });
+        }
+      }
+      if (nextLawyerStatus === 'aprobado') {
+        await PropertyRepository.update(prop.id, { is_verified: true });
       }
     }
 

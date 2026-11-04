@@ -7,8 +7,10 @@ const API_BASE = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API
   ? process.env.NEXT_PUBLIC_API_URL
   : 'http://localhost:4000/api';
 
+export type PlanType = 'priorizacion' | 'fotografo' | 'abogado' | 'duo' | 'premium' | 'basico' | 'oro' | 'diamante';
+
 export interface PublicationPlanItem {
-  id: 'basico' | 'oro' | 'diamante';
+  id: PlanType;
   name: string;
   badgeColor: string;
   durationLabel: string;
@@ -16,9 +18,15 @@ export interface PublicationPlanItem {
   price: number;
   currency: 'USD' | 'BOB';
   exposure: string;
+  isPopular?: boolean;
+  description?: string;
   features: {
     canalesInmoVAX: boolean;
     soporte: string;
+    priorizacion?: boolean;
+    fotografo?: boolean;
+    abogado?: boolean;
+    selloVerificado?: boolean;
   };
 }
 
@@ -30,12 +38,14 @@ export interface PaymentOrderResponse {
     propertyTitle?: string;
     sellerEmail: string;
     sellerName?: string;
+    sellerPhone?: string;
     planId: string;
     planName: string;
     amount: number;
     currency: string;
     qrCodeData: string;
     receiptUrl?: string | null;
+    folioDocumentUrl?: string | null;
     status: 'pendiente' | 'aprobado' | 'rechazado' | 'exento_vip';
     createdAt: string;
   };
@@ -50,12 +60,16 @@ export interface AdminPendingOrder {
   propertyTitle?: string;
   sellerEmail: string;
   sellerName?: string;
+  sellerPhone?: string;
   planId: string;
   planName: string;
   amount: number;
   currency: string;
   qrCodeData: string;
   receiptUrl?: string | null;
+  folioDocumentUrl?: string | null;
+  lawyerStatus?: 'pendiente' | 'aprobado' | 'rechazado';
+  photographerStatus?: 'no_aplica' | 'pendiente' | 'completado';
   status: 'pendiente' | 'aprobado' | 'rechazado' | 'exento_vip';
   rejectionReason?: string | null;
   createdAt: string;
@@ -70,38 +84,66 @@ export async function fetchPublicationPlans(): Promise<Record<string, Publicatio
   } catch (err) {
     console.warn('[paymentsApi] Fallback a planes por defecto:', err);
     return {
-      basico: {
-        id: 'basico',
-        name: 'Básico',
-        badgeColor: 'gray',
-        durationLabel: '30 días',
+      priorizacion: {
+        id: 'priorizacion',
+        name: 'Priorización de Anuncio',
+        badgeColor: 'blue',
+        durationLabel: 'Primeros lugares en búsquedas',
         durationDays: 30,
-        price: 25,
+        price: 15,
         currency: 'USD',
-        exposure: 'Buena',
-        features: { canalesInmoVAX: true, soporte: 'Online' }
+        exposure: 'Alta',
+        description: 'Coloca tu inmueble en la parte superior de las búsquedas para generar tráfico y llamadas inmediatas.',
+        features: { canalesInmoVAX: true, soporte: 'Online', priorizacion: true }
       },
-      oro: {
-        id: 'oro',
-        name: 'Oro',
-        badgeColor: 'amber',
-        durationLabel: '60 días',
-        durationDays: 60,
-        price: 45,
+      fotografo: {
+        id: 'fotografo',
+        name: 'Fotógrafo Profesional',
+        badgeColor: 'purple',
+        durationLabel: 'Sesión a domicilio',
+        durationDays: null,
+        price: 60,
         currency: 'USD',
-        exposure: 'Buena',
-        features: { canalesInmoVAX: true, soporte: 'Online y telefónico' }
+        exposure: 'Alta',
+        description: 'Sesión fotográfica HD a domicilio y edición profesional que multiplica por 3 las visitas.',
+        features: { canalesInmoVAX: true, soporte: 'Coordinación telefónica', fotografo: true }
       },
-      diamante: {
-        id: 'diamante',
-        name: 'Diamante',
-        badgeColor: 'orange',
-        durationLabel: '¡Hasta que se venda o alquile!',
+      abogado: {
+        id: 'abogado',
+        name: 'Servicio de Abogado (DDRR)',
+        badgeColor: 'emerald',
+        durationLabel: 'Auditoría legal completa',
         durationDays: null,
         price: 75,
         currency: 'USD',
+        exposure: 'Alta',
+        description: 'Revisión minuciosa del Folio Real en Derechos Reales + Sello verde "Verificado Legalmente".',
+        features: { canalesInmoVAX: true, soporte: 'Asesor Notarial dedicado', abogado: true, selloVerificado: true }
+      },
+      duo: {
+        id: 'duo',
+        name: 'Plan Dúo (Priorización + Fotos)',
+        badgeColor: 'indigo',
+        durationLabel: 'Priorización + Sesión HD',
+        durationDays: 45,
+        price: 85,
+        currency: 'USD',
+        exposure: 'Muy Alta',
+        description: 'Combina máxima visibilidad en búsquedas y fotografías profesionales de alto impacto.',
+        features: { canalesInmoVAX: true, soporte: 'Online y telefónico', priorizacion: true, fotografo: true }
+      },
+      premium: {
+        id: 'premium',
+        name: 'Plan Premium (Todo Incluido)',
+        badgeColor: 'amber',
+        durationLabel: 'Priorización + Abogado + Fotos',
+        durationDays: null,
+        price: 120,
+        currency: 'USD',
         exposure: 'Máxima',
-        features: { canalesInmoVAX: true, soporte: 'Asesor dedicado y telefónico' }
+        isPopular: true,
+        description: 'El paquete definitivo: Priorización en búsquedas + Fotógrafo profesional HD + Sello verde de Verificación Legal.',
+        features: { canalesInmoVAX: true, soporte: 'Asesor dedicado y telefónico', priorizacion: true, fotografo: true, abogado: true, selloVerificado: true }
       }
     };
   }
@@ -141,7 +183,8 @@ export async function createPaymentOrder(payload: {
   propertyTitle?: string;
   sellerEmail: string;
   sellerName?: string;
-  planId: 'basico' | 'oro' | 'diamante';
+  sellerPhone?: string;
+  planId: PlanType;
 }): Promise<PaymentOrderResponse> {
   try {
     const res = await fetch(`${API_BASE}/payments/create-order`, {
@@ -155,12 +198,21 @@ export async function createPaymentOrder(payload: {
   }
 }
 
-export async function uploadPaymentReceipt(orderId: string, receiptUrl: string): Promise<boolean> {
+export async function uploadPaymentReceipt(payload: {
+  orderId: string;
+  receiptUrl: string;
+  folioDocumentUrl?: string;
+  sellerPhone?: string;
+} | string, receiptUrlArg?: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/payments/upload-receipt`, {
+    const body = typeof payload === 'string' 
+      ? { orderId: payload, receiptUrl: receiptUrlArg || '' }
+      : payload;
+
+    const res = await fetch(`${API_BASE}/payments/confirm`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId, receiptUrl })
+      body: JSON.stringify(body)
     });
     return res.ok;
   } catch {
@@ -214,6 +266,22 @@ export async function rejectPaymentOrder(orderId: string, reason?: string): Prom
       method: 'POST',
       headers: getAdminAuthHeaders(),
       body: JSON.stringify({ reason })
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateOperationalStatus(orderId: string, updates: {
+  lawyerStatus?: 'pendiente' | 'aprobado' | 'rechazado';
+  photographerStatus?: 'no_aplica' | 'pendiente' | 'completado';
+}): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/payments/review`, {
+      method: 'POST',
+      headers: getAdminAuthHeaders(),
+      body: JSON.stringify({ orderId, ...updates })
     });
     return res.ok;
   } catch {

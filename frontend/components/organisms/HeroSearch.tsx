@@ -77,12 +77,18 @@ export const HeroSearch = () => {
 
       {/* Contenido principal centrado */}
       <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center text-center">
-        {/* Título Principal y Bajada */}
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-md mb-2 sm:mb-3">
-          Encuentra tu próximo hogar
+        {/* Badge Cero Comisiones */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black uppercase tracking-wider mb-4 backdrop-blur-md animate-in fade-in duration-300">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          Cero Comisiones Inmobiliarias • Publicación 100% Gratuita
+        </div>
+
+        {/* Título Principal de Alto Impacto */}
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md mb-3 max-w-4xl mx-auto">
+          Vende tu casa sin intermediarios. <span className="text-emerald-400">No regales el 3% al 7%</span> de tu patrimonio en comisiones.
         </h1>
-        <p className="text-xs sm:text-sm md:text-base text-white/85 max-w-xl mx-auto mb-6 sm:mb-8 font-medium drop-shadow">
-          La mayor oferta de anticréticos, ventas y alquileres en Bolivia con total seguridad
+        <p className="text-xs sm:text-sm md:text-base text-white/85 max-w-2xl mx-auto mb-6 sm:mb-8 font-medium drop-shadow leading-relaxed">
+          Publica gratis en minutos. Conecta directo con compradores reales en Bolivia y protege tu patrimonio con verificación legal en Derechos Reales.
         </p>
 
         {/* Molécula: Pestañas de Modo de Búsqueda */}

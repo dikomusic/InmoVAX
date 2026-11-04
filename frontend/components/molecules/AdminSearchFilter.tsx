@@ -21,6 +21,11 @@ interface AdminSearchFilterProps {
     href?: string;
     icon?: React.ReactNode;
   };
+  secondaryButton?: {
+    label: string;
+    onClick?: () => void;
+    icon?: React.ReactNode;
+  };
 }
 
 export const AdminSearchFilter = ({
@@ -28,7 +33,8 @@ export const AdminSearchFilter = ({
   onSearchChange,
   placeholder = "Buscar...",
   selectFilters = [],
-  actionButton
+  actionButton,
+  secondaryButton
 }: AdminSearchFilterProps) => {
   return (
     <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
@@ -60,6 +66,17 @@ export const AdminSearchFilter = ({
             ))}
           </select>
         ))}
+
+        {secondaryButton && (
+          <button
+            type="button"
+            onClick={secondaryButton.onClick}
+            className="px-3.5 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+          >
+            {secondaryButton.icon}
+            {secondaryButton.label}
+          </button>
+        )}
 
         {actionButton && (
           actionButton.href ? (

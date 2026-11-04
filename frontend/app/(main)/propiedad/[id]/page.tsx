@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { ClientMap } from '@/components/molecules/ClientMap';
 import { PropertyContactForm } from '@/components/molecules/PropertyContactForm';
 import { PropertyViewTracker } from '@/components/atoms/PropertyViewTracker';
+import { PropertyLegalSecurityBox } from '@/components/molecules/PropertyLegalSecurityBox';
 
 export default async function PropiedadDetallePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -80,10 +81,14 @@ export default async function PropiedadDetallePage({ params }: { params: Promise
               <span className="bg-gray-200 text-content-muted text-xs font-mono font-bold px-3 py-1 rounded-full">
                 ID: {property.id}
               </span>
-              {folioReal && (
-                <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200">
+              {property.isVerified ? (
+                <span className="inline-flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-sm">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  DDRR Verificado
+                  Verificado Legalmente (DDRR)
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-300/80 text-xs font-bold px-3 py-1 rounded-full">
+                  Sin Verificación Legal
                 </span>
               )}
             </div>
@@ -259,7 +264,7 @@ export default async function PropiedadDetallePage({ params }: { params: Promise
         <div className="w-full lg:w-1/3 relative">
           <div className="sticky top-8 bg-surface-white p-6 rounded-2xl shadow-xl border border-gray-100">
             
-            <div className="mb-6">
+            <div className="mb-4">
               <span className="block text-xs font-extrabold text-content-muted uppercase tracking-wider mb-1">
                 Precio de Publicación
               </span>
@@ -267,10 +272,25 @@ export default async function PropiedadDetallePage({ params }: { params: Promise
                 {precio}
               </h2>
               {folioReal && (
-                <p className="text-xs sm:text-sm font-semibold text-emerald-600 mt-2 flex items-center gap-1.5">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" /> Papeles al día (Verificado)
-                </p>
+                <div className="text-xs font-mono font-semibold text-slate-500 mt-2 flex items-center gap-1.5">
+                  <span>Folio Real:</span>
+                  <strong className="text-slate-800">{folioReal}</strong>
+                </div>
               )}
+            </div>
+
+            {/* RECUADRO DE SEGURIDAD LEGAL Y ANTI-ESTAFAS */}
+            <div className="mb-6">
+              <PropertyLegalSecurityBox
+                property={{
+                  id: property.id,
+                  title: property.titulo,
+                  folioReal: property.folioReal,
+                  price: property.precio,
+                  location: property.ubicacion,
+                  isVerified: property.isVerified
+                }}
+              />
             </div>
 
             <PropertyContactForm

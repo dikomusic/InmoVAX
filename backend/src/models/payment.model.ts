@@ -10,12 +10,15 @@ export const createPaymentOrderSchema = z.object({
   propertyTitle: z.string().optional(),
   sellerEmail: z.string().email('El correo de vendedor no es válido'),
   sellerName: z.string().optional(),
-  planId: z.enum(['basico', 'oro', 'diamante'])
+  sellerPhone: z.string().optional(),
+  planId: z.enum(['priorizacion', 'fotografo', 'abogado', 'duo', 'premium', 'basico', 'oro', 'diamante'])
 });
 
 export const confirmPaymentSchema = z.object({
   orderId: z.string().min(1, 'El ID de orden es obligatorio'),
-  receiptUrl: z.string().min(1, 'La URL del comprobante es requerida')
+  receiptUrl: z.string().min(1, 'La URL del comprobante es requerida'),
+  folioDocumentUrl: z.string().optional(),
+  sellerPhone: z.string().optional()
 });
 
 export const reviewPaymentSchema = z.object({
@@ -23,7 +26,9 @@ export const reviewPaymentSchema = z.object({
   action: z.enum(['aprobar', 'rechazar']).optional(),
   decision: z.enum(['approve', 'reject']).optional(),
   reason: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  lawyerStatus: z.enum(['pendiente', 'aprobado', 'rechazado']).optional(),
+  photographerStatus: z.enum(['no_aplica', 'pendiente', 'completado']).optional()
 });
 
 export type CreatePaymentOrderModel = z.infer<typeof createPaymentOrderSchema>;

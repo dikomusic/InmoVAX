@@ -43,6 +43,7 @@ export interface ManagedProperty {
   esNuevo?: boolean;
   publicationPlan?: 'basico' | 'oro' | 'diamante';
   isPaid?: boolean;
+  isVerified?: boolean;
 }
 
 export const PROPERTIES_STORAGE_KEY = 'inmovax-managed-properties-v3';

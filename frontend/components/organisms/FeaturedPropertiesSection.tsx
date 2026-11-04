@@ -74,6 +74,7 @@ export const FeaturedPropertiesSection = () => {
                 esNuevo={prop.esNuevo ?? true}
                 href={`/propiedad/${prop.id}`}
                 imagenUrl={prop.image}
+                isVerified={prop.isVerified}
               />
             ))}
           </div>

@@ -5,7 +5,7 @@ import { Modal } from '../atoms/Modal';
 import { 
   Building2, Search, Plus, Eye, Edit3, Trash2, CheckCircle2, 
   PauseCircle, Play, ShieldCheck, MapPin, DollarSign, BedDouble, 
-  Maximize2, User, FileText, Check, X, Filter, Sparkles, Clock, AlertCircle, Phone
+  Maximize2, User, FileText, Check, X, Filter, Sparkles, Clock, AlertCircle, Phone, Download
 } from 'lucide-react';
 
 export interface PropertyItem {
@@ -144,6 +144,43 @@ export const AdminPropertiesSection = ({
     return matchesType && matchesStatus && matchesSearch;
   });
 
+  const exportPropertiesToCsv = () => {
+    if (filteredProperties.length === 0) {
+      alert('No hay inmuebles para exportar con los filtros seleccionados.');
+      return;
+    }
+    const headers = ['ID Inmueble', 'Titulo', 'Zona', 'Modalidad', 'Precio', 'Estado', 'Propietario', 'Contacto', 'Folio Real', 'Habitaciones', 'Superficie', 'Fecha'];
+    const rows = filteredProperties.map(p => [
+      p.id,
+      p.title,
+      p.zone,
+      p.type,
+      p.price,
+      p.status,
+      p.ownerName || 'Propietario InmoVAX',
+      p.ownerContact || '',
+      p.folioReal || '',
+      p.rooms,
+      p.area,
+      p.date
+    ]);
+
+    const csvContent = '\uFEFF' + [
+      headers.join(','),
+      ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `InmoVAX_Inmuebles_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       
@@ -264,6 +301,11 @@ export const AdminPropertiesSection = ({
             ]
           }
         ]}
+        secondaryButton={{
+          label: "Exportar (Excel)",
+          icon: <Download className="w-3.5 h-3.5" />,
+          onClick: exportPropertiesToCsv
+        }}
         actionButton={{
           label: "Registrar Inmueble",
           icon: <Plus className="w-4 h-4" />,
