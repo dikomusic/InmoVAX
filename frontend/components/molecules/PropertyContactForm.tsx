@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, CheckCircle2, Loader2, Sparkles, Send, User } from 'lucide-react';
+import Link from 'next/link';
+import { MessageCircle, CheckCircle2, Loader2, Sparkles, Send, User, ShieldAlert, Lock } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Textarea } from '../atoms/Textarea';
@@ -14,7 +15,8 @@ import {
   ConsultationItem,
   getStoredConsultations,
   writeStoredList,
-  CONSULTATIONS_KEY
+  CONSULTATIONS_KEY,
+  FrontendSession
 } from '@/lib/frontendStore';
 import { incrementPropertyInquiries, getAllManagedProperties } from '@/lib/propertiesStore';
 
@@ -39,6 +41,7 @@ const QUICK_PROMPTS = [
 ];
 
 export const PropertyContactForm = ({ property }: PropertyContactFormProps) => {
+  const [session, setSession] = useState<FrontendSession | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -61,29 +64,50 @@ export const PropertyContactForm = ({ property }: PropertyContactFormProps) => {
   const sellerName = resolvedSellerName || 'Propietario del Inmueble';
   const sellerEmail = resolvedSellerEmail || 'vendedor@inmovax.com';
 
-  useEffect(() => {
-    const session = readStoredSession();
-    if (session) {
-      if (session.name) setName(session.name);
-      if (session.email) setEmail(session.email);
-    }
+  const isOwner = Boolean(
+    session?.email && sellerEmail && session.email.toLowerCase().trim() === sellerEmail.toLowerCase().trim()
+  );
 
-    // Verificar si ya existe un chat previo con este vendedor sobre esta propiedad
-    if (session?.email) {
-      const existing = getStoredConsultations().find(
-        (c) => c.propertyId === property.id && c.buyerEmail?.toLowerCase() === session.email.toLowerCase()
-      );
-      if (existing) {
-        setActiveChatConsultation(existing);
+  useEffect(() => {
+    const updateSession = () => {
+      const s = readStoredSession();
+      setSession(s);
+      if (s) {
+        if (s.name) setName(s.name);
+        if (s.email) setEmail(s.email);
+        if (s.phone) setPhone(s.phone);
+
+        // Verificar si ya existe un chat previo con este vendedor sobre esta propiedad
+        const existing = getStoredConsultations().find(
+          (c) => c.propertyId === property.id && c.buyerEmail?.toLowerCase() === s.email.toLowerCase()
+        );
+        if (existing) {
+          setActiveChatConsultation(existing);
+        }
+      } else {
+        setName('');
+        setEmail('');
+        setActiveChatConsultation(null);
       }
-    }
+    };
+
+    updateSession();
+    window.addEventListener('inmovax:session-updated', updateSession);
+    return () => window.removeEventListener('inmovax:session-updated', updateSession);
   }, [property.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!name.trim() || name.trim().length < 2) {
+    const currentSession = readStoredSession();
+    if (!currentSession || !currentSession.email) {
+      setErrorMsg('Debes iniciar sesión para comunicarte con el anunciante.');
+      return;
+    }
+
+    const buyerName = (currentSession.name || name).trim();
+    if (!buyerName || buyerName.length < 2) {
       setErrorMsg('Por favor ingresa tu nombre completo.');
       return;
     }
@@ -95,8 +119,7 @@ export const PropertyContactForm = ({ property }: PropertyContactFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const session = readStoredSession();
-      const buyerEmail = session?.email || email.trim() || `${name.toLowerCase().replace(/\s+/g, '.')}@usuario.com`;
+      const buyerEmail = currentSession.email.trim();
 
       // 1. Guardar y emitir el mensaje P2P en el Store interno
       const consultation = sendP2PMessage({
@@ -109,8 +132,8 @@ export const PropertyContactForm = ({ property }: PropertyContactFormProps) => {
         sellerEmail,
         sellerName,
         buyerEmail,
-        buyerName: name.trim(),
-        buyerPhone: phone.trim() || undefined,
+        buyerName,
+        buyerPhone: phone.trim() || currentSession.phone || undefined,
         messageText: message.trim()
       });
 
@@ -182,133 +205,183 @@ export const PropertyContactForm = ({ property }: PropertyContactFormProps) => {
           </div>
         </div>
 
-        {/* Si ya hay un chat previo abierto, ofrecer continuar conversación */}
-        {activeChatConsultation && !isSuccess && (
-          <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 text-blue-950 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <span className="text-xs font-bold block text-blue-900">Conversación activa</span>
-              <p className="text-[11px] text-blue-700 truncate">
-                Tienes mensajes con {sellerName} para este inmueble.
+        {/* CASO 1: USUARIO NO AUTENTICADO (BLOQUEO DE SEGURIDAD REQUERIDO) */}
+        {!session ? (
+          <div className="bg-slate-50 border border-slate-200/90 rounded-3xl p-6 text-center space-y-4 shadow-2xs">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+              <Lock className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h5 className="font-extrabold text-surface-dark text-sm sm:text-base">
+                Inicia sesión para contactar al anunciante
+              </h5>
+              <p className="text-xs text-content-muted max-w-xs mx-auto leading-relaxed">
+                Por seguridad y para evitar spam, debes ingresar con tu cuenta de InmoVAX para enviar mensajes y chatear directamente con el vendedor.
               </p>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsChatOpen(true)}
-              className="border-primary text-primary hover:bg-primary/10 shrink-0 text-xs font-bold py-1.5 px-3"
+            <Link
+              href={`/login?redirect=${encodeURIComponent(`/propiedad/${property.id}`)}`}
+              className="inline-block w-full"
             >
-              Abrir Chat
-            </Button>
-          </div>
-        )}
-
-        {isSuccess ? (
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-3 animate-in fade-in">
-            <div className="flex items-center gap-2 font-black text-sm text-emerald-800">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-              <span>¡Mensaje enviado al vendedor!</span>
-            </div>
-            <p className="text-xs text-emerald-800/90 leading-relaxed">
-              Tu consulta fue entregada a <strong>{sellerName}</strong> dentro de InmoVAX. Podrás ver sus respuestas en tiempo real.
-            </p>
-            
-            <div className="flex flex-col gap-2 pt-1">
               <Button
                 type="button"
                 variant="primary"
                 fullWidth
-                onClick={() => setIsChatOpen(true)}
-                className="flex items-center justify-center gap-2 shadow-sm text-xs font-bold"
+                className="py-3 text-xs sm:text-sm font-bold shadow-sm"
               >
-                <MessageCircle className="w-4 h-4" />
-                <span>Abrir Chat con el Propietario</span>
+                Iniciar Sesión / Registrarme
               </Button>
-
-              <button
-                type="button"
-                onClick={() => setIsSuccess(false)}
-                className="text-xs font-bold text-emerald-700 hover:underline pt-1 text-center"
-              >
-                Escribir otro mensaje
-              </button>
+            </Link>
+          </div>
+        ) : isOwner ? (
+          /* CASO 2: EL PROPIETARIO ESTÁ VIENDO SU PROPIO INMUEBLE */
+          <div className="bg-blue-50/70 border border-blue-200 rounded-3xl p-5 text-center space-y-2">
+            <span className="text-xs font-black text-blue-900 block">Eres el propietario de esta publicación</span>
+            <p className="text-xs text-blue-700 leading-relaxed max-w-xs mx-auto">
+              Puedes ver y responder todas las preguntas y ofertas de compradores en tu Panel de Vendedor.
+            </p>
+            <div className="pt-1">
+              <Link href="/vendedor">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary/10 text-xs font-bold py-2 px-4 rounded-xl"
+                >
+                  Ir al Panel de Vendedor
+                </Button>
+              </Link>
             </div>
           </div>
         ) : (
+          /* CASO 3: COMPRADOR AUTENTICADO */
           <>
-            {errorMsg && (
-              <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
-                {errorMsg}
+            {/* Si ya hay un chat previo abierto, ofrecer continuar conversación */}
+            {activeChatConsultation && !isSuccess && (
+              <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 text-blue-950 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-xs font-bold block text-blue-900">Conversación activa previa</span>
+                  <p className="text-[11px] text-blue-700 truncate">
+                    Ya tienes un hilo de mensajes abierto con {sellerName}.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsChatOpen(true)}
+                  className="border-primary text-primary hover:bg-primary/10 shrink-0 text-xs font-bold py-1.5 px-3"
+                >
+                  Abrir Chat
+                </Button>
               </div>
             )}
 
-            {/* Preguntas rápidas en 1 clic */}
-            <div>
-              <span className="block text-[11px] font-extrabold uppercase tracking-wider text-content-muted mb-1.5 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-500" />
-                Preguntas Rápidas Frecuentes
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {QUICK_PROMPTS.map((prompt, idx) => (
-                  <button
-                    key={idx}
+            {isSuccess ? (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-3 animate-in fade-in">
+                <div className="flex items-center gap-2 font-black text-sm text-emerald-800">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                  <span>¡Mensaje enviado al vendedor!</span>
+                </div>
+                <p className="text-xs text-emerald-800/90 leading-relaxed">
+                  Tu consulta fue entregada a <strong>{sellerName}</strong> dentro de InmoVAX. Podrás ver sus respuestas en tiempo real.
+                </p>
+                
+                <div className="flex flex-col gap-2 pt-1">
+                  <Button
                     type="button"
-                    onClick={() => setMessage(prompt)}
-                    className="text-[11px] font-medium bg-gray-100 hover:bg-primary/10 hover:text-primary hover:border-primary/30 text-gray-700 px-2.5 py-1 rounded-lg border border-gray-200 transition-all cursor-pointer text-left"
+                    variant="primary"
+                    fullWidth
+                    onClick={() => setIsChatOpen(true)}
+                    className="flex items-center justify-center gap-2 shadow-sm text-xs font-bold"
                   >
-                    {prompt}
+                    <MessageCircle className="w-4 h-4" />
+                    <span>Abrir Chat con el Propietario</span>
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsSuccess(false)}
+                    className="text-xs font-bold text-emerald-700 hover:underline pt-1 text-center cursor-pointer"
+                  >
+                    Escribir otro mensaje
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                {errorMsg && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+                    {errorMsg}
+                  </div>
+                )}
 
-            <FormField label="Tu Nombre">
-              <Input
-                type="text"
-                placeholder="Nombre y Apellido"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </FormField>
+                {/* Identificación del usuario autenticado */}
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-gray-100 flex items-center justify-between text-xs">
+                  <span className="text-content-muted">Remitente:</span>
+                  <span className="font-extrabold text-surface-dark truncate">
+                    {session.name} <span className="font-normal text-content-muted">({session.email})</span>
+                  </span>
+                </div>
 
-            <FormField label="Teléfono de Contacto (Opcional)">
-              <Input
-                type="tel"
-                placeholder="Número de celular"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </FormField>
+                {/* Preguntas rápidas en 1 clic */}
+                <div>
+                  <span className="block text-[11px] font-extrabold uppercase tracking-wider text-content-muted mb-1.5 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-amber-500" />
+                    Preguntas Rápidas Frecuentes
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {QUICK_PROMPTS.map((prompt, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setMessage(prompt)}
+                        className="text-[11px] font-medium bg-gray-100 hover:bg-primary/10 hover:text-primary hover:border-primary/30 text-gray-700 px-2.5 py-1 rounded-lg border border-gray-200 transition-all cursor-pointer text-left"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <FormField label="Tu Mensaje para el Propietario">
-              <Textarea
-                className="h-24 text-xs sm:text-sm"
-                placeholder={`Hola ${sellerName}, estoy interesado en este inmueble y quisiera consultarle...`}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                required
-              />
-            </FormField>
+                <FormField label="Teléfono de Contacto (Opcional)">
+                  <Input
+                    type="tel"
+                    placeholder="Número de celular para coordinar visitas"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </FormField>
 
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              disabled={isSubmitting}
-              className="flex items-center justify-center gap-2 py-3 rounded-2xl shadow-sm text-xs sm:text-sm font-bold"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Enviando al vendedor...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  <span>Enviar Mensaje Interno</span>
-                </>
-              )}
-            </Button>
+                <FormField label="Tu Mensaje para el Propietario">
+                  <Textarea
+                    className="h-24 text-xs sm:text-sm"
+                    placeholder={`Hola ${sellerName}, estoy interesado en este inmueble y quisiera consultarle...`}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    required
+                  />
+                </FormField>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  fullWidth
+                  disabled={isSubmitting}
+                  className="flex items-center justify-center gap-2 py-3 rounded-2xl shadow-sm text-xs sm:text-sm font-bold"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Enviando al vendedor...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      <span>Enviar Mensaje Interno</span>
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
           </>
         )}
       </form>

@@ -43,8 +43,9 @@ export class ConsultationController {
       const consultation = await ConsultationService.replyConsultation(
         consultationId,
         validated.replyText,
-        body.senderEmail,
-        body.senderName
+        validated.senderEmail,
+        validated.senderName,
+        validated.senderRole
       );
 
       return c.json({

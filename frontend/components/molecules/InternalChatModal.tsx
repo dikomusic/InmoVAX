@@ -96,13 +96,15 @@ export const InternalChatModal = ({
     const textToSend = inputText.trim();
     if (!textToSend || !activeConsultation) return;
 
+    const session = readStoredSession();
+    if (!session || !session.email) {
+      alert('Debes iniciar sesión para enviar mensajes en la conversación.');
+      return;
+    }
+
     const senderRole: 'vendedor' | 'comprador' = isCurrentUserSeller ? 'vendedor' : 'comprador';
-    const senderName = isCurrentUserSeller
-      ? (session?.name || activeConsultation.sellerName || 'Vendedor')
-      : (session?.name || activeConsultation.buyerName || 'Comprador');
-    const senderEmail = isCurrentUserSeller
-      ? (session?.email || activeConsultation.sellerEmail || 'vendedor@inmovax.com')
-      : (session?.email || activeConsultation.buyerEmail || 'comprador@inmovax.com');
+    const senderName = session.name || (isCurrentUserSeller ? (activeConsultation.sellerName || 'Vendedor') : (activeConsultation.buyerName || 'Comprador'));
+    const senderEmail = session.email;
 
     // 1. Limpieza inmediata del input para fluidez visual
     setInputText('');
@@ -246,9 +248,21 @@ export const InternalChatModal = ({
           </div>
 
           {messagesList.map((msg, idx) => {
-            const isMe = isCurrentUserSeller
-              ? msg.senderRole === 'vendedor'
-              : msg.senderRole === 'comprador';
+            const cleanSessionEmail = session?.email?.toLowerCase().trim();
+            const cleanMsgEmail = msg.senderEmail?.toLowerCase().trim();
+            const cleanSessionName = session?.name?.toLowerCase().trim();
+            const cleanMsgName = msg.senderName?.toLowerCase().trim();
+
+            let isMe = false;
+            if (cleanSessionEmail && cleanMsgEmail && cleanSessionEmail === cleanMsgEmail) {
+              isMe = true;
+            } else if (cleanSessionName && cleanMsgName && cleanSessionName === cleanMsgName) {
+              isMe = true;
+            } else if (isCurrentUserSeller) {
+              isMe = msg.senderRole === 'vendedor';
+            } else {
+              isMe = msg.senderRole === 'comprador';
+            }
 
             return (
               <div

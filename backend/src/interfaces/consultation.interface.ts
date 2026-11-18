@@ -59,4 +59,5 @@ export interface IReplyConsultationDTO {
   replyText: string;
   senderEmail?: string;
   senderName?: string;
+  senderRole?: 'vendedor' | 'comprador';
 }

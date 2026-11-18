@@ -129,7 +129,13 @@ export class ConsultationService {
   /**
    * Responder a una consulta existente
    */
-  static async replyConsultation(consultationId: string, replyText: string, senderEmail?: string, senderName?: string): Promise<IConsultation> {
+  static async replyConsultation(
+    consultationId: string,
+    replyText: string,
+    senderEmail?: string,
+    senderName?: string,
+    senderRole?: 'vendedor' | 'comprador'
+  ): Promise<IConsultation> {
     const consultation = await ConsultationRepository.findById(consultationId);
     if (!consultation) {
       const notFoundError: any = new Error('Consulta no encontrada');
@@ -140,24 +146,40 @@ export class ConsultationService {
     const nowIso = new Date().toISOString();
     const messageId = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
-    // 1. Insertar el mensaje de respuesta
+    // Resolver rol de remitente de forma certera
+    let resolvedRole: 'vendedor' | 'comprador' = senderRole || 'vendedor';
+    if (!senderRole && senderEmail) {
+      const cleanSender = senderEmail.toLowerCase().trim();
+      const cleanBuyer = (consultation.buyer_email || '').toLowerCase().trim();
+      if (cleanSender === cleanBuyer) {
+        resolvedRole = 'comprador';
+      }
+    }
+
+    const isBuyer = resolvedRole === 'comprador';
+    const resolvedName = senderName ||
+      (isBuyer ? (consultation.buyer_name || 'Comprador') : (consultation.seller_name || 'Vendedor'));
+    const resolvedEmail = senderEmail ||
+      (isBuyer ? consultation.buyer_email : consultation.seller_email);
+
+    // 1. Insertar el mensaje con el rol real del emisor
     await ConsultationRepository.createMessage({
       id: messageId,
       consultation_id: consultationId,
-      sender_email: senderEmail || consultation.seller_email,
-      sender_name: senderName || consultation.seller_name || 'Vendedor',
-      sender_role: 'vendedor',
+      sender_email: resolvedEmail,
+      sender_name: resolvedName,
+      sender_role: resolvedRole,
       text: replyText,
       timestamp: formatDate(nowIso),
       created_at: nowIso
     });
 
-    // 2. Actualizar estado de la conversación a respondido
+    // 2. Actualizar estado y contadores de la conversación según quién respondió
     await ConsultationRepository.updateConsultation(consultationId, {
-      status: 'respondido',
+      status: isBuyer ? 'pendiente' : 'respondido',
       last_message: replyText,
-      unread_by_buyer: (consultation.unread_by_buyer || 0) + 1,
-      unread_by_seller: 0,
+      unread_by_buyer: isBuyer ? 0 : (consultation.unread_by_buyer || 0) + 1,
+      unread_by_seller: isBuyer ? (consultation.unread_by_seller || 0) + 1 : 0,
       updated_at: nowIso
     });
 
@@ -176,12 +198,12 @@ export class ConsultationService {
       buyerEmail: consultation.buyer_email,
       buyerName: consultation.buyer_name,
       buyerPhone: consultation.buyer_phone,
-      status: 'respondido',
+      status: isBuyer ? 'pendiente' : 'respondido',
       lastMessage: replyText,
       date: formatDate(nowIso),
       messages,
-      unreadBySeller: 0,
-      unreadByBuyer: (consultation.unread_by_buyer || 0) + 1
+      unreadBySeller: isBuyer ? (consultation.unread_by_seller || 0) + 1 : 0,
+      unreadByBuyer: isBuyer ? 0 : (consultation.unread_by_buyer || 0) + 1
     };
   }
 

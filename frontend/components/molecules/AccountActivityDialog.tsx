@@ -25,6 +25,7 @@ import {
   HistoryItem,
   ConsultationItem,
   getStoredConsultations,
+  fetchConsultationsForBuyer,
   readStoredList,
   writeStoredList,
   readStoredSession
@@ -59,13 +60,20 @@ export const AccountActivityDialog = ({ activity, onClose }: AccountActivityDial
     setHistory(readStoredList<HistoryItem>(HISTORY_KEY));
     setConsultations(getStoredConsultations());
 
-    // REQ-32: Sincronizar favoritos del usuario desde Supabase en la nube
+    // REQ-32 & REQ-34: Sincronizar favoritos y consultas del usuario desde Supabase en la nube
     if (session?.email) {
-      const cloudRes = await fetchUserFavorites(session.email);
-      if (cloudRes.success && cloudRes.favorites) {
-        setFavorites(cloudRes.favorites);
-        writeStoredList(FAVORITES_KEY, cloudRes.favorites, false);
-      }
+      fetchUserFavorites(session.email).then((cloudRes) => {
+        if (cloudRes.success && cloudRes.favorites) {
+          setFavorites(cloudRes.favorites);
+          writeStoredList(FAVORITES_KEY, cloudRes.favorites, false);
+        }
+      }).catch(() => {});
+
+      fetchConsultationsForBuyer(session.email).then((cloudCons) => {
+        if (cloudCons && cloudCons.length > 0) {
+          setConsultations(cloudCons);
+        }
+      }).catch(() => {});
     }
   };
 

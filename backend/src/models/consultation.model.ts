@@ -25,7 +25,10 @@ export const consultationInputSchema = newConsultationSchema;
 
 
 export const consultationReplySchema = z.object({
-  replyText: z.string().min(2, 'La respuesta debe tener al menos 2 caracteres').max(1500)
+  replyText: z.string().min(1, 'La respuesta no puede estar vacía').max(1500),
+  senderEmail: z.string().email('Email inválido').optional(),
+  senderName: z.string().min(1).optional(),
+  senderRole: z.enum(['vendedor', 'comprador']).optional()
 });
 
 export type ConsultationInputModel = z.infer<typeof consultationInputSchema>;

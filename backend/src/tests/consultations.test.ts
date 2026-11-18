@@ -88,6 +88,31 @@ describe("Pruebas de Caja Negra y Caja Blanca - Sistema de Consultas P2P (Supaba
     expect(json.consultation.messages.length).toBe(2);
   });
 
+  test("Caja Negra CN-03-B: POST /api/consultations/:id/reply - Comprador contra-responde y el rol 'comprador' y estado 'pendiente' se conservan", async () => {
+    const buyerFollowUp = {
+      senderEmail: testBuyerEmail,
+      senderName: "Comprador Test",
+      senderRole: "comprador",
+      replyText: "Excelente, ¿podríamos agendar una visita presencial?"
+    };
+
+    const req = new Request(`http://localhost:4000/api/consultations/${createdConsultationId}/reply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buyerFollowUp)
+    });
+
+    const res = await app.fetch(req);
+    expect(res.status).toBe(200);
+
+    const json = (await res.json()) as any;
+    expect(json.success).toBe(true);
+    expect(json.consultation.status).toBe("pendiente");
+    expect(json.consultation.lastMessage).toBe("Excelente, ¿podríamos agendar una visita presencial?");
+    expect(json.consultation.messages.length).toBe(3);
+    expect(json.consultation.messages[2].senderRole).toBe("comprador");
+  });
+
   test("Caja Negra CN-04: GET /api/consultations/buyer/:email - Comprador visualiza el hilo completo con la respuesta", async () => {
     const req = new Request(`http://localhost:4000/api/consultations/buyer/${encodeURIComponent(testBuyerEmail)}`);
     const res = await app.fetch(req);
@@ -99,8 +124,9 @@ describe("Pruebas de Caja Negra y Caja Blanca - Sistema de Consultas P2P (Supaba
 
     const found = json.consultations.find((c: any) => c.id === createdConsultationId);
     expect(found).toBeDefined();
-    expect(found.messages.length).toBe(2);
+    expect(found.messages.length).toBe(3);
     expect(found.messages[1].senderRole).toBe("vendedor");
+    expect(found.messages[2].senderRole).toBe("comprador");
   });
 
   test("Caja Negra CN-05: GET /api/consultations/:id - Lectura de conversación individual", async () => {
@@ -111,7 +137,7 @@ describe("Pruebas de Caja Negra y Caja Blanca - Sistema de Consultas P2P (Supaba
     const json = (await res.json()) as any;
     expect(json.success).toBe(true);
     expect(json.consultation.id).toBe(createdConsultationId);
-    expect(json.consultation.messages.length).toBe(2);
+    expect(json.consultation.messages.length).toBe(3);
   });
 
   test("Caja Negra CN-06: Aislamiento de privacidad - Un vendedor ajeno no ve consultas de otros", async () => {
