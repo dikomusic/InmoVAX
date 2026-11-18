@@ -11,6 +11,7 @@ export const consultationsRouter = new Hono();
 // Mensajería y Conversaciones
 consultationsRouter.post('/', ConsultationController.createConsultation);
 consultationsRouter.post('/:id/reply', ConsultationController.replyConsultation);
+consultationsRouter.patch('/:id/status', ConsultationController.updateStatus);
 
 // Bandejas de Entrada
 consultationsRouter.get('/seller/:email', ConsultationController.getSellerConsultations);

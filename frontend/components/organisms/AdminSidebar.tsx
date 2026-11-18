@@ -56,7 +56,7 @@ export const AdminSidebar = ({
       )}
 
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-surface-dark text-content-inverse flex flex-col justify-between transition-transform duration-300 ease-in-out border-r border-gray-800 ${
+        className={`fixed lg:static top-0 left-0 z-50 h-screen w-72 shrink-0 bg-surface-dark text-content-inverse flex flex-col justify-between overflow-y-auto transition-transform duration-300 ease-in-out border-r border-gray-800 ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >

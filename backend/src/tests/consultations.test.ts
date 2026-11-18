@@ -152,6 +152,20 @@ describe("Pruebas de Caja Negra y Caja Blanca - Sistema de Consultas P2P (Supaba
     expect(json.consultations.length).toBe(0);
   });
 
+  test("Caja Negra CN-07: PATCH /api/consultations/:id/status - Administrador actualiza estado a respondido/atendido", async () => {
+    const req = new Request(`http://localhost:4000/api/consultations/${createdConsultationId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "respondido" })
+    });
+    const res = await app.fetch(req);
+    expect(res.status).toBe(200);
+
+    const json = (await res.json()) as any;
+    expect(json.success).toBe(true);
+    expect(json.consultation.status).toBe("respondido");
+  });
+
   // ============================================================================
   // SECCIÓN 2: PRUEBAS DE CAJA BLANCA (Lógica Interna, Tipos, Supabase & Ramas de Error)
   // ============================================================================

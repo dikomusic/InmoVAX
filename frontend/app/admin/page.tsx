@@ -136,7 +136,7 @@ export default function AdminPage() {
       const res = await fetch(`${API_BASE}/properties/${id}`, {
         method: 'DELETE',
         headers: {
-          'x-admin-key': 'AdminInmoVAX#2026'
+          'x-admin-key': process.env.NEXT_PUBLIC_ADMIN_KEY || ''
         }
       });
       if (res.ok) {
@@ -160,7 +160,7 @@ export default function AdminPage() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-admin-key': 'AdminInmoVAX#2026'
+          'x-admin-key': process.env.NEXT_PUBLIC_ADMIN_KEY || ''
         },
         body: JSON.stringify({
           title: newProp.title,
@@ -193,7 +193,7 @@ export default function AdminPage() {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
-          'x-admin-key': 'AdminInmoVAX#2026'
+          'x-admin-key': process.env.NEXT_PUBLIC_ADMIN_KEY || ''
         },
         body: JSON.stringify({
           title: updated.title,
@@ -244,7 +244,7 @@ export default function AdminPage() {
   const publishedCount = properties.filter(p => p.status === 'Publicado').length;
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen w-full overflow-hidden">
       
       {/* TOAST FLOTANTE */}
       {notification && (
@@ -269,12 +269,16 @@ export default function AdminPage() {
       />
 
       {/* CONTENIDO PRINCIPAL */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
         
         {/* HEADER ORGANISM */}
         <AdminHeader
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           onQuickPublish={() => setActiveTab('propiedades')}
+          properties={properties}
+          pendingPaymentsCount={pendingPaymentsCount}
+          unreadMessagesCount={unreadMessagesCount}
+          onNavigateTab={(tab) => setActiveTab(tab)}
         />
 
         {/* CONTENEDOR DE PESTAÑAS */}

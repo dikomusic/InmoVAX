@@ -29,10 +29,11 @@ export const AdminUsersSection: React.FC = () => {
 
   const getAdminHeaders = (): Record<string, string> => {
     const token = typeof window !== 'undefined' ? window.localStorage.getItem('inmovax-token') : null;
+    const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || '';
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'x-admin-key': 'AdminInmoVAX#2026'
+      'Content-Type': 'application/json'
     };
+    if (adminKey) headers['x-admin-key'] = adminKey;
     if (token) headers['Authorization'] = `Bearer ${token}`;
     return headers;
   };

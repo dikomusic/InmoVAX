@@ -208,6 +208,22 @@ export class ConsultationService {
   }
 
   /**
+   * Actualizar estado de una consulta (Marcar Atendido / Pendiente)
+   */
+  static async updateStatus(consultationId: string, status: 'pendiente' | 'respondido'): Promise<IConsultation | null> {
+    const nowIso = new Date().toISOString();
+    const updates: Record<string, any> = {
+      status,
+      updated_at: nowIso
+    };
+    if (status === 'respondido') {
+      updates.unread_by_seller = 0;
+    }
+    await ConsultationRepository.updateConsultation(consultationId, updates);
+    return await this.getConsultationById(consultationId);
+  }
+
+  /**
    * Obtener todas las consultas dirigidas a un vendedor
    */
   static async getSellerConsultations(email: string): Promise<IConsultation[]> {

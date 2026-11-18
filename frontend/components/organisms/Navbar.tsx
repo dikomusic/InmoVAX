@@ -92,15 +92,24 @@ export const Navbar = () => {
     supabase.auth.getSession().then(({ data: { session: supaSession } }) => {
       if (supaSession?.user) {
         const email = supaSession.user.email || '';
-        const name = supaSession.user.user_metadata?.full_name || email.split('@')[0];
         const isAdmin = email === 'admin@inmovax.com';
         const current = readStoredSession();
-        if (!current || current.email !== email) {
+
+        const effectiveName = (current && current.email === email && current.name)
+          ? current.name
+          : (supaSession.user.user_metadata?.full_name || (isAdmin ? 'Super Administrador InmoVAX' : email.split('@')[0]));
+
+        const effectivePhone = (current && current.email === email && current.phone)
+          ? current.phone
+          : (supaSession.user.user_metadata?.phone || null);
+
+        if (!current || current.email !== email || !current.name) {
           const newSession: FrontendSession = {
-            name: isAdmin ? 'Super Administrador InmoVAX' : name,
+            name: effectiveName,
             email,
-            hasPublishedProperties: isAdmin,
-            role: isAdmin ? 'admin' : 'comprador'
+            hasPublishedProperties: current?.hasPublishedProperties ?? isAdmin,
+            role: current?.role || (isAdmin ? 'admin' : 'comprador'),
+            phone: effectivePhone
           };
           saveStoredSession(newSession);
           setSession(newSession);
@@ -111,13 +120,23 @@ export const Navbar = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, supaSession) => {
       if (supaSession?.user) {
         const email = supaSession.user.email || '';
-        const name = supaSession.user.user_metadata?.full_name || email.split('@')[0];
         const isAdmin = email === 'admin@inmovax.com';
+        const current = readStoredSession();
+
+        const effectiveName = (current && current.email === email && current.name)
+          ? current.name
+          : (supaSession.user.user_metadata?.full_name || (isAdmin ? 'Super Administrador InmoVAX' : email.split('@')[0]));
+
+        const effectivePhone = (current && current.email === email && current.phone)
+          ? current.phone
+          : (supaSession.user.user_metadata?.phone || null);
+
         const newSession: FrontendSession = {
-          name: isAdmin ? 'Super Administrador InmoVAX' : name,
+          name: effectiveName,
           email,
-          hasPublishedProperties: isAdmin,
-          role: isAdmin ? 'admin' : 'comprador'
+          hasPublishedProperties: current?.hasPublishedProperties ?? isAdmin,
+          role: current?.role || (isAdmin ? 'admin' : 'comprador'),
+          phone: effectivePhone
         };
         saveStoredSession(newSession);
         setSession(newSession);

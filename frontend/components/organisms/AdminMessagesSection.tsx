@@ -84,13 +84,38 @@ export const AdminMessagesSection: React.FC = () => {
     loadMessages();
   }, []);
 
-  const handleToggleStatus = (id: string) => {
+  const handleToggleStatus = async (id: string) => {
+    const target = messages.find(m => m.id === id);
+    if (!target) return;
+
+    const newStatus: 'pendiente' | 'respondido' = target.status === 'pendiente' ? 'respondido' : 'pendiente';
+
+    // 1. Actualización optimista inmediata en pantalla
     setMessages(prev => prev.map(m => {
       if (m.id === id) {
-        return { ...m, status: m.status === 'pendiente' ? 'respondido' : 'pendiente' };
+        return { ...m, status: newStatus };
       }
       return m;
     }));
+
+    // 2. Persistencia en Supabase PostgreSQL a través del backend
+    try {
+      const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || '';
+      const token = typeof window !== 'undefined' ? window.localStorage.getItem('inmovax-token') : null;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (adminKey) headers['x-admin-key'] = adminKey;
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      await fetch(`${API_BASE}/consultations/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ status: newStatus })
+      });
+    } catch (err) {
+      console.error('Error al persistir estado de la consulta:', err);
+    }
   };
 
   const filtered = messages.filter(m => {

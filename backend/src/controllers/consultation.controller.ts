@@ -64,6 +64,30 @@ export class ConsultationController {
   }
 
   /**
+   * PATCH /api/consultations/:id/status: Actualizar estado de consulta (Atendido/Pendiente)
+   */
+  static async updateStatus(c: Context) {
+    const consultationId = c.req.param('id') || '';
+    try {
+      const body = await c.req.json();
+      const status = body.status;
+      if (!status || !['pendiente', 'respondido'].includes(status)) {
+        return c.json({ success: false, error: 'Estado inválido. Debe ser pendiente o respondido.' }, 400);
+      }
+
+      const consultation = await ConsultationService.updateStatus(consultationId, status);
+      return c.json({
+        success: true,
+        source: 'supabase-postgresql',
+        message: `Estado actualizado a ${status}`,
+        consultation
+      });
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message || 'Error al actualizar estado' }, 500);
+    }
+  }
+
+  /**
    * GET /api/consultations/seller/:email: Consultas del vendedor
    */
   static async getSellerConsultations(c: Context) {
