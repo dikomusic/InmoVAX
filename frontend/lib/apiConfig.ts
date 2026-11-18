@@ -6,3 +6,4 @@ export const API_BASE = (typeof process !== 'undefined' && process.env?.NEXT_PUB
   : 'http://localhost:4000/api';
 
 export const BACKEND_URL = API_BASE.replace(/\/api\/?$/, '');
+

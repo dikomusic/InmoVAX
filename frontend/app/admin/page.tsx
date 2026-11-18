@@ -155,22 +155,28 @@ export default function AdminPage() {
     showNotification(`Nueva propiedad "${newProp.title}" registrada exitosamente.`);
     
     try {
+      const dbStatus = newProp.status === 'Publicado' ? 'Activo' : (newProp.status === 'En Revisión Legal' ? 'En Validación Legal' : (newProp.status === 'Pausado' ? 'Pausado' : 'Activo'));
       await fetch(`${API_BASE}/properties`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': 'AdminInmoVAX#2026'
+        },
         body: JSON.stringify({
           title: newProp.title,
           zone: newProp.zone,
           type: newProp.type,
           price: newProp.price,
-          status: newProp.status === 'Publicado' ? 'Activo' : 'En Validación Legal',
-          assignedAdvisor: newProp.ownerName,
+          status: dbStatus,
+          authorEmail: 'admin@inmovax.com',
+          authorName: newProp.ownerName || 'Super Administrador InmoVAX',
           sellerName: newProp.ownerName,
           sellerPhone: newProp.ownerContact,
+          assignedAdvisor: newProp.ownerName,
           folioReal: newProp.folioReal,
           image: newProp.image,
-          habitaciones: newProp.rooms,
-          metros: parseInt(newProp.area) || 120,
+          bedrooms: newProp.rooms || 3,
+          areaSqm: parseInt(newProp.area) || 120,
           description: newProp.description
         })
       });
@@ -182,21 +188,25 @@ export default function AdminPage() {
     setProperties(prev => prev.map(p => p.id === updated.id ? updated : p));
     showNotification(`Propiedad "${updated.title}" actualizada.`);
     try {
+      const dbStatus = updated.status === 'Publicado' ? 'Activo' : (updated.status === 'En Revisión Legal' ? 'En Validación Legal' : (updated.status === 'Pausado' ? 'Pausado' : updated.status));
       await fetch(`${API_BASE}/properties/${updated.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': 'AdminInmoVAX#2026'
+        },
         body: JSON.stringify({
           title: updated.title,
           zone: updated.zone,
           type: updated.type,
           price: updated.price,
-          status: updated.status === 'Publicado' ? 'Activo' : 'En Validación Legal',
+          status: dbStatus,
           sellerName: updated.ownerName,
           sellerPhone: updated.ownerContact,
           folioReal: updated.folioReal,
           image: updated.image,
-          habitaciones: updated.rooms,
-          metros: parseInt(updated.area) || 120,
+          bedrooms: updated.rooms || 3,
+          areaSqm: parseInt(updated.area) || 120,
           description: updated.description
         })
       });
