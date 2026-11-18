@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic';
 import { AddressAutocomplete } from '../molecules/AddressAutocomplete';
 import { saveStoredSession, readStoredSession } from '@/lib/frontendStore';
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
+import { API_BASE } from '@/lib/apiConfig';
 
 const MapPicker = dynamic(() => import('../molecules/MapPicker'), { 
   ssr: false,
@@ -140,7 +141,7 @@ export const PublishPropertyForm = ({
 
     try {
       // Registrar / sincronizar perfil en Supabase PostgreSQL
-      await fetch('http://127.0.0.1:4000/api/properties/register-profile', {
+      await fetch(`${API_BASE}/properties/register-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -757,7 +758,7 @@ export const PublishPropertyForm = ({
                             const uploadData = new FormData();
                             uploadData.append('file', file);
                             
-                            const res = await fetch('http://127.0.0.1:4000/api/properties/upload', {
+                            const res = await fetch(`${API_BASE}/properties/upload`, {
                               method: 'POST',
                               body: uploadData
                             });

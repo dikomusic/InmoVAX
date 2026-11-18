@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { API_BASE } from '@/lib/apiConfig';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     if (!error && data.user) {
       // Sincronizar automáticamente en la tabla profiles
       try {
-        await fetch('http://127.0.0.1:4000/api/properties/register-profile', {
+        await fetch(`${API_BASE}/properties/register-profile`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

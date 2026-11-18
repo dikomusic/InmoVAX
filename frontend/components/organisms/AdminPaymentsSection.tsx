@@ -17,6 +17,7 @@ import {
   AdminPendingOrder
 } from '@/lib/paymentsApi';
 import { getAllManagedProperties, saveManagedProperties } from '@/lib/propertiesStore';
+import { API_BASE } from '@/lib/apiConfig';
 import { Modal } from '../atoms/Modal';
 
 export const AdminPaymentsSection: React.FC = () => {
@@ -90,7 +91,7 @@ export const AdminPaymentsSection: React.FC = () => {
     if (ok) {
       if (targetOrder?.propertyId) {
         try {
-          await fetch(`http://localhost:4000/api/properties/${targetOrder.propertyId}/status`, {
+          await fetch(`${API_BASE}/properties/${targetOrder.propertyId}/status`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: 'Activo' })

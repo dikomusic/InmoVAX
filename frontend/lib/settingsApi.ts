@@ -41,9 +41,7 @@ export interface SellerProfileData {
   notifyWhatsappAlerts: boolean;
 }
 
-const BACKEND_URL = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
-  ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '')
-  : (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000');
+import { BACKEND_URL } from './apiConfig';
 
 export async function fetchPlatformSettings(): Promise<{ settings: PlatformSettings; zones: PlatformZone[] } | null> {
   try {

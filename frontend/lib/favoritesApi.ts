@@ -7,10 +7,7 @@
  */
 
 import { FavoriteItem } from './frontendStore';
-
-const API_BASE = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
-  ? process.env.NEXT_PUBLIC_API_URL
-  : 'http://localhost:4000/api';
+import { API_BASE } from './apiConfig';
 
 export interface FavoritesResponse {
   success: boolean;

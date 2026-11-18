@@ -7,6 +7,7 @@ import { Input } from '../atoms/Input';
 import { Textarea } from '../atoms/Textarea';
 import { FormField } from './FormField';
 import { InternalChatModal } from './InternalChatModal';
+import { API_BASE } from '@/lib/apiConfig';
 import {
   readStoredSession,
   sendP2PMessage,
@@ -120,11 +121,7 @@ export const PropertyContactForm = ({ property }: PropertyContactFormProps) => {
 
       // 2. Sincronizar con el backend en Supabase PostgreSQL
       try {
-        const apiBase = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
-          ? process.env.NEXT_PUBLIC_API_URL
-          : 'http://localhost:4000/api';
-
-        const res = await fetch(`${apiBase}/consultations`, {
+        const res = await fetch(`${API_BASE}/consultations`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

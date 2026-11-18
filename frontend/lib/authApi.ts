@@ -3,9 +3,7 @@
  * Conecta con el Backend Bun (http://localhost:4000/api/auth) y Supabase Auth / PostgreSQL
  */
 
-const API_BASE = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
-  ? process.env.NEXT_PUBLIC_API_URL
-  : 'http://localhost:4000/api';
+import { API_BASE } from './apiConfig';
 
 export interface RegisterPayload {
   full_name: string;

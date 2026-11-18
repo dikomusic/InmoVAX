@@ -11,6 +11,7 @@ import { AdminSettingsSection } from '@/components/organisms/AdminSettingsSectio
 import { readStoredSession } from '@/lib/frontendStore';
 import { getAllManagedProperties, saveManagedProperties, deleteManagedProperty } from '@/lib/propertiesStore';
 import { fetchAdminPendingPayments, fetchAdminHistoryPayments } from '@/lib/paymentsApi';
+import { API_BASE } from '@/lib/apiConfig';
 import { Lock, Loader2, Activity } from 'lucide-react';
 import { Error403Forbidden } from '@/components/organisms/Error403Forbidden';
 
@@ -29,12 +30,8 @@ export default function AdminPage() {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
   const loadPropertiesAndMetrics = () => {
-    const apiBase = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
-      ? process.env.NEXT_PUBLIC_API_URL
-      : 'http://localhost:4000/api';
-
     // 1. Inmuebles reales desde Supabase / Bun
-    fetch(`${apiBase}/properties?status=all`, { cache: 'no-store' })
+    fetch(`${API_BASE}/properties?status=all`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (data.properties) {
@@ -79,7 +76,7 @@ export default function AdminPage() {
     }).catch(() => {});
 
     // 3. Consultas y mensajes recibidos
-    fetch('http://localhost:4000/api/consultations')
+    fetch(`${API_BASE}/consultations`)
       .then(res => res.json())
       .then(data => {
         if (data.consultations) {
@@ -115,7 +112,7 @@ export default function AdminPage() {
     setProperties(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
     
     try {
-      const res = await fetch(`http://localhost:4000/api/properties/${id}/status`, {
+      const res = await fetch(`${API_BASE}/properties/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: dbStatus })
@@ -136,7 +133,7 @@ export default function AdminPage() {
     deleteManagedProperty(id);
     
     try {
-      const res = await fetch(`http://localhost:4000/api/properties/${id}`, {
+      const res = await fetch(`${API_BASE}/properties/${id}`, {
         method: 'DELETE',
         headers: {
           'x-admin-key': 'AdminInmoVAX#2026'
@@ -158,7 +155,7 @@ export default function AdminPage() {
     showNotification(`Nueva propiedad "${newProp.title}" registrada exitosamente.`);
     
     try {
-      await fetch('http://localhost:4000/api/properties', {
+      await fetch(`${API_BASE}/properties`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -181,9 +178,30 @@ export default function AdminPage() {
     } catch {}
   };
 
-  const handleEditProperty = (updated: PropertyItem) => {
+  const handleEditProperty = async (updated: PropertyItem) => {
     setProperties(prev => prev.map(p => p.id === updated.id ? updated : p));
     showNotification(`Propiedad "${updated.title}" actualizada.`);
+    try {
+      await fetch(`${API_BASE}/properties/${updated.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: updated.title,
+          zone: updated.zone,
+          type: updated.type,
+          price: updated.price,
+          status: updated.status === 'Publicado' ? 'Activo' : 'En Validación Legal',
+          sellerName: updated.ownerName,
+          sellerPhone: updated.ownerContact,
+          folioReal: updated.folioReal,
+          image: updated.image,
+          habitaciones: updated.rooms,
+          metros: parseInt(updated.area) || 120,
+          description: updated.description
+        })
+      });
+      loadPropertiesAndMetrics();
+    } catch {}
   };
 
   if (!mounted || authStatus === 'checking') {

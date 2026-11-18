@@ -12,6 +12,7 @@ import {
   replyP2PMessage,
   readStoredSession
 } from '@/lib/frontendStore';
+import { API_BASE } from '@/lib/apiConfig';
 
 interface InternalChatModalProps {
   isOpen: boolean;
@@ -55,10 +56,7 @@ export const InternalChatModal = ({
 
     const fetchLatest = async () => {
       try {
-        const apiBase = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
-          ? process.env.NEXT_PUBLIC_API_URL
-          : 'http://localhost:4000/api';
-        const res = await fetch(`${apiBase}/consultations/${encodeURIComponent(activeConsultation.id)}`);
+        const res = await fetch(`${API_BASE}/consultations/${encodeURIComponent(activeConsultation.id)}`);
         if (res.ok) {
           const data = await res.json();
           if (data?.success && data?.consultation) {
@@ -131,11 +129,7 @@ export const InternalChatModal = ({
 
     // 3. Persistir directamente en Supabase PostgreSQL a través del backend
     try {
-      const apiBase = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
-        ? process.env.NEXT_PUBLIC_API_URL
-        : 'http://localhost:4000/api';
-
-      const res = await fetch(`${apiBase}/consultations/${encodeURIComponent(activeConsultation.id)}/reply`, {
+      const res = await fetch(`${API_BASE}/consultations/${encodeURIComponent(activeConsultation.id)}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

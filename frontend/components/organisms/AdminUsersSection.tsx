@@ -5,6 +5,7 @@ import {
   Ban, CheckCircle2, Building2, Phone, Mail, Sparkles, Download 
 } from 'lucide-react';
 import { Modal } from '../atoms/Modal';
+import { API_BASE } from '@/lib/apiConfig';
 
 export interface UserItem {
   id: string;
@@ -39,7 +40,7 @@ export const AdminUsersSection: React.FC = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/api/auth/users', {
+      const res = await fetch(`${API_BASE}/auth/users`, {
         headers: getAdminHeaders()
       });
       const data = await res.json();
@@ -124,7 +125,7 @@ export const AdminUsersSection: React.FC = () => {
     setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: nextStatus } : u));
 
     try {
-      await fetch(`http://localhost:4000/api/auth/users/${user.id}/status`, {
+      await fetch(`${API_BASE}/auth/users/${user.id}/status`, {
         method: 'PATCH',
         headers: getAdminHeaders(),
         body: JSON.stringify({ status: nextStatus })

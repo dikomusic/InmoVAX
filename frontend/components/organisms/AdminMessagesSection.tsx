@@ -4,6 +4,7 @@ import {
   MessageSquare, Clock, CheckCircle2, Search, Mail, 
   Phone, ArrowUpRight, Building2, Check, ExternalLink 
 } from 'lucide-react';
+import { API_BASE } from '@/lib/apiConfig';
 
 export interface ConsultationItem {
   id: string;
@@ -29,7 +30,7 @@ export const AdminMessagesSection: React.FC = () => {
   const loadMessages = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/api/consultations');
+      const res = await fetch(`${API_BASE}/consultations`);
       const data = await res.json();
       if (data.consultations && data.consultations.length > 0) {
         setMessages(data.consultations);

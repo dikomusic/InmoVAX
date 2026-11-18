@@ -1,5 +1,6 @@
 import { PropertyCardProps } from '../organisms/PropertyCard';
 import { getAllManagedProperties, ManagedProperty } from '@/lib/propertiesStore';
+import { API_BASE } from '@/lib/apiConfig';
 
 export type PropertyOperation = 'Venta' | 'Alquiler' | 'Anticrético';
 
@@ -148,7 +149,7 @@ export const fetchPropertyById = async (id: string): Promise<PropertyListing | n
   const normalizedId = decodeURIComponent(id).trim();
 
   try {
-    const res = await fetch(`http://127.0.0.1:4000/api/properties/${encodeURIComponent(normalizedId)}`, {
+    const res = await fetch(`${API_BASE}/properties/${encodeURIComponent(normalizedId)}`, {
       cache: 'no-store'
     });
     if (res.ok) {

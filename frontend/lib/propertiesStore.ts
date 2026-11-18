@@ -8,6 +8,7 @@
  */
 
 import { readStoredSession, saveStoredSession, emitStoreEvent } from './frontendStore';
+import { API_BASE } from './apiConfig';
 
 export interface ManagedProperty {
   id: string;
@@ -89,10 +90,7 @@ export const isMatchingSellerEmail = (emailA?: string, emailB?: string): boolean
 let hasSyncedOnce = false;
 
 const getBackendPropertiesUrl = () => {
-  const base = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
-    ? process.env.NEXT_PUBLIC_API_URL
-    : 'http://localhost:4000/api';
-  return `${base}/properties?status=all`;
+  return `${API_BASE}/properties?status=all`;
 };
 
 export const syncPropertiesWithCloudBackend = async () => {
@@ -296,7 +294,7 @@ export const addManagedProperty = async (data: NewPropertyInput): Promise<Manage
   // Sincronizar asíncronamente con el Backend en Bun y Supabase
   if (typeof window !== 'undefined') {
     try {
-      const res = await fetch('http://127.0.0.1:4000/api/properties', {
+      const res = await fetch(`${API_BASE}/properties`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -337,7 +335,7 @@ export const addManagedProperty = async (data: NewPropertyInput): Promise<Manage
           saveManagedProperties(merged);
         }
 
-        const fetchRes = await fetch('http://127.0.0.1:4000/api/properties?status=all');
+        const fetchRes = await fetch(`${API_BASE}/properties?status=all`);
         if (fetchRes.ok) {
           const json = await fetchRes.json();
           if (json.properties && Array.isArray(json.properties) && json.properties.length > 0) {
@@ -387,12 +385,12 @@ export const deleteManagedProperty = (propertyId: string): boolean => {
 
   // Sincronizar eliminación con el Backend en Bun y Supabase
   if (typeof window !== 'undefined') {
-    fetch(`http://127.0.0.1:4000/api/properties/${encodeURIComponent(propertyId)}`, {
+    fetch(`${API_BASE}/properties/${encodeURIComponent(propertyId)}`, {
       method: 'DELETE'
     })
       .then(async (res) => {
         if (res.ok) {
-          const fetchRes = await fetch('http://127.0.0.1:4000/api/properties');
+          const fetchRes = await fetch(`${API_BASE}/properties`);
           if (fetchRes.ok) {
             const json = await fetchRes.json();
             if (json.properties) saveManagedProperties(json.properties);
@@ -417,7 +415,7 @@ export const updateManagedProperty = async (updated: ManagedProperty): Promise<b
   // Sincronizar asíncronamente con el Backend en Bun y Supabase PostgreSQL
   if (typeof window !== 'undefined') {
     try {
-      const res = await fetch(`http://127.0.0.1:4000/api/properties/${encodeURIComponent(updated.id)}`, {
+      const res = await fetch(`${API_BASE}/properties/${encodeURIComponent(updated.id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -484,7 +482,7 @@ export const togglePauseManagedProperty = (propertyId: string): string => {
 
   // Sincronizar cambio de estado con el Backend en Bun y Supabase
   if (typeof window !== 'undefined') {
-    fetch(`http://127.0.0.1:4000/api/properties/${encodeURIComponent(propertyId)}/toggle-pause`, {
+    fetch(`${API_BASE}/properties/${encodeURIComponent(propertyId)}/toggle-pause`, {
       method: 'PATCH'
     }).catch(() => {});
   }

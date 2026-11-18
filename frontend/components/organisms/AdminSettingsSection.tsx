@@ -29,6 +29,7 @@ import {
   PlatformSettings,
   PlatformZone
 } from '@/lib/settingsApi';
+import { BACKEND_URL } from '@/lib/apiConfig';
 
 interface AdminSettingsSectionProps {
   onSaveSettings?: () => void;
@@ -93,7 +94,7 @@ export const AdminSettingsSection = ({
 
   const fetchHealth = () => {
     setIsRefreshingHealth(true);
-    fetch('http://localhost:4000/health')
+    fetch(`${BACKEND_URL}/health`)
       .then(res => res.json())
       .then(data => setHealthData(data))
       .catch(() => setHealthData(null))

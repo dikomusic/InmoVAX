@@ -3,9 +3,7 @@
  * Conecta con el Backend Bun (http://localhost:4000/api/payments)
  */
 
-const API_BASE = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL)
-  ? process.env.NEXT_PUBLIC_API_URL
-  : 'http://localhost:4000/api';
+import { API_BASE } from './apiConfig';
 
 export type PlanType = 'priorizacion' | 'fotografo' | 'abogado' | 'duo' | 'premium' | 'basico' | 'oro' | 'diamante';
 
