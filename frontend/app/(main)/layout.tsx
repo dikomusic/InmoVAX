@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navbar } from "@/components/organisms/Navbar";
 import { Footer } from "@/components/organisms/Footer";
+import { InmoChatbotWidget } from "@/components/molecules/InmoChatbotWidget";
 
 export default function MainLayout({
   children,
@@ -15,6 +16,8 @@ export default function MainLayout({
         {children}
       </main>
       <Footer />
+      {/* Chatbot Asistente Virtual Inteligente con Gemini */}
+      <InmoChatbotWidget />
     </div>
   );
 }

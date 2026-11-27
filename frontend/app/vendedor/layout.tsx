@@ -1,4 +1,5 @@
 import React from 'react';
+import { InmoChatbotWidget } from "@/components/molecules/InmoChatbotWidget";
 
 export const metadata = {
   title: 'InmoVax | Portal del Vendedor & Propietario',
@@ -13,6 +14,8 @@ export default function SellerLayout({
   return (
     <div className="min-h-screen bg-[#F4F7FC] text-content-main font-sans antialiased">
       {children}
+      <InmoChatbotWidget />
     </div>
   );
 }
+

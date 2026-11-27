@@ -16,6 +16,7 @@ import { authRouter } from './auth';
 import { paymentsRouter } from './payments';
 import { settingsRouter } from './settings';
 import { favoritesRouter } from './favorites';
+import { chatRouter } from './chat';
 
 export function registerRoutes(app: Hono) {
   app.route('/health', healthRouter);
@@ -30,4 +31,6 @@ export function registerRoutes(app: Hono) {
   app.route('/api/payments', paymentsRouter);
   app.route('/api/settings', settingsRouter);
   app.route('/api/favorites', favoritesRouter);
+  app.route('/api/chat', chatRouter);
 }
+
