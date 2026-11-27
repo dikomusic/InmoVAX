@@ -240,26 +240,3 @@ export const AdminHeader = ({
   );
 };
 
-        {/* ACCIÓN RÁPIDA */}
-        {onQuickPublish ? (
-          <button
-            type="button"
-            onClick={onQuickPublish}
-            className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Publicar Inmueble</span>
-          </button>
-        ) : (
-          <Link
-            href="/publicar"
-            className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition-all shadow-sm active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Publicar Inmueble</span>
-          </Link>
-        )}
-      </div>
-    </header>
-  );
-};

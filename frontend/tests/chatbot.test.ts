@@ -1,20 +1,20 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, test, expect } from 'bun:test';
 
 describe('Chatbot InmoBot - Lógica y Rutas de IA', () => {
-  it('Debe tener configurada la variable GEMINI_API_KEY o fallback', () => {
+  test('Debe tener configurada la variable GEMINI_API_KEY o fallback', () => {
     const key = process.env.GEMINI_API_KEY;
     expect(key).toBeDefined();
     expect(key?.length).toBeGreaterThan(10);
   });
 
-  it('Debe estructurar correctamente la llamada de búsqueda de inmuebles', () => {
+  test('Debe estructurar correctamente la llamada de búsqueda de inmuebles', () => {
     const userMessage = 'Busco un departamento en Sopocachi en anticretico';
     const q = userMessage.toLowerCase();
     const isSearch = q.includes('departamento') || q.includes('anticretico') || q.includes('sopocachi');
     expect(isSearch).toBe(true);
   });
 
-  it('Debe formatear las tarjetas de inmuebles sugeridos con href y moneda', () => {
+  test('Debe formatear las tarjetas de inmuebles sugeridos con href y moneda', () => {
     const mockProperty = {
       id: 'prop-123',
       title: 'Departamento Soleado',
