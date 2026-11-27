@@ -206,7 +206,7 @@ export const Navbar = () => {
     { label: 'Servicios de Plataforma', isHeader: true },
     { label: '', isDivider: true },
     { label: 'Servicios Notariales y Legales', href: '/asesores' },
-    { label: 'Planes y Cartelería QR', href: '/publicar' },
+    { label: 'Planes de Publicación', href: '/publicar' },
     { label: 'Foro Comunitario', href: '/foro' },
     { label: 'Sobre InmoVAX', href: '/nosotros' },
     { label: 'Contacto y Soporte', href: '/contacto' },

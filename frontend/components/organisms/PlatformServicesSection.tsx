@@ -1,15 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
-import { QrCode, ShieldCheck, MessageSquare, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ShieldCheck, MessageSquare, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 const SERVICES = [
   {
-    icon: QrCode,
-    badge: "Publicidad Directa",
-    title: "Cartelería Inteligente con Código QR",
-    description: "Instala en tu balcón o puerta tu letrero exterior con código QR. Los compradores que pasen por la calle escanean tu ficha completa y te contactan directo a tu WhatsApp sin comisiones.",
-    linkText: "Conocer cartelería QR",
-    href: "/publicar"
+    icon: Sparkles,
+    badge: "Inteligencia Artificial",
+    title: "Búsqueda Inteligente con IA",
+    description: "Encuentra inmuebles en segundos escribiendo en lenguaje natural. Nuestra IA analiza zonas, tipo de contrato (anticrético, venta o alquiler), presupuesto y dormitorios para darte opciones exactas al instante.",
+    linkText: "Probar búsqueda inteligente",
+    href: "#buscador-principal"
   },
   {
     icon: ShieldCheck,
@@ -36,6 +36,7 @@ const SERVICES = [
     href: "/foro"
   }
 ];
+
 
 export const PlatformServicesSection: React.FC = () => {
   return (

@@ -81,8 +81,8 @@ const INITIAL_POSTS: ForumPost[] = [
   },
   {
     id: 'post-3',
-    title: 'Experiencia vendiendo directo con cartel QR vs agencia inmobiliaria tradicional',
-    content: 'Comparto mi experiencia: publiqué mi departamento en Sopocachi en InmoVAX e instalé el letrero con código QR en mi balcón. En dos semanas recibí 11 mensajes directos de personas que pasaban por la calle y lo vendí sin pagar el 4% que me pedían las inmobiliarias.',
+    title: 'Experiencia vendiendo directo en InmoVAX vs agencia inmobiliaria tradicional',
+    content: 'Comparto mi experiencia: publiqué mi departamento en Sopocachi en InmoVAX de forma directa. En dos semanas recibí 11 mensajes de personas interesadas y lo vendí sin pagar el 4% que me pedían las inmobiliarias.',
     category: 'Compra / Venta',
     authorName: 'Arq. Marcelo Arispe',
     date: 'Hace 3 días',

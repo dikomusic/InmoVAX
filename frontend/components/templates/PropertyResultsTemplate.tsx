@@ -46,16 +46,18 @@ const PropertyResultsContent = ({ operation, type, showMap = false }: PropertyRe
 
   // Inicializar filtros desde la URL o el tipo de ruta
   const [filters, setFilters] = useState<FilterValues>(() => {
-    const ciudadParam = searchParams.get('ciudad') || '';
+    const ciudadParam = searchParams.get('ciudad') || searchParams.get('zona') || searchParams.get('q') || '';
     const minParam = searchParams.get('min') || '';
     const maxParam = searchParams.get('max') || '';
+    const dormsParam = searchParams.get('dormitorios') || searchParams.get('beds') || '';
 
     return {
       ...initialFilterValues,
       location: ciudadParam,
       propertyType: type !== 'todos' ? type : '',
       priceMin: minParam,
-      priceMax: maxParam
+      priceMax: maxParam,
+      bedrooms: dormsParam
     };
   });
 

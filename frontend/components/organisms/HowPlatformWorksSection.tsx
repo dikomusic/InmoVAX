@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { QrCode, MessageCircle, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Sparkles, MessageCircle, ShieldCheck, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 
 export const HowPlatformWorksSection: React.FC = () => {
@@ -30,16 +30,17 @@ export const HowPlatformWorksSection: React.FC = () => {
               <div className="w-12 h-12 rounded-2xl bg-accent/20 text-accent flex items-center justify-center font-black text-lg border border-accent/30">
                 1
               </div>
-              <h3 className="text-lg font-bold text-white">Publica y activa tu Cartel QR</h3>
+              <h3 className="text-lg font-bold text-white">Busca con IA o Publica en Minutos</h3>
               <p className="text-xs text-gray-300 leading-relaxed">
-                Registra los datos de tu inmueble en minutos. Activa tu letrero exterior con código QR dinámico para que los transeúntes vean tu ficha completa al instante.
+                Utiliza nuestra búsqueda inteligente con IA en lenguaje natural para dar con el inmueble exacto, o publica tu propiedad directamente sin trámites burocráticos.
               </p>
             </div>
             <div className="pt-4 border-t border-white/10 flex items-center gap-2 text-xs font-bold text-accent">
-              <QrCode className="w-4 h-4" />
-              <span>Cartelería inteligente</span>
+              <Sparkles className="w-4 h-4" />
+              <span>Búsqueda Inteligente</span>
             </div>
           </div>
+
 
           {/* PASO 2 */}
           <div className="bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10 space-y-4 hover:border-accent/40 transition-all flex flex-col justify-between">
