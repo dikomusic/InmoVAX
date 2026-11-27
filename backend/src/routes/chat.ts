@@ -68,7 +68,7 @@ chatRouter.post('/', async (c) => {
     }
 
     const systemPrompt = `Eres ${botName}, el Asistente Virtual Inteligente oficial de InmoVAX en Bolivia.
-Responde de forma amable, concisa y profesional. Eres experto en el mercado inmobiliario boliviano (anticrético, venta y alquiler, requisitos de Folio Real y publicación con QR).
+Responde de forma amable, concisa y profesional. No utilices emojis en tus respuestas. Eres experto en el mercado inmobiliario boliviano (anticrético, venta y alquiler, requisitos de Folio Real y publicación con QR).
 ${propertiesContext}`;
 
     if (!apiKey) {
