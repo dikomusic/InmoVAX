@@ -43,6 +43,7 @@ export const InmoChatbotWidget: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
   const [botName, setBotName] = useState('InmoBot');
+  const [activeModel, setActiveModel] = useState('Gemini 3 Flash');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Cargar historial y configuración al montar
@@ -123,6 +124,14 @@ export const InmoChatbotWidget: React.FC = () => {
 
       if (res.ok) {
         const data = await res.json();
+        if (data.model) {
+          const prettyModel = data.model
+            .replace('gemini-', 'Gemini ')
+            .replace('-preview', '')
+            .replace('-latest', ' (Latest)')
+            .replace('fallback-inmovax', 'InmoVAX Engine');
+          setActiveModel(prettyModel);
+        }
         const botMsg: ChatMessage = {
           id: `bot-${Date.now()}`,
           role: 'assistant',
@@ -229,7 +238,7 @@ export const InmoChatbotWidget: React.FC = () => {
                   <div className="flex items-center gap-1.5">
                     <h3 className="font-bold text-sm tracking-tight">{botName}</h3>
                     <span className="text-[10px] bg-blue-500/30 text-blue-200 px-1.5 py-0.5 rounded-md font-medium border border-blue-400/20">
-                      IA Gemini
+                      {activeModel}
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-300 flex items-center gap-1">

@@ -169,6 +169,7 @@ ${propertiesContext}
 
     // 5. Invocar Gemini con rotación de modelos
     let botReply = '';
+    let usedModel = '';
     let lastError: any = null;
 
     for (const model of GEMINI_MODELS) {
@@ -192,6 +193,7 @@ ${propertiesContext}
           const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (candidateText) {
             botReply = candidateText;
+            usedModel = model;
             break; // Éxito con este modelo
           }
         } else {
@@ -207,13 +209,16 @@ ${propertiesContext}
     if (!botReply) {
       console.warn('Fallo llamada a Gemini API:', lastError);
       botReply = `¡Hola! Soy **${botName}**. En este momento estoy consultando nuestra base de datos en InmoVAX. Puedo ayudarte a buscar departamentos o casas en anticrético, alquiler y venta en La Paz y otras ciudades de Bolivia, o explicarte cómo publicar tu inmueble. ¿En qué zona o qué presupuesto tienes en mente?`;
+      usedModel = 'fallback-inmovax';
     }
 
     return NextResponse.json({
       success: true,
       message: botReply,
-      suggestedProperties
+      suggestedProperties,
+      model: usedModel
     });
+
 
   } catch (error: any) {
     console.error('Error general en /api/chat:', error);
