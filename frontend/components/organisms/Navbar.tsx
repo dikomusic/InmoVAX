@@ -203,13 +203,13 @@ export const Navbar = () => {
   ];
 
   const menuMas: DropdownItem[] = [
-    { label: 'Más', isHeader: true },
+    { label: 'Servicios de Plataforma', isHeader: true },
     { label: '', isDivider: true },
-    { label: ' Nuestros asesores', href: '/asesores' },
-    { label: ' Oficinas', href: '/oficinas' },
-    { label: ' Nosotros', href: '/nosotros' },
-    { label: ' Trabaja con nosotros', href: '/empleo' },
-    { label: ' Contacto', href: '/contacto' },
+    { label: 'Servicios Notariales y Legales', href: '/asesores' },
+    { label: 'Planes y Cartelería QR', href: '/publicar' },
+    { label: 'Foro Comunitario', href: '/foro' },
+    { label: 'Sobre InmoVAX', href: '/nosotros' },
+    { label: 'Contacto y Soporte', href: '/contacto' },
   ];
 
   return (
@@ -226,8 +226,8 @@ export const Navbar = () => {
           <NavDropdown title="Alquilar" items={menuAlquilar} />
           <NavDropdown title="Anticrético" items={menuAnticretico} />
 
-          <Link href="/proyectos" className="text-content-inverse hover:text-accent font-medium transition-colors">
-            Proyectos
+          <Link href="/foro" className="text-content-inverse hover:text-accent font-medium transition-colors">
+            Foro
           </Link>
 
           <NavDropdown title="Más" items={menuMas} />
@@ -477,8 +477,8 @@ export const Navbar = () => {
               </div>
             </details>
 
-            <Link href="/proyectos" onClick={() => setMenuAbierto(false)} className="text-content-inverse font-bold text-lg hover:text-accent">
-              Proyectos
+            <Link href="/foro" onClick={() => setMenuAbierto(false)} className="text-content-inverse font-bold text-lg hover:text-accent">
+              Foro
             </Link>
 
             <details className="group">
