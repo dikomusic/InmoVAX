@@ -90,7 +90,7 @@ export default function SellerPortalPage() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const tabParam = urlParams.get('tab') as SellerTab;
-      if (tabParam && ['resumen', 'inmuebles', 'consultas', 'citas', 'documentos', 'configuracion'].includes(tabParam)) {
+      if (tabParam && ['resumen', 'inmuebles', 'consultas', 'configuracion'].includes(tabParam)) {
         setActiveTab(tabParam);
       }
     }
@@ -414,16 +414,6 @@ export default function SellerPortalPage() {
           onRejectOffer={handleRejectOffer}
           onCounterOfferSubmit={handleCounterOfferSubmit}
         />
-      )}
-
-      {activeTab === 'citas' && (
-        <SellerAppointmentsSection
-          appointments={appointments}
-        />
-      )}
-
-      {activeTab === 'documentos' && (
-        <SellerDocumentsSection />
       )}
 
       {activeTab === 'configuracion' && (

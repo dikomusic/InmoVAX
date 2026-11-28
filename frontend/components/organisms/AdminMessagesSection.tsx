@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   MessageSquare, Clock, CheckCircle2, Search, Mail, 
-  Phone, ArrowUpRight, Building2, Check, ExternalLink 
+  Phone, ArrowUpRight, Building2, Check, ExternalLink, Trash2 
 } from 'lucide-react';
 import { API_BASE } from '@/lib/apiConfig';
+import { createClient } from '@/lib/supabase/client';
 
 export interface ConsultationItem {
   id: string;
@@ -30,54 +31,55 @@ export const AdminMessagesSection: React.FC = () => {
   const loadMessages = async () => {
     setLoading(true);
     try {
+      // 1. Consulta directa a Supabase (funciona tanto en local como en Vercel)
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('consultations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (data && data.length > 0) {
+        const mapped: ConsultationItem[] = data.map((c: any) => ({
+          id: c.id,
+          propertyId: c.property_id,
+          propertyTitle: c.property_title || 'Consulta de Inmueble',
+          propertyPrice: c.property_price || '',
+          sellerEmail: c.seller_email,
+          sellerName: c.seller_name,
+          buyerEmail: c.buyer_email,
+          buyerName: c.buyer_name,
+          buyerPhone: c.buyer_phone,
+          status: c.status || 'pendiente',
+          lastMessage: c.last_message || c.message || '',
+          date: c.created_at ? new Date(c.created_at).toLocaleDateString('es-BO', { hour: '2-digit', minute: '2-digit' }) : 'Reciente'
+        }));
+        setMessages(mapped);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Fallback backend
       const res = await fetch(`${API_BASE}/consultations`);
-      const data = await res.json();
-      if (data.consultations && data.consultations.length > 0) {
-        setMessages(data.consultations);
+      const resData = await res.json();
+      if (resData.consultations && resData.consultations.length > 0) {
+        setMessages(resData.consultations);
       } else {
-        // Fallback demostrativo
-        setMessages([
-          {
-            id: "msg-101",
-            propertyTitle: "Departamento en Sopocachi (Terraza)",
-            propertyPrice: "$us 45,000",
-            buyerName: "Rodrigo Morales",
-            buyerEmail: "rodrigo.morales@gmail.com",
-            buyerPhone: "+591 76543210",
-            status: "pendiente",
-            lastMessage: "Buenas tardes, quisiera saber si aceptan pago con crédito bancario pre-aprobado.",
-            date: "Hoy, 15:30"
-          },
-          {
-            id: "msg-102",
-            propertyTitle: "Casa Familiar en Achumani",
-            propertyPrice: "$us 320,000",
-            buyerName: "Patricia Claure",
-            buyerEmail: "patricia.claure@hotmail.com",
-            buyerPhone: "+591 71234567",
-            status: "respondido",
-            lastMessage: "¿Tienen disponible el plano de construcción y gravámenes al día?",
-            date: "Ayer, 18:20"
-          }
-        ]);
+        setMessages([]);
       }
     } catch {
-      setMessages([
-        {
-          id: "msg-101",
-          propertyTitle: "Departamento en Sopocachi (Terraza)",
-          propertyPrice: "$us 45,000",
-          buyerName: "Rodrigo Morales",
-          buyerEmail: "rodrigo.morales@gmail.com",
-          buyerPhone: "+591 76543210",
-          status: "pendiente",
-          lastMessage: "Buenas tardes, quisiera saber si aceptan pago con crédito bancario pre-aprobado.",
-          date: "Hoy, 15:30"
-        }
-      ]);
+      setMessages([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    setMessages(prev => prev.filter(m => m.id !== id));
+    try {
+      const supabase = createClient();
+      await supabase.from('consultations').delete().eq('id', id);
+      await fetch(`${API_BASE}/consultations/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    } catch {}
   };
 
   useEffect(() => {
@@ -278,6 +280,17 @@ export const AdminMessagesSection: React.FC = () => {
               >
                 <Check className="w-3 h-3" />
                 <span>{msg.status === 'pendiente' ? 'Marcar Atendido' : 'Marcar Pendiente'}</span>
+              </button>
+
+              {/* Eliminar mensaje */}
+              <button
+                type="button"
+                onClick={() => handleDeleteMessage(msg.id)}
+                className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                title="Eliminar consulta"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>Eliminar</span>
               </button>
 
             </div>

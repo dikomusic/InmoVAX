@@ -57,6 +57,9 @@ export const AdminPaymentsSection: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    const handleUpdate = () => loadData();
+    window.addEventListener('payment-orders-updated', handleUpdate);
+    return () => window.removeEventListener('payment-orders-updated', handleUpdate);
   }, []);
 
   const showToast = (msg: string) => {

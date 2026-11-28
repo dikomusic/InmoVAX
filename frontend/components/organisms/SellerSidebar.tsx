@@ -52,14 +52,6 @@ export const SellerSidebar = ({
       badge: consultationsCount !== undefined && consultationsCount > 0 ? String(consultationsCount) : undefined,
       badgeColor: 'bg-emerald-500'
     },
-    {
-      id: 'citas',
-      label: 'Agenda y Visitas',
-      Icon: CalendarDays,
-      badge: appointmentsCount !== undefined ? String(appointmentsCount) : undefined,
-      badgeColor: 'bg-blue-500'
-    },
-    { id: 'documentos', label: 'Folio Real y Minutas', Icon: FileText },
     { id: 'configuracion', label: 'Mi Configuración', Icon: Settings }
   ];
 

@@ -12,6 +12,7 @@ import { readStoredSession } from '@/lib/frontendStore';
 import { getAllManagedProperties, saveManagedProperties, deleteManagedProperty } from '@/lib/propertiesStore';
 import { fetchAdminPendingPayments, fetchAdminHistoryPayments } from '@/lib/paymentsApi';
 import { API_BASE } from '@/lib/apiConfig';
+import { createClient } from '@/lib/supabase/client';
 import { Lock, Loader2, Activity } from 'lucide-react';
 import { Error403Forbidden } from '@/components/organisms/Error403Forbidden';
 
@@ -75,16 +76,32 @@ export default function AdminPage() {
       setRevenueTotal(rev);
     }).catch(() => {});
 
-    // 3. Consultas y mensajes recibidos
-    fetch(`${API_BASE}/consultations`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.consultations) {
-          const pending = data.consultations.filter((c: any) => c.status === 'pendiente');
-          setUnreadMessagesCount(pending.length);
+    // 3. Consultas y mensajes recibidos (directo desde Supabase)
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { count, error } = await supabase
+          .from('consultations')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pendiente');
+
+        if (!error && count !== null) {
+          setUnreadMessagesCount(count);
+          return;
         }
-      })
-      .catch(() => {});
+
+        const res = await fetch(`${API_BASE}/consultations`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.consultations) {
+            const pending = data.consultations.filter((c: any) => c.status === 'pendiente');
+            setUnreadMessagesCount(pending.length);
+          }
+        }
+      } catch {
+        setUnreadMessagesCount(0);
+      }
+    })();
   };
 
   useEffect(() => {
@@ -97,6 +114,10 @@ export default function AdminPage() {
     }
     setAuthStatus('authorized');
     loadPropertiesAndMetrics();
+
+    const handlePaymentUpdate = () => loadPropertiesAndMetrics();
+    window.addEventListener('payment-orders-updated', handlePaymentUpdate);
+    return () => window.removeEventListener('payment-orders-updated', handlePaymentUpdate);
   }, []);
 
   const showNotification = (msg: string) => {

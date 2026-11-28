@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Modal } from '../atoms/Modal';
 import { API_BASE } from '@/lib/apiConfig';
+import { createClient } from '@/lib/supabase/client';
 
 export interface UserItem {
   id: string;
@@ -41,71 +42,53 @@ export const AdminUsersSection: React.FC = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
+      // 1. Conexión directa a Supabase (funciona de forma transparente en Vercel y local)
+      const supabase = createClient();
+      const [profilesRes, propsRes] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('properties').select('id, user_id')
+      ]);
+
+      if (profilesRes.data && profilesRes.data.length > 0) {
+        const propCounts: Record<string, number> = {};
+        propsRes.data?.forEach(p => {
+          if (p.user_id) propCounts[p.user_id] = (propCounts[p.user_id] || 0) + 1;
+        });
+
+        const mapped: UserItem[] = profilesRes.data.map((p: any) => {
+          const count = propCounts[p.id] || 0;
+          const role: UserItem['role'] = p.role_id === 4 
+            ? 'Administrador' 
+            : (p.role_id === 3 ? 'Vendedor' : 'Cliente');
+          const status: UserItem['status'] = p.is_verified === false ? 'Suspendido' : 'Activo';
+
+          return {
+            id: p.id,
+            email: p.email,
+            fullName: p.full_name || p.email.split('@')[0],
+            phone: p.phone || '+591 76543210',
+            role,
+            status,
+            propertiesCount: count,
+            createdAt: p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : '2026-09-01'
+          };
+        });
+
+        setUsers(mapped);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Consulta al backend como fallback secundario
       const res = await fetch(`${API_BASE}/auth/users`, {
         headers: getAdminHeaders()
       });
       const data = await res.json();
       if (data.users && data.users.length > 0) {
         setUsers(data.users);
-      } else {
-        // Fallback datos locales si aún no hay usuarios en backend
-        setUsers([
-          {
-            id: "usr-admin-01",
-            fullName: "Daniel Catari",
-            email: "admin@inmovax.com",
-            phone: "+591 76543210",
-            role: "Administrador",
-            status: "Activo",
-            propertiesCount: 8,
-            createdAt: "2026-09-01"
-          },
-          {
-            id: "usr-demo-02",
-            fullName: "Carlos Eduardo Mendoza",
-            email: "vendedor@inmovax.com",
-            phone: "+591 71234567",
-            role: "Vendedor",
-            status: "Activo",
-            propertiesCount: 4,
-            createdAt: "2026-09-15"
-          },
-          {
-            id: "usr-client-03",
-            fullName: "Mariana Alarcón",
-            email: "mariana.alarcon@gmail.com",
-            phone: "+591 79876543",
-            role: "Cliente",
-            status: "Activo",
-            propertiesCount: 1,
-            createdAt: "2026-09-22"
-          }
-        ]);
       }
-    } catch {
-      // Fallback
-      setUsers([
-        {
-          id: "usr-admin-01",
-          fullName: "Daniel Catari",
-          email: "admin@inmovax.com",
-          phone: "+591 76543210",
-          role: "Administrador",
-          status: "Activo",
-          propertiesCount: 8,
-          createdAt: "2026-09-01"
-        },
-        {
-          id: "usr-demo-02",
-          fullName: "Carlos Eduardo Mendoza",
-          email: "vendedor@inmovax.com",
-          phone: "+591 71234567",
-          role: "Vendedor",
-          status: "Activo",
-          propertiesCount: 4,
-          createdAt: "2026-09-15"
-        }
-      ]);
+    } catch (err) {
+      console.warn('Cargando usuarios desde servicio:', err);
     } finally {
       setLoading(false);
     }
@@ -126,6 +109,9 @@ export const AdminUsersSection: React.FC = () => {
     setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: nextStatus } : u));
 
     try {
+      const supabase = createClient();
+      await supabase.from('profiles').update({ is_verified: nextStatus === 'Activo' }).eq('id', user.id);
+
       await fetch(`${API_BASE}/auth/users/${user.id}/status`, {
         method: 'PATCH',
         headers: getAdminHeaders(),
