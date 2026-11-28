@@ -152,6 +152,7 @@ export const fetchPropertyById = async (id: string): Promise<PropertyListing | n
   if (!id) return null;
   const normalizedId = decodeURIComponent(id).trim();
 
+  // 1. Intentar consultar el backend en Bun
   try {
     const res = await fetch(`${API_BASE}/properties/${encodeURIComponent(normalizedId)}`, {
       cache: 'no-store'
@@ -162,8 +163,87 @@ export const fetchPropertyById = async (id: string): Promise<PropertyListing | n
         return managedPropertyToListing(json.property);
       }
     }
-  } catch (err) {
-    console.error('Error fetching property from backend:', err);
+  } catch {}
+
+  // 2. Consulta directa a Supabase (PostgreSQL) para SSR y Vercel
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (supabaseUrl && supabaseKey) {
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalizedId);
+      
+      let query = supabase.from('properties').select('*, property_images(*), profiles:profiles!properties_user_id_fkey(*)');
+      if (isUuid) {
+        query = query.eq('id', normalizedId);
+      } else {
+        query = query.ilike('code', normalizedId);
+      }
+
+      const { data } = await query.maybeSingle();
+      if (data) {
+        const typeMap: Record<number, 'Anticrético' | 'Venta' | 'Alquiler'> = {
+          1: 'Anticrético',
+          2: 'Venta',
+          3: 'Alquiler'
+        };
+        const statusMap: Record<number, 'Activo' | 'En Validación Legal' | 'Pausado' | 'Cerrado'> = {
+          1: 'Activo',
+          2: 'En Validación Legal',
+          3: 'Pausado',
+          4: 'Cerrado'
+        };
+
+        const coverImg = Array.isArray(data.property_images)
+          ? data.property_images.find((img: any) => img.is_cover)?.image_url
+          : null;
+        const gallery: string[] = Array.isArray(data.property_images)
+          ? data.property_images.map((img: any) => img.image_url).filter(Boolean)
+          : [];
+        const image = coverImg || gallery[0] || data.image || '';
+        const pricePrefix = data.currency === 'USD' ? '$us ' : 'Bs. ';
+        const price = `${pricePrefix}${Number(data.price_amount).toLocaleString()}`;
+        const code = data.code || data.id;
+
+        const mp: ManagedProperty = {
+          id: code,
+          title: data.title,
+          zone: data.zone,
+          address: data.address || data.zone,
+          description: data.description || '',
+          type: typeMap[data.type_id] || 'Anticrético',
+          price,
+          views: data.views_count ?? 0,
+          inquiries: data.inquiries_count ?? 0,
+          status: statusMap[data.status_id] || 'Activo',
+          folioReal: data.folio_real || '',
+          assignedAdvisor: data.profiles?.full_name || 'Propietario',
+          image,
+          gallery,
+          category: data.category || 'Departamento',
+          isNegotiable: data.is_negotiable ?? false,
+          latitude: data.latitude !== null && data.latitude !== undefined ? Number(data.latitude) : null,
+          longitude: data.longitude !== null && data.longitude !== undefined ? Number(data.longitude) : null,
+          habitaciones: data.bedrooms ?? undefined,
+          banos: data.bathrooms ?? undefined,
+          metros: data.area_sqm ? Number(data.area_sqm) : undefined,
+          landAreaSqm: data.land_area_sqm ? Number(data.land_area_sqm) : null,
+          estacionamientos: data.parking_spots ?? 0,
+          parkingSpots: data.parking_spots ?? 0,
+          amenidades: Array.isArray(data.amenities) ? data.amenities : [],
+          amenities: Array.isArray(data.amenities) ? data.amenities : [],
+          href: `/propiedad/${code}`,
+          datePublished: data.created_at ? 'Publicado recientemente' : 'Publicado hace 4 días',
+          authorEmail: data.profiles?.email || '',
+          authorName: data.profiles?.full_name || 'Propietario',
+          isVerified: Boolean(data.is_verified)
+        };
+        return managedPropertyToListing(mp);
+      }
+    } catch (err) {
+      console.error('Direct Supabase fetch error in fetchPropertyById:', err);
+    }
   }
 
   const local = getPropertyById(normalizedId);

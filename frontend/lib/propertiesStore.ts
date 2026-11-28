@@ -124,7 +124,7 @@ export const fetchPropertiesDirectFromSupabase = async (): Promise<ManagedProper
     const supabase = createClient(url, key);
     const { data, error } = await supabase
       .from('properties')
-      .select('*, property_images(*), profiles(*)')
+      .select('*, property_images(*), profiles:profiles!properties_user_id_fkey(*)')
       .order('created_at', { ascending: false });
 
     if (!error && Array.isArray(data) && data.length > 0) {

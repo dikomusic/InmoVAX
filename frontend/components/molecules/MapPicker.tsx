@@ -1,7 +1,7 @@
 "use client";
 // 1. Eliminamos 'useState' y 'useRef' que ya no usaremos
 import React, { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -61,17 +61,35 @@ const LocationMarker = ({ onLocationSelect, externalCenter, readOnly }: MapPicke
       eventHandlers={eventHandlers} 
       position={externalCenter} 
       icon={customPinIcon} 
-    />
+    >
+      <Popup>
+        <div className="p-1 text-center font-sans">
+          <span className="text-[10px] font-black uppercase tracking-wider text-primary block">InmoVAX</span>
+          <span className="text-xs font-extrabold text-surface-dark block mt-0.5">Ubicación del Inmueble</span>
+          <span className="text-[10px] text-content-muted font-mono block mt-0.5">
+            {externalCenter.lat.toFixed(4)}, {externalCenter.lng.toFixed(4)}
+          </span>
+        </div>
+      </Popup>
+    </Marker>
   ) : null;
 };
 
 const MapPicker = ({ onLocationSelect, externalCenter, readOnly }: MapPickerProps) => {
-  const defaultCenter = { lat: -16.5000, lng: -68.1193 };
+  const defaultCenter = { lat: -16.5250, lng: -68.0950 };
 
   return (
-    <div className="h-64 w-full rounded-xl overflow-hidden border-2 border-gray-200 z-0 relative">
-      <MapContainer center={externalCenter || defaultCenter} zoom={externalCenter ? 15 : 13} scrollWheelZoom={true} style={{ height: '100%', width: '100%', zIndex: 10 }}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <div className="h-72 sm:h-80 w-full rounded-2xl overflow-hidden border border-gray-200 z-0 relative shadow-xs">
+      <MapContainer 
+        center={externalCenter || defaultCenter} 
+        zoom={externalCenter ? 15 : 13} 
+        scrollWheelZoom={true} 
+        style={{ height: '100%', width: '100%', zIndex: 10 }}
+      >
+        <TileLayer 
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+        />
         <LocationMarker onLocationSelect={onLocationSelect} externalCenter={externalCenter} readOnly={readOnly} />
       </MapContainer>
     </div>

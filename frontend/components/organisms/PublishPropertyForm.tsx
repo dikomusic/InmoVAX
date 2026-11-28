@@ -13,6 +13,8 @@ import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
 import { PropertyFormData } from '../molecules/PublishSummaryCard';
+import { ClientMap } from '../molecules/ClientMap';
+import { resolvePropertyCoordinates } from '@/lib/geoCoordinates';
 import { saveStoredSession, readStoredSession } from '@/lib/frontendStore';
 import { API_BASE } from '@/lib/apiConfig';
 
@@ -106,7 +108,7 @@ export const PublishPropertyForm: React.FC<PublishPropertyFormProps> = ({
     descripcion: '',
     zona: '',
     calle: '',
-    coordenadas: { lat: -16.5000, lng: -68.1500 },
+    coordenadas: { lat: -16.5250, lng: -68.0950 },
     supConstruida: '',
     supTerreno: '',
     habitaciones: '',
@@ -363,7 +365,18 @@ export const PublishPropertyForm: React.FC<PublishPropertyFormProps> = ({
               </label>
               <Select
                 value={formData.ciudad || 'La Paz'}
-                onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })}
+                onChange={(e) => {
+                  const newCiudad = e.target.value;
+                  const newCoords = resolvePropertyCoordinates({
+                    zone: formData.zona,
+                    ubicacion: `${formData.zona}, ${newCiudad}`
+                  });
+                  setFormData(prev => ({
+                    ...prev,
+                    ciudad: newCiudad,
+                    coordenadas: newCoords
+                  }));
+                }}
                 options={CIUDADES_BOLIVIA}
                 required
               />
@@ -375,8 +388,19 @@ export const PublishPropertyForm: React.FC<PublishPropertyFormProps> = ({
               <Input
                 type="text"
                 value={formData.zona}
-                onChange={(e) => setFormData({ ...formData, zona: e.target.value })}
-                placeholder="Ej. Sopocachi, Calacoto, Equipetrol, Sarco..."
+                onChange={(e) => {
+                  const newZona = e.target.value;
+                  const newCoords = resolvePropertyCoordinates({
+                    zone: newZona,
+                    ubicacion: `${newZona}, ${formData.ciudad || 'La Paz'}`
+                  });
+                  setFormData(prev => ({
+                    ...prev,
+                    zona: newZona,
+                    coordenadas: newCoords
+                  }));
+                }}
+                placeholder="Ej. Sopocachi, Calacoto, Irpavi, Achumani..."
                 required
               />
             </div>
@@ -390,9 +414,35 @@ export const PublishPropertyForm: React.FC<PublishPropertyFormProps> = ({
             <Input
               type="text"
               value={formData.calle}
-              onChange={(e) => setFormData({ ...formData, calle: e.target.value })}
+              onChange={(e) => {
+                const newCalle = e.target.value;
+                setFormData(prev => ({ ...prev, calle: newCalle }));
+              }}
               placeholder="Ej. Calle 21 de Calacoto, Edif. Los Andes, frente al parque..."
             />
+          </div>
+
+          {/* Mapa Interactivo con Geoubicación en Vivo */}
+          <div className="bg-surface-light p-3.5 rounded-2xl border border-gray-200 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-surface-dark flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-primary" /> Ubicación en el Mapa
+              </span>
+              <span className="text-[11px] text-content-muted font-medium">
+                {formData.zona ? `Enfocado en ${formData.zona}` : 'Escribe tu zona para centrar'}
+              </span>
+            </div>
+            <div className="h-56 w-full rounded-xl overflow-hidden border border-gray-200">
+              <ClientMap
+                externalCenter={formData.coordenadas}
+                onLocationSelect={(lat: number, lng: number) => {
+                  setFormData(prev => ({ ...prev, coordenadas: { lat, lng } }));
+                }}
+              />
+            </div>
+            <p className="text-[11px] text-content-muted">
+              Puedes arrastrar el pin rojo para indicar la ubicación exacta de la puerta o ingreso de tu inmueble.
+            </p>
           </div>
 
           {/* Moneda y Precio */}

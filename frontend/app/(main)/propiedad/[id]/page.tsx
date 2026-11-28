@@ -248,6 +248,15 @@ export default async function PropiedadDetallePage({ params }: { params: Promise
                   readOnly={true} 
                   externalCenter={propertyCoords} 
                 />
+                <div className="flex items-center justify-between mt-2 px-1 text-xs text-content-muted">
+                  <span className="flex items-center gap-1 font-medium">
+                    <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                    Ubicación geolocalizada en <strong>{ubicacion || direccion}</strong>
+                  </span>
+                  <span className="font-mono text-[11px] text-primary/80 font-bold">
+                    {propertyCoords.lat.toFixed(4)}, {propertyCoords.lng.toFixed(4)}
+                  </span>
+                </div>
               </div>
 
               <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
