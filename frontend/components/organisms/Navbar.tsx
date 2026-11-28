@@ -208,6 +208,7 @@ export const Navbar = () => {
     { label: 'Servicios Notariales y Legales', href: '/asesores' },
     { label: 'Planes de Publicación', href: '/publicar' },
     { label: 'Foro Comunitario', href: '/foro' },
+    { label: 'Presentación del Proyecto (Pitch)', href: '/presentacion' },
     { label: 'Sobre InmoVAX', href: '/nosotros' },
     { label: 'Contacto y Soporte', href: '/contacto' },
   ];
