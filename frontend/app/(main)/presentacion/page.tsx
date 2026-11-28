@@ -1,117 +1,105 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Maximize2, Minimize2, ChevronLeft, ChevronRight, Play, Pause, 
   RotateCcw, Sparkles, ShieldCheck, DollarSign, TrendingUp, 
-  AlertTriangle, CheckCircle2, ArrowRight, Clock, MessageSquare, 
-  Bot, Users, Building2, Home, Scale, Search, FileText, Check,
-  BookOpen, Layers, Zap, ExternalLink
+  AlertTriangle, CheckCircle2, ArrowRight, Clock, 
+  Bot, Users, Home, Scale, Search, FileText, Check,
+  BookOpen, ExternalLink, Activity, ArrowUpRight
 } from 'lucide-react';
 
-interface Slide {
+interface SlideData {
   id: number;
   badge: string;
-  title: string;
-  subtitle: string;
+  tagline: string;
   durationRecommended: string;
   speakerNotes: string[];
 }
 
-const SLIDES_META: Slide[] = [
+const SLIDES: SlideData[] = [
   {
     id: 1,
-    badge: "Visión & Propuesta de Valor",
-    title: "InmoVAX: La plataforma tecnológica inmobiliaria sin comisiones en Bolivia",
-    subtitle: "Conectamos compradores y propietarios directamente mediante Inteligencia Artificial y blindaje legal notarial en Derechos Reales.",
-    durationRecommended: "0:00 - 1:00 (1 min)",
+    badge: "Visión",
+    tagline: "El fin de las comisiones inmobiliarias en Bolivia",
+    durationRecommended: "0:00 - 1:00",
     speakerNotes: [
-      "Inicia con energía: 'Buenas tardes a todos. Hoy les presento InmoVAX.'",
-      "Plantea la premisa principal: No somos una inmobiliaria tradicional; somos la plataforma tecnológica que erradica las comisiones abusivas en Bolivia.",
-      "Destaca los dos pilares: Inteligencia Artificial en lenguaje natural + Seguridad jurídica real."
+      "Inicia con fuerza: 'InmoVAX no es una inmobiliaria tradicional. Somos la plataforma tecnológica que conecta directamente a propietarios y compradores con 0% de comisiones y respaldo legal en Derechos Reales.'",
+      "Señala los 3 números gigantes en pantalla: 0% comisión, 100% P2P, Inteligencia Artificial 24/7."
     ]
   },
   {
     id: 2,
-    badge: "El Problema del Mercado",
-    title: "El desangrado de comisiones y la inseguridad en anticréticos",
-    subtitle: "En Bolivia, vender o tomar un anticrético significa perder hasta el 7% en comisiones o arriesgar el patrimonio frente a estafas.",
-    durationRecommended: "1:00 - 2:15 (1.15 min)",
+    badge: "El Problema",
+    tagline: "El desangrado del 3% al 7% en comisiones y el riesgo del anticrético",
+    durationRecommended: "1:00 - 2:15",
     speakerNotes: [
-      "Usa el deslizador interactivo de precios en vivo para asombrar al jurado.",
-      "Muestra cómo en una casa de $150,000, una familia pierde hasta $10,500 en comisiones que no agregan valor.",
-      "Explica el dolor del anticrético boliviano: contratos privados sin verificación en Derechos Reales que terminan en estafas o juicios de años."
+      "Mueve el slider en vivo: 'Miren cómo en una propiedad de $150,000, una familia pierde más de $10,000 en comisiones que no agregan valor.'",
+      "Muestra la animación de las monedas fugándose hacia la agencia tradicional.",
+      "Alerta sobre los anticréticos sin Folio Real: estafas y juicios de años."
     ]
   },
   {
     id: 3,
-    badge: "La Solución InmoVAX",
-    title: "Desintermediación directa P2P y blindaje notarial",
-    subtitle: "Reemplazamos al intermediario abusivo con software moderno, conexión directa y verificación de Folio Real digital.",
-    durationRecommended: "2:15 - 3:30 (1.15 min)",
+    badge: "La Solución",
+    tagline: "Conexión directa P2P + Escaneo legal en Derechos Reales",
+    durationRecommended: "2:15 - 3:30",
     speakerNotes: [
-      "Compara la ruta rota tradicional vs la ruta transparente de InmoVAX.",
-      "Enfatiza: Cero comisiones de intermediación (el propietario conserva el 100% de su patrimonio).",
-      "Explica la verificación de Folio Real y Notario de Fe Pública para que el anticrético sea 100% seguro."
+      "Muestra el rayo de luz que conecta directo al propietario con el comprador sin intermediarios.",
+      "Destaca el escáner notarial en movimiento: cada anticrético es auditado en Folio Real para blindar el capital al 100%."
     ]
   },
   {
     id: 4,
-    badge: "Innovación Tecnológica Clave",
-    title: "Búsqueda Inteligente con IA en lenguaje natural",
-    subtitle: "Nadie habla en filtros técnicos rígidos. En InmoVAX los usuarios buscan como hablan.",
-    durationRecommended: "3:30 - 4:45 (1.15 min)",
+    badge: "Tecnología IA",
+    tagline: "Búsqueda en lenguaje natural: la IA piensa como tú",
+    durationRecommended: "3:30 - 4:45",
     speakerNotes: [
-      "Muestra la simulación de búsqueda en tiempo real.",
-      "Explica cómo la IA desglosa automáticamente la zona, el presupuesto, el tipo de contrato y los dormitorios.",
-      "Menciona que InmoBot (potenciado por Gemini Flash) asesora legalmente y filtra inmuebles 24/7 sin emojis y con lenguaje profesional."
+      "Mira la animación de escritura en tiempo real: el usuario no llena filtros aburridos, solo escribe como habla.",
+      "La IA detecta automáticamente zona, tipo de contrato, presupuesto y dormitorios al instante.",
+      "InmoBot (Gemini Flash) asesora legalmente 24/7 sin emojis y con seriedad."
     ]
   },
   {
     id: 5,
-    badge: "Ecosistema de Plataforma",
-    title: "Las 4 herramientas integradas de InmoVAX",
-    subtitle: "Una solución completa que acompaña a las partes desde la búsqueda hasta el cierre legal.",
-    durationRecommended: "4:45 - 5:30 (45 seg)",
+    badge: "Ecosistema",
+    tagline: "4 herramientas interconectadas en un solo núcleo",
+    durationRecommended: "4:45 - 5:30",
     speakerNotes: [
-      "Pasa rápidamente por los 4 pilares: Buscador IA, InmoBot Legal, Foro Comunitario de Bolivia y Formulario en 3 pasos.",
-      "Menciona que el foro resuelve dudas reales sobre devolución de capital y trámites en Derechos Reales."
+      "Muestra los 4 satélites orbitando el núcleo: Buscador IA, InmoBot, Foro Comunitario Legal y Registro en 3 pasos.",
+      "Todo está integrado en una experiencia limpia y moderna."
     ]
   },
   {
     id: 6,
-    badge: "Modelo de Negocio",
-    title: "¿Cómo genera ingresos InmoVAX? (Modelo Freemium)",
-    subtitle: "Monetizamos en servicios de alto valor agregado sin quitarle un solo centavo de comisión a la venta.",
-    durationRecommended: "5:30 - 6:15 (45 seg)",
+    badge: "Monetización",
+    tagline: "Modelo Freemium: captamos volumen y monetizamos en seguridad legal",
+    durationRecommended: "5:30 - 6:15",
     speakerNotes: [
-      "Aclara el modelo de negocio: Publicar es 100% gratis para ganar masa crítica y volumen de propiedades.",
-      "Monetizamos en: 1) Servicios Notariales y auditoría de Folio Real, 2) Planes de exposición destacada para urgencia de venta.",
-      "Este modelo alinea nuestros incentivos con el usuario: ganamos cuando el cliente está seguro, no quitándole porcentaje."
+      "Explica el embudo animado: publicar es 100% gratis (captamos miles de inmuebles).",
+      "Monetizamos en trámites notariales ($30 a $150 por verificación de Folio Real) y visibilidad VIP.",
+      "Ganamos cuando el usuario está protegido, no quitándole comisiones de venta."
     ]
   },
   {
     id: 7,
-    badge: "Mercado & Oportunidad",
-    title: "El mercado inmobiliario y el fenómeno del anticrético",
-    subtitle: "Un mercado de más de $us 2,500 millones anuales en Bolivia que los gigantes extranjeros no entienden ni resuelven.",
-    durationRecommended: "6:15 - 6:45 (30 seg)",
+    badge: "Mercado",
+    tagline: "Más de $us 2,500 millones anuales en el eje troncal de Bolivia",
+    durationRecommended: "6:15 - 6:45",
     speakerNotes: [
-      "Menciona las tres principales plazas: La Paz, Santa Cruz y Cochabamba.",
-      "Explica que plataformas como Facebook Marketplace están llenas de informalidad, y portales tradicionales cobran comisiones caras.",
-      "InmoVAX es la única plataforma adaptada a la idiosincrasia boliviana del anticrético."
+      "Muestra las barras de volumen de La Paz, Santa Cruz y Cochabamba.",
+      "Destaca: Las plataformas extranjeras no entienden el anticrético boliviano. InmoVAX domina este nicho."
     ]
   },
   {
     id: 8,
-    badge: "Cierre & Demostración",
-    title: "El futuro inmobiliario de Bolivia comienza hoy",
-    subtitle: "Tecnología, transparencia y cero comisiones para proteger el patrimonio de las familias bolivianas.",
-    durationRecommended: "6:45 - 7:00 (15 seg)",
+    badge: "Cierre & Demo",
+    tagline: "¿Listos para transformar el mercado inmobiliario?",
+    durationRecommended: "6:45 - 7:00",
     speakerNotes: [
-      "Frase de impacto: 'El patrimonio que una familia tardó 20 años en construir no debería perderse en comisiones de 5 minutos.'",
-      "Invita al jurado/inversionistas a ver el demo en vivo con el botón de abajo y abre el espacio de preguntas."
+      "Frase de remate: 'El patrimonio que tomó 20 años en construirse no debe perderse en comisiones de 5 minutos.'",
+      "Haz clic en 'Probar Demo en Vivo' y pasa a la sesión de preguntas."
     ]
   }
 ];
@@ -121,20 +109,35 @@ export default function PresentacionPitchPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   
-  // Cronómetro del Pitch (Objetivo: 7 minutos = 420 segundos)
+  // Cronómetro de 7 minutos
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Estados interactivos para Diapositiva 2 (Simulador de comisiones)
-  const [propertyPrice, setPropertyPrice] = useState(120000);
-  
-  // Estados interactivos para Diapositiva 4 (Simulador de búsqueda IA)
-  const [simQuery, setSimQuery] = useState("Departamento en Sopocachi en anticrético menos de $us 45,000");
+  // Estados interactivos
+  const [propertyPrice, setPropertyPrice] = useState(140000);
+  const [simQueryIndex, setSimQueryIndex] = useState(0);
 
-  const totalSlides = SLIDES_META.length;
-  const slideMeta = SLIDES_META[currentSlide - 1];
+  const totalSlides = SLIDES.length;
+  const slideMeta = SLIDES[currentSlide - 1];
 
-  // Control del cronómetro
+  // Consultas de animación automática para la Diapositiva 4
+  const queriesAI = [
+    { text: "Departamento en Sopocachi en anticrético menos de $us 45,000", chips: ["Anticrético", "Departamento", "Sopocachi", "< $us 45k"] },
+    { text: "Casa en venta en Calacoto con 3 dormitorios y garaje", chips: ["Venta", "Casa", "Calacoto", "3 Dorms", "Parqueo"] },
+    { text: "Monoambiente amoblado en Achumani en alquiler", chips: ["Alquiler", "Monoambiente", "Achumani", "Amoblado"] }
+  ];
+
+  // Rotación automática de consultas de IA cada 4 segundos si estamos en slide 4
+  useEffect(() => {
+    if (currentSlide === 4) {
+      const qInterval = setInterval(() => {
+        setSimQueryIndex(prev => (prev + 1) % queriesAI.length);
+      }, 3500);
+      return () => clearInterval(qInterval);
+    }
+  }, [currentSlide]);
+
+  // Cronómetro
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isTimerRunning) {
@@ -147,7 +150,7 @@ export default function PresentacionPitchPage() {
     };
   }, [isTimerRunning]);
 
-  // Atajos de teclado para exponer con fluidez
+  // Atajos de teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
@@ -184,36 +187,75 @@ export default function PresentacionPitchPage() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Cálculo de comisiones dinámicas
-  const comisionBaja = propertyPrice * 0.03;
-  const comisionAlta = propertyPrice * 0.07;
-  const comisionPromedio = propertyPrice * 0.05;
+  // Cálculos dinámicos
+  const comisionPromedio = Math.round(propertyPrice * 0.05);
+  const comisionAlta = Math.round(propertyPrice * 0.07);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between selection:bg-primary selection:text-white font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#070B14] text-white flex flex-col justify-between selection:bg-primary selection:text-white font-sans overflow-x-hidden relative">
       
-      {/* 1. BARRA SUPERIOR DE CONTROL Y CRONÓMETRO DE 7 MINUTOS */}
-      <header className="w-full bg-gray-900/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 sticky top-0 z-50">
+      {/* ESTILOS DE ANIMACIÓN CONTINUA EN MOVIMIENTO REAL (CSS KEYFRAMES) */}
+      <style jsx global>{`
+        @keyframes floatCash {
+          0% { transform: translateY(0px) rotate(0deg) scale(1); opacity: 0; }
+          20% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { transform: translateY(-70px) rotate(15deg) scale(0.85); opacity: 0; }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(37,99,235,0.3); }
+          50% { transform: scale(1.03); box-shadow: 0 0 45px rgba(37,99,235,0.6); }
+        }
+        @keyframes beamFlow {
+          0% { stroke-dashoffset: 100; }
+          100% { stroke-dashoffset: 0; }
+        }
+        @keyframes scannerMove {
+          0%, 100% { transform: translateY(0%); }
+          50% { transform: translateY(180%); }
+        }
+        @keyframes orbitRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes radarSweep {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes waveBars {
+          0%, 100% { height: 15%; }
+          50% { height: 95%; }
+        }
+        .anim-float-1 { animation: floatCash 2.8s infinite ease-out; }
+        .anim-float-2 { animation: floatCash 2.8s infinite ease-out 0.9s; }
+        .anim-float-3 { animation: floatCash 2.8s infinite ease-out 1.8s; }
+        .anim-pulse-glow { animation: pulseGlow 3s infinite ease-in-out; }
+        .anim-scanner { animation: scannerMove 2.5s infinite ease-in-out; }
+        .anim-orbit { animation: orbitRotate 18s linear infinite; }
+        .anim-radar { animation: radarSweep 4s linear infinite; }
+      `}</style>
+
+      {/* 1. BARRA SUPERIOR DE CONTROL Y CRONÓMETRO */}
+      <header className="w-full bg-black/60 backdrop-blur-md border-b border-white/10 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 sticky top-0 z-50">
         
-        {/* Marca y Slide actual */}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center font-black text-white text-sm shadow-md shadow-primary/20">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center font-black text-white text-sm shadow-lg shadow-primary/30">
               IV
             </div>
-            <span className="font-black text-base tracking-tight text-white group-hover:text-primary transition-colors">
-              Inmo<span className="text-primary">VAX</span> <span className="text-xs text-emerald-400 font-bold uppercase tracking-wider ml-1">Pitch Deck</span>
+            <span className="font-black text-base text-white">
+              Inmo<span className="text-primary">VAX</span>
             </span>
           </Link>
-          <span className="hidden sm:inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/80 border border-white/10">
-            Diapositiva {currentSlide} de {totalSlides}
+          <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-white/10 text-white/90 border border-white/10">
+            Slide {currentSlide} / {totalSlides}
           </span>
         </div>
 
-        {/* Cronómetro en vivo de 7 Minutos */}
-        <div className="flex items-center gap-3 bg-black/40 px-3.5 py-1.5 rounded-full border border-white/10 text-xs font-mono">
+        {/* Cronómetro 7 min */}
+        <div className="flex items-center gap-2.5 bg-white/5 px-3.5 py-1.5 rounded-full border border-white/10 text-xs font-mono">
           <Clock className={`w-4 h-4 ${secondsElapsed > 420 ? 'text-red-400 animate-pulse' : secondsElapsed > 300 ? 'text-amber-400' : 'text-emerald-400'}`} />
-          <span className={`font-black text-sm ${secondsElapsed > 420 ? 'text-red-400 font-bold' : secondsElapsed > 300 ? 'text-amber-300' : 'text-emerald-300'}`}>
+          <span className={`font-black text-sm ${secondsElapsed > 420 ? 'text-red-400' : secondsElapsed > 300 ? 'text-amber-300' : 'text-emerald-300'}`}>
             {formatTimer(secondsElapsed)}
           </span>
           <span className="text-white/40 text-[11px]">/ 07:00</span>
@@ -221,22 +263,22 @@ export default function PresentacionPitchPage() {
           <button
             type="button"
             onClick={() => setIsTimerRunning(!isTimerRunning)}
-            className="hover:text-primary transition-colors cursor-pointer p-1"
-            title={isTimerRunning ? 'Pausar cronómetro' : 'Iniciar cronómetro'}
+            className="hover:text-primary transition-colors cursor-pointer p-0.5"
+            title={isTimerRunning ? 'Pausar' : 'Iniciar'}
           >
             {isTimerRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
           </button>
           <button
             type="button"
             onClick={() => { setSecondsElapsed(0); setIsTimerRunning(false); }}
-            className="hover:text-primary transition-colors cursor-pointer p-1"
-            title="Reiniciar cronómetro"
+            className="hover:text-primary transition-colors cursor-pointer p-0.5"
+            title="Reiniciar"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Controles de Vista */}
+        {/* Botones de acción */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -244,562 +286,566 @@ export default function PresentacionPitchPage() {
             className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
               showNotes 
                 ? 'bg-amber-400/20 text-amber-300 border-amber-400/40' 
-                : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white'
+                : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
             }`}
-            title="Ver guion del orador (Tecla N)"
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Guion del Orador</span>
+            <span className="hidden md:inline">Guion (N)</span>
           </button>
 
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer"
-            title="Pantalla completa (Tecla F)"
+            className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/80 transition-all cursor-pointer"
+            title="Pantalla completa (F)"
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
         </div>
       </header>
 
-      {/* 2. CONTENIDO PRINCIPAL DE LA DIAPOSITIVA */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 flex flex-col justify-center">
+      {/* 2. CONTENIDO PRINCIPAL: 80% GRÁFICAS ANIMADAS Y NÚMEROS DE IMPACTO */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col justify-center">
         
-        {/* Cabecera de la diapositiva */}
-        <div className="mb-8 text-center max-w-4xl mx-auto space-y-3 animate-in fade-in duration-300">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/20 border border-primary/40 text-blue-300 text-xs font-black uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span>{slideMeta.badge}</span>
-            <span className="text-white/40">•</span>
-            <span className="text-white/60 font-medium lowercase">{slideMeta.durationRecommended}</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-            {slideMeta.title}
+        {/* Titular corto de impacto */}
+        <div className="text-center mb-6 space-y-2">
+          <span className="inline-block px-3 py-1 rounded-full bg-primary/20 text-blue-300 text-xs font-black uppercase tracking-wider border border-primary/30">
+            {slideMeta.badge} • {slideMeta.durationRecommended}
+          </span>
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+            {slideMeta.tagline}
           </h1>
-          <p className="text-sm sm:text-base text-gray-400 font-medium max-w-2xl mx-auto">
-            {slideMeta.subtitle}
-          </p>
         </div>
 
-        {/* ================= SLIDE 1: PORTADA & VISIÓN ================= */}
+        {/* ================= SLIDE 1: PORTADA & VISIÓN (RADAR / RED DE NODOS ANIMADA) ================= */}
         {currentSlide === 1 && (
-          <div className="space-y-8 animate-in zoom-in-95 duration-300">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-6">
+            
+            {/* 3 Métricas Gigantes */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-3xl p-6 text-center space-y-2 anim-pulse-glow">
+                <span className="text-5xl sm:text-6xl font-black text-emerald-400 block tracking-tight">
+                  0%
+                </span>
+                <span className="text-sm font-black text-white uppercase tracking-wider block">Comisión Inmobiliaria</span>
+                <span className="text-xs text-gray-400 block">Ahorras del 3% al 7% íntegro de tu patrimonio</span>
+              </div>
+
+              <div className="bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-3xl p-6 text-center space-y-2 anim-pulse-glow" style={{ animationDelay: '0.5s' }}>
+                <span className="text-5xl sm:text-6xl font-black text-blue-400 block tracking-tight">
+                  100%
+                </span>
+                <span className="text-sm font-black text-white uppercase tracking-wider block">Conexión Directa P2P</span>
+                <span className="text-xs text-gray-400 block">Propietario a comprador vía chat y WhatsApp</span>
+              </div>
+
+              <div className="bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-3xl p-6 text-center space-y-2 anim-pulse-glow" style={{ animationDelay: '1s' }}>
+                <span className="text-5xl sm:text-6xl font-black text-amber-400 block tracking-tight">
+                  DDRR
+                </span>
+                <span className="text-sm font-black text-white uppercase tracking-wider block">Blindaje con Folio Real</span>
+                <span className="text-xs text-gray-400 block">Auditoría notarial contra estafas y gravámenes</span>
+              </div>
+            </div>
+
+            {/* Gráfica animada de Red de Ciudades en Bolivia */}
+            <div className="relative bg-black/50 border border-white/10 rounded-3xl p-6 h-48 flex items-center justify-around overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.15),transparent_70%)]" />
               
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-md flex flex-col justify-between hover:border-primary/50 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black mb-4">
-                  <DollarSign className="w-6 h-6" />
+              {/* Nodos con pulsaciones */}
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                <div className="w-14 h-14 rounded-2xl bg-blue-600/30 border-2 border-blue-400 flex items-center justify-center font-black text-white shadow-lg animate-pulse">
+                  LPZ
                 </div>
-                <div>
-                  <h3 className="text-lg font-black text-white mb-2">0% Comisiones</h3>
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    Desintermediación completa. El propietario conserva el 100% del valor de su venta o anticrético sin regalar entre el 3% y el 7%.
-                  </p>
-                </div>
+                <span className="text-xs font-bold text-blue-200">La Paz / El Alto</span>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-md flex flex-col justify-between hover:border-primary/50 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-black mb-4">
-                  <Sparkles className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-white mb-2">Búsqueda Inteligente con IA</h3>
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    Motor de procesamiento de lenguaje natural en tiempo real que interpreta zonas bolivianas, presupuesto y dormitorios en una sola frase.
-                  </p>
-                </div>
+              {/* Rayo de luz animado en el centro */}
+              <div className="relative z-10 flex-1 max-w-xs h-1 bg-gray-800 rounded-full mx-4 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-500 via-emerald-400 to-amber-400 rounded-full animate-pulse w-full" />
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-md flex flex-col justify-between hover:border-primary/50 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black mb-4">
-                  <ShieldCheck className="w-6 h-6" />
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-600/30 border-2 border-emerald-400 flex items-center justify-center font-black text-white shadow-lg animate-pulse" style={{ animationDelay: '0.4s' }}>
+                  CBBA
                 </div>
-                <div>
-                  <h3 className="text-lg font-black text-white mb-2">Blindaje Jurídico Notarial</h3>
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    Auditoría de Folio Real en Derechos Reales y soporte notarial para erradicar estafas y gravámenes ocultos en anticréticos.
-                  </p>
-                </div>
+                <span className="text-xs font-bold text-emerald-200">Cochabamba</span>
               </div>
 
+              <div className="relative z-10 flex-1 max-w-xs h-1 bg-gray-800 rounded-full mx-4 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-blue-500 rounded-full animate-pulse w-full" style={{ animationDelay: '0.7s' }} />
+              </div>
+
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                <div className="w-14 h-14 rounded-2xl bg-amber-600/30 border-2 border-amber-400 flex items-center justify-center font-black text-white shadow-lg animate-pulse" style={{ animationDelay: '0.8s' }}>
+                  SCZ
+                </div>
+                <span className="text-xs font-bold text-amber-200">Santa Cruz</span>
+              </div>
             </div>
 
-            {/* Métrica de impacto */}
-            <div className="bg-gradient-to-r from-primary/20 via-blue-900/30 to-emerald-950/20 border border-primary/30 rounded-3xl p-6 text-center">
-              <span className="text-xs font-black uppercase tracking-wider text-blue-300 block mb-1">
-                Propósito Central
-              </span>
-              <p className="text-base sm:text-lg font-bold text-white max-w-3xl mx-auto">
-                Democratizar el acceso a la vivienda y proteger el patrimonio de las familias bolivianas con tecnología accesible y transparente.
-              </p>
-            </div>
           </div>
         )}
 
-        {/* ================= SLIDE 2: EL PROBLEMA (GRÁFICA ANIMADA DE COMISIONES) ================= */}
+        {/* ================= SLIDE 2: EL PROBLEMA (FUGA DE DINERO EN MOVIMIENTO REAL) ================= */}
         {currentSlide === 2 && (
-          <div className="space-y-6 animate-in zoom-in-95 duration-300">
+          <div className="space-y-6">
             
-            {/* Control interactivo de precio para impresionar al jurado */}
-            <div className="bg-gray-900/80 border border-white/10 rounded-3xl p-6 backdrop-blur-md max-w-2xl mx-auto">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                  Mueve el precio del inmueble:
-                </span>
-                <span className="text-xl font-black text-emerald-400">
-                  $us {propertyPrice.toLocaleString('en-US')}
-                </span>
-              </div>
+            {/* Slider de precio interactivo */}
+            <div className="bg-black/60 border border-white/15 rounded-3xl p-5 max-w-xl mx-auto flex items-center gap-4">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider shrink-0">
+                Precio de Casa:
+              </span>
               <input
                 type="range"
-                min="30000"
-                max="350000"
+                min="50000"
+                max="300000"
                 step="10000"
                 value={propertyPrice}
                 onChange={(e) => setPropertyPrice(Number(e.target.value))}
                 className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
               />
-              <div className="flex justify-between text-[10px] text-gray-500 font-bold mt-1">
-                <span>$us 30,000 (Anticrético mediano)</span>
-                <span>$us 350,000 (Casa zona Sur)</span>
-              </div>
-            </div>
-
-            {/* GRÁFICA COMPARATIVA ANIMADA */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Modelo Tradicional (Rojo / Pérdida) */}
-              <div className="bg-red-950/30 border border-red-500/30 rounded-3xl p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-red-400 tracking-wider flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-red-400" />
-                    Modelo Inmobiliario Tradicional
-                  </span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
-                    Comisión del 3% al 7%
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="text-3xl sm:text-4xl font-black text-red-400">
-                    - $us {comisionPromedio.toLocaleString('en-US')}
-                  </div>
-                  <p className="text-xs text-red-200/80 leading-relaxed">
-                    Dinero del patrimonio familiar confiscado por un agente inmobiliario que solo subió un anuncio a Facebook.
-                  </p>
-                </div>
-
-                {/* Barra animada de pérdida */}
-                <div className="space-y-1">
-                  <div className="h-4 w-full bg-gray-800 rounded-full overflow-hidden p-0.5 border border-red-500/20">
-                    <div 
-                      className="h-full bg-gradient-to-r from-red-600 to-rose-500 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, (comisionAlta / 25000) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-gray-400 block text-right font-medium">
-                    Rango de pérdida: ${comisionBaja.toLocaleString()} a ${comisionAlta.toLocaleString()} USD
-                  </span>
-                </div>
-              </div>
-
-              {/* Modelo InmoVAX (Verde / Ahorro) */}
-              <div className="bg-emerald-950/30 border border-emerald-500/40 rounded-3xl p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    Modelo Directo InmoVAX
-                  </span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    0% Comisión de Venta
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="text-3xl sm:text-4xl font-black text-emerald-400">
-                    $us 0 en comisiones
-                  </div>
-                  <p className="text-xs text-emerald-200/80 leading-relaxed">
-                    Conservas el 100% de tu dinero. Negociación transparente de persona a persona mediante chat seguro y WhatsApp.
-                  </p>
-                </div>
-
-                {/* Barra animada de conservación al 100% */}
-                <div className="space-y-1">
-                  <div className="h-4 w-full bg-gray-800 rounded-full overflow-hidden p-0.5 border border-emerald-500/20">
-                    <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full w-full" />
-                  </div>
-                  <span className="text-[10px] text-emerald-400 block text-right font-black">
-                    100% de tu patrimonio protegido
-                  </span>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Segundo problema crítico: Inseguridad en Anticréticos */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3 text-xs text-gray-300">
-              <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0" />
-              <span>
-                <strong>El dolor legal en Bolivia:</strong> Más del 60% de los anticréticos se firman con minutas privadas sin registrarse en Derechos Reales, dejando al anticresista expuesto a perder su capital si el inmueble tiene una hipoteca oculta.
+              <span className="text-lg font-black text-emerald-400 shrink-0">
+                ${propertyPrice.toLocaleString()} USD
               </span>
             </div>
 
-          </div>
-        )}
-
-        {/* ================= SLIDE 3: LA SOLUCIÓN INMOVAX ================= */}
-        {currentSlide === 3 && (
-          <div className="space-y-6 animate-in zoom-in-95 duration-300">
+            {/* COMPARATIVA ANIMADA EN MOVIMIENTO */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
               
-              {/* El Pasado Roto */}
-              <div className="bg-gray-900/60 border border-white/10 rounded-3xl p-6 sm:p-8 space-y-4 opacity-75">
-                <span className="text-xs font-black uppercase text-gray-400 tracking-wider block">
-                  El Pasado: Informalidad y Costos
-                </span>
-                <ul className="space-y-3 text-xs sm:text-sm text-gray-400">
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">✕</span>
-                    <span>Intermediarios que cobran hasta el 7% sin asumir ninguna responsabilidad legal.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">✕</span>
-                    <span>Anticréticos acordados de palabra o en minutas privadas sin Folio Real.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">✕</span>
-                    <span>Buscadores obsoletos que obligan a rellenar 15 filtros vacíos.</span>
-                  </li>
-                </ul>
+              {/* Lado Rojo: La Fuga de Dinero con animaciones de billetes subiendo */}
+              <div className="bg-red-950/30 border-2 border-red-500/40 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between">
+                
+                {/* Elementos flotantes animados (Billetes fugándose) */}
+                <div className="absolute right-6 top-8 pointer-events-none">
+                  <span className="text-red-400 text-lg font-black anim-float-1 block">-$3,500</span>
+                  <span className="text-red-400 text-lg font-black anim-float-2 block">-$7,000</span>
+                  <span className="text-red-400 text-xl font-black anim-float-3 block">-$10,500</span>
+                </div>
+
+                <div>
+                  <span className="text-xs font-black uppercase text-red-400 tracking-wider flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-4 h-4 text-red-400 animate-bounce" />
+                    Modelo Tradicional: Dinero Confiscado
+                  </span>
+                  <div className="text-4xl sm:text-5xl font-black text-red-400">
+                    - ${comisionPromedio.toLocaleString()} USD
+                  </div>
+                  <span className="text-xs text-red-300 font-semibold block mt-1">
+                    (Entre ${Math.round(propertyPrice * 0.03).toLocaleString()} y ${comisionAlta.toLocaleString()} en comisiones)
+                  </span>
+                </div>
+
+                {/* Barra de desangrado animada */}
+                <div className="space-y-1.5 pt-6">
+                  <div className="h-6 w-full bg-gray-900 rounded-full overflow-hidden p-1 border border-red-500/30">
+                    <div 
+                      className="h-full bg-gradient-to-r from-red-600 via-rose-500 to-red-500 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.min(100, (comisionAlta / 21000) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[11px] text-gray-400 block text-right font-mono">
+                    Pérdida irreversible del patrimonio familiar
+                  </span>
+                </div>
               </div>
 
-              {/* El Futuro InmoVAX */}
-              <div className="bg-gradient-to-b from-blue-950/40 to-primary/10 border-2 border-primary/50 rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl">
-                <span className="text-xs font-black uppercase text-primary tracking-wider block">
-                  La Solución InmoVAX: Tecnología Directa
-                </span>
-                <ul className="space-y-3 text-xs sm:text-sm text-gray-200">
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Conexión Directa P2P:</strong> Negociación abierta comprador-propietario sin agentes abusivos.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Auditoría en Derechos Reales:</strong> Verificación de antecedentes de Folio Real y protocolo notarial.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Búsqueda con IA:</strong> Encuentra inmuebles escribiendo en lenguaje natural en segundos.</span>
-                  </li>
-                </ul>
+              {/* Lado Verde: Retención Total InmoVAX */}
+              <div className="bg-emerald-950/30 border-2 border-emerald-500/50 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between anim-pulse-glow">
+                <div>
+                  <span className="text-xs font-black uppercase text-emerald-400 tracking-wider flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    Modelo InmoVAX: Patrimonio Intacto
+                  </span>
+                  <div className="text-4xl sm:text-5xl font-black text-emerald-400">
+                    $0 en comisiones
+                  </div>
+                  <span className="text-xs text-emerald-300 font-semibold block mt-1">
+                    Ahorras el 100% del valor de tu propiedad
+                  </span>
+                </div>
+
+                {/* Barra 100% protegida */}
+                <div className="space-y-1.5 pt-6">
+                  <div className="h-6 w-full bg-gray-900 rounded-full overflow-hidden p-1 border border-emerald-500/30">
+                    <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full w-full" />
+                  </div>
+                  <span className="text-[11px] text-emerald-400 block text-right font-black font-mono">
+                    100% protegido para tu familia
+                  </span>
+                </div>
               </div>
 
             </div>
 
-            {/* Diagrama de flujo seguro */}
-            <div className="bg-gray-900 border border-white/10 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-full bg-primary/20 text-primary font-black flex items-center justify-center">1</span>
-                <span className="font-bold">Publicación Gratuita Directa</span>
+            {/* Alerta de riesgo en anticréticos */}
+            <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-4 flex items-center gap-3 text-xs text-red-200">
+              <div className="w-8 h-8 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 font-black">
+                !
               </div>
-              <ArrowRight className="w-4 h-4 text-gray-500 hidden md:block" />
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-full bg-primary/20 text-primary font-black flex items-center justify-center">2</span>
-                <span className="font-bold">Búsqueda Inteligente con IA</span>
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-500 hidden md:block" />
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-full bg-primary/20 text-primary font-black flex items-center justify-center">3</span>
-                <span className="font-bold">Contacto Directo sin Comisión</span>
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-500 hidden md:block" />
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center">4</span>
-                <span className="font-bold">Cierre con Respaldo Notarial</span>
-              </div>
+              <span>
+                <strong>El peligro del anticrético tradicional en Bolivia:</strong> 6 de cada 10 contratos no se registran en Derechos Reales. Si el propietario tiene deudas ocultas, el inquilino pierde todos sus ahorros.
+              </span>
             </div>
+
           </div>
         )}
 
-        {/* ================= SLIDE 4: INNOVACIÓN EN IA (SIMULADOR EN VIVO) ================= */}
-        {currentSlide === 4 && (
-          <div className="space-y-6 animate-in zoom-in-95 duration-300">
+        {/* ================= SLIDE 3: LA SOLUCIÓN (ESCÁNER LÁSER Y RAYOS DE CONEXIÓN) ================= */}
+        {currentSlide === 3 && (
+          <div className="space-y-6">
             
-            {/* Simulador de consulta */}
-            <div className="bg-gray-900/90 border border-primary/40 rounded-3xl p-6 sm:p-8 backdrop-blur-md space-y-4">
-              <span className="text-xs font-black uppercase text-blue-300 tracking-wider flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
-                Simulador del Motor de Búsqueda Inteligente
-              </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+              
+              {/* Visual 1: El Escáner Notarial en Movimiento */}
+              <div className="bg-black/60 border border-white/10 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-blue-300 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  Auditoría Digital de Derechos Reales
+                </span>
 
-              {/* Barra interactiva */}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={simQuery}
-                  onChange={(e) => setSimQuery(e.target.value)}
-                  className="w-full bg-black/60 text-white rounded-2xl py-4 pl-4 pr-12 text-sm sm:text-base border border-white/20 focus:border-primary outline-hidden font-medium"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-3 bg-primary text-white p-2 rounded-xl"
-                  title="Buscar"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
+                {/* Documento virtual con línea de escáner láser animada */}
+                <div className="relative my-4 bg-white/5 border border-white/20 rounded-2xl p-4 h-44 flex flex-col justify-between overflow-hidden">
+                  
+                  {/* Línea verde de escáner en movimiento continuo */}
+                  <div className="absolute left-0 right-0 h-1 bg-emerald-400 shadow-[0_0_15px_#10b981] anim-scanner z-20" />
+
+                  <div className="flex justify-between items-center border-b border-white/10 pb-2 text-[11px] font-mono text-gray-400">
+                    <span>FOLIO REAL MATRÍCULA: 2.01.0.99.0018472</span>
+                    <span className="text-emerald-400 font-bold">ESCANEO ACTIVO</span>
+                  </div>
+
+                  <div className="space-y-1.5 text-[11px] text-gray-300">
+                    <p className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      Titularidad legítima confirmada en DDRR
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      Sin gravámenes, embargos ni hipotecas ocultas
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      Protocolización con Notario de Fe Pública
+                    </p>
+                  </div>
+
+                  <div className="bg-emerald-500/20 border border-emerald-400/40 rounded-xl px-3 py-1 text-center">
+                    <span className="text-xs font-black text-emerald-300 uppercase tracking-wider">
+                      Sello: Contrato 100% Blindado
+                    </span>
+                  </div>
+                </div>
+
+                <span className="text-xs text-gray-400">
+                  Protegemos el 100% del capital entregado en anticrético o compraventa.
+                </span>
               </div>
 
-              {/* Botones de prueba rápida para la exposición */}
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                <span className="text-gray-400 font-bold text-[11px]">Consultas de prueba para el pitch:</span>
-                {[
-                  "Departamento en Sopocachi en anticrético menos de $us 45,000",
-                  "Casa en venta en Calacoto con 3 dormitorios",
-                  "Oficina en alquiler en Miraflores La Paz"
-                ].map((q, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSimQuery(q)}
-                    className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white/90 text-[11px] font-semibold transition-all cursor-pointer"
-                  >
-                    {q}
-                  </button>
+              {/* Visual 2: Conexión Directa en Rayos */}
+              <div className="bg-black/60 border border-white/10 rounded-3xl p-6 flex flex-col justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-emerald-400" />
+                  Conexión Inmediata Comprador - Propietario
+                </span>
+
+                <div className="my-6 flex items-center justify-between gap-3 text-center">
+                  <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 space-y-1">
+                    <Home className="w-8 h-8 text-primary mx-auto" />
+                    <span className="text-xs font-black block">Propietario</span>
+                    <span className="text-[10px] text-gray-400 block">Publica gratis</span>
+                  </div>
+
+                  {/* Flecha de conexión animada */}
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest animate-pulse">0% Comisión</span>
+                    <div className="w-16 h-1 bg-gradient-to-r from-primary to-emerald-400 rounded-full my-1 animate-pulse" />
+                    <span className="text-[10px] text-gray-400">Chat / WhatsApp</span>
+                  </div>
+
+                  <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 space-y-1">
+                    <Users className="w-8 h-8 text-emerald-400 mx-auto" />
+                    <span className="text-xs font-black block">Comprador</span>
+                    <span className="text-[10px] text-gray-400 block">Trato directo</span>
+                  </div>
+                </div>
+
+                <span className="text-xs text-gray-400">
+                  Sin agentes intermediando ni manipulando los precios.
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* ================= SLIDE 4: IA EN VIVO (ANIMACIÓN AUTOMÁTICA DE CONSULTAS Y CHIPS) ================= */}
+        {currentSlide === 4 && (
+          <div className="space-y-6">
+            
+            {/* Pantalla de Terminal Inteligente */}
+            <div className="bg-gray-950 border-2 border-primary/50 rounded-3xl p-6 sm:p-8 relative overflow-hidden anim-pulse-glow">
+              
+              <div className="flex items-center justify-between pb-4 border-b border-white/10 text-xs font-mono">
+                <span className="text-primary font-bold flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary animate-spin" />
+                  MOTOR NLP INMOVAX • PROCESAMIENTO EN TIEMPO REAL
+                </span>
+                <span className="text-emerald-400 font-black animate-pulse">EN VIVO</span>
+              </div>
+
+              {/* Frase animada cambiante */}
+              <div className="py-6">
+                <span className="text-xs text-gray-400 font-bold block mb-2 uppercase tracking-wider">
+                  El usuario escribe en lenguaje natural:
+                </span>
+                <div className="text-lg sm:text-2xl md:text-3xl font-black text-white bg-black/60 p-4 rounded-2xl border border-white/10 min-h-[4.5rem] flex items-center">
+                  <span>"{queriesAI[simQueryIndex].text}"</span>
+                </div>
+              </div>
+
+              {/* Chips que se encienden al instante */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
+                  La Inteligencia Artificial desglosa al milisegundo:
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {queriesAI[simQueryIndex].chips.map((chip, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3.5 py-1.5 rounded-full bg-primary/20 border-2 border-primary text-blue-300 text-xs sm:text-sm font-black shadow-lg shadow-primary/20 transition-all animate-bounce"
+                      style={{ animationDuration: `${1 + idx * 0.2}s` }}
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Barra de Ondas de Sonido / IA en Movimiento */}
+              <div className="pt-6 flex items-center justify-between gap-1 h-8 opacity-70">
+                {[...Array(24)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 bg-gradient-to-t from-primary to-emerald-400 rounded-full"
+                    style={{
+                      animation: `waveBars ${0.8 + (i % 5) * 0.2}s ease-in-out infinite`,
+                      animationDelay: `${(i % 6) * 0.15}s`
+                    }}
+                  />
                 ))}
               </div>
 
-              {/* Chips de interpretación en tiempo real */}
-              <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-2">
-                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4" />
-                  La Inteligencia Artificial desglosa automáticamente:
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-3 py-1 rounded-full bg-primary/20 text-blue-300 border border-primary/30 text-xs font-black">
-                    Contrato: Anticrético
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-black">
-                    Inmueble: Departamento
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-black">
-                    Zona: Sopocachi (La Paz)
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-black">
-                    Precio Máx: $us 45,000
-                  </span>
-                </div>
-              </div>
             </div>
 
-            {/* Asistente InmoBot Gemini */}
-            <div className="bg-gradient-to-r from-blue-950/40 to-gray-900 border border-white/10 rounded-3xl p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0">
-                <Bot className="w-6 h-6" />
-              </div>
-              <div className="text-xs sm:text-sm">
-                <h4 className="font-extrabold text-white">InmoBot Asesor Virtual 24/7 (Gemini Flash)</h4>
-                <p className="text-gray-400 mt-0.5">
-                  Responde consultas legales, redacta cláusulas de anticrético y sugiere propiedades verificadas sin emojis y con lenguaje profesional adaptado a la legislación boliviana.
-                </p>
-              </div>
+            {/* InmoBot Gemini */}
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-xs text-gray-300">
+              <span className="flex items-center gap-2">
+                <Bot className="w-5 h-5 text-emerald-400 shrink-0" />
+                <strong>InmoBot con Gemini Flash:</strong> Asesoría jurídica boliviana 24/7 sin emojis y con estricto rigor profesional.
+              </span>
+              <span className="text-emerald-400 font-mono font-bold">&lt; 1.5 seg</span>
             </div>
 
           </div>
         )}
 
-        {/* ================= SLIDE 5: ECOSISTEMA ================= */}
+        {/* ================= SLIDE 5: ECOSISTEMA (NÚCLEO ORBITAL EN MOVIMIENTO) ================= */}
         {currentSlide === 5 && (
-          <div className="space-y-6 animate-in zoom-in-95 duration-300">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="space-y-6">
+            
+            {/* 4 Satélites */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 hover:border-primary/50 transition-all flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center">
-                    <Search className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-black text-white text-base">Búsqueda con IA</h3>
-                  <p className="text-xs text-gray-400">
-                    Búsqueda en lenguaje natural que elimina selectores complejos y encuentra en segundos.
-                  </p>
+              <div className="bg-white/5 border-2 border-blue-500/40 rounded-3xl p-5 text-center space-y-2 anim-pulse-glow">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mx-auto">
+                  <Search className="w-6 h-6" />
                 </div>
-                <span className="text-[10px] text-primary font-bold uppercase tracking-wider mt-4">Pilar 1</span>
+                <h3 className="font-black text-white text-sm">Búsqueda IA</h3>
+                <p className="text-[11px] text-gray-400">Lenguaje natural en segundos</p>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 hover:border-primary/50 transition-all flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                    <Bot className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-black text-white text-base">InmoBot Gemini</h3>
-                  <p className="text-xs text-gray-400">
-                    Asistente multi-pantalla con pantalla de chat, catálogo de inmuebles y guía legal boliviana.
-                  </p>
+              <div className="bg-white/5 border-2 border-emerald-500/40 rounded-3xl p-5 text-center space-y-2 anim-pulse-glow" style={{ animationDelay: '0.4s' }}>
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+                  <Bot className="w-6 h-6" />
                 </div>
-                <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mt-4">Pilar 2</span>
+                <h3 className="font-black text-white text-sm">InmoBot</h3>
+                <p className="text-[11px] text-gray-400">Asesor legal boliviano 24/7</p>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 hover:border-primary/50 transition-all flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                    <Users className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-black text-white text-base">Foro Comunitario</h3>
-                  <p className="text-xs text-gray-400">
-                    Comunidad viva para consultar dudas reales de anticréticos, impuestos y experiencias notariales.
-                  </p>
+              <div className="bg-white/5 border-2 border-amber-500/40 rounded-3xl p-5 text-center space-y-2 anim-pulse-glow" style={{ animationDelay: '0.8s' }}>
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+                  <Users className="w-6 h-6" />
                 </div>
-                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider mt-4">Pilar 3</span>
+                <h3 className="font-black text-white text-sm">Foro Comunitario</h3>
+                <p className="text-[11px] text-gray-400">Dudas reales de anticréticos</p>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 hover:border-primary/50 transition-all flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
-                    <Home className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-black text-white text-base">Registro Rápido 3 Pasos</h3>
-                  <p className="text-xs text-gray-400">
-                    Publicación dinámica y limpia sin campos absurdos ni trabas burocráticas.
-                  </p>
+              <div className="bg-white/5 border-2 border-purple-500/40 rounded-3xl p-5 text-center space-y-2 anim-pulse-glow" style={{ animationDelay: '1.2s' }}>
+                <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center mx-auto">
+                  <Home className="w-6 h-6" />
                 </div>
-                <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider mt-4">Pilar 4</span>
+                <h3 className="font-black text-white text-sm">Registro en 3 Pasos</h3>
+                <p className="text-[11px] text-gray-400">Sin trabas ni datos absurdos</p>
               </div>
 
             </div>
+
+            {/* Núcleo de Tecnología Central */}
+            <div className="bg-gradient-to-r from-blue-900/30 via-primary/20 to-emerald-900/30 border border-primary/30 rounded-3xl p-6 text-center space-y-2">
+              <span className="text-xs font-black text-blue-300 uppercase tracking-widest block">
+                Arquitectura de Última Generación
+              </span>
+              <p className="text-lg font-black text-white">
+                Next.js 16 Turbopack • Bun Engine • Supabase PostgreSQL • Google Gemini Flash
+              </p>
+              <span className="text-xs text-gray-400 block font-mono">
+                Tiempos de carga &lt; 0.5s en conexiones móviles bolivianas
+              </span>
+            </div>
+
           </div>
         )}
 
-        {/* ================= SLIDE 6: MODELO DE NEGOCIO ================= */}
+        {/* ================= SLIDE 6: MODELO DE NEGOCIO (EMBUDO Y TARIFAS NOTARIALES) ================= */}
         {currentSlide === 6 && (
-          <div className="space-y-6 animate-in zoom-in-95 duration-300">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-6">
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center items-stretch">
               
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-4">
-                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black uppercase tracking-wider border border-emerald-500/30">
-                  Nivel 1: Gratuito (Freemium)
-                </span>
-                <h3 className="text-lg font-black text-white">Publicación Directa P2P</h3>
-                <ul className="text-xs text-gray-300 space-y-2">
-                  <li className="flex items-center gap-2">✓ Publicación 100% gratuita</li>
-                  <li className="flex items-center gap-2">✓ Mensajes y WhatsApp directo</li>
-                  <li className="flex items-center gap-2">✓ Cero comisiones de venta</li>
-                </ul>
-                <p className="text-[11px] text-gray-400 pt-2 border-t border-white/10">
-                  Atrae miles de inmuebles y crea un efecto de red insuperable.
-                </p>
+              {/* Nivel 1 */}
+              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-3 flex flex-col justify-between">
+                <div>
+                  <span className="text-xs font-black text-gray-400 uppercase tracking-wider block">Entrada Masiva</span>
+                  <div className="text-4xl font-black text-white my-2">$0</div>
+                  <span className="text-sm font-extrabold text-emerald-400 block">Publicación Gratuita P2P</span>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Efecto de red: captamos el 80% de propiedades que huyen de inmobiliarias.
+                  </p>
+                </div>
+                <div className="h-1.5 w-full bg-emerald-500/40 rounded-full" />
               </div>
 
-              <div className="bg-primary/10 border-2 border-primary/50 rounded-3xl p-6 space-y-4 shadow-xl">
-                <span className="px-3 py-1 rounded-full bg-primary/20 text-blue-300 text-xs font-black uppercase tracking-wider border border-primary/30">
-                  Nivel 2: Servicios Legales (Principal Fuente)
-                </span>
-                <h3 className="text-lg font-black text-white">Auditoría Notarial y DDRR</h3>
-                <ul className="text-xs text-gray-200 space-y-2">
-                  <li className="flex items-center gap-2">✓ Verificación de Folio Real digital</li>
-                  <li className="flex items-center gap-2">✓ Redacción de minutas de anticrético</li>
-                  <li className="flex items-center gap-2">✓ Protocolización notarial segura</li>
-                </ul>
-                <p className="text-[11px] text-blue-200 pt-2 border-t border-white/10 font-bold">
-                  Tarifas fijas de $us 30 a $us 150 por trámite seguro.
-                </p>
+              {/* Nivel 2: Principal Motor de Ingresos */}
+              <div className="bg-primary/20 border-2 border-primary rounded-3xl p-6 space-y-3 flex flex-col justify-between anim-pulse-glow">
+                <div>
+                  <span className="text-xs font-black text-blue-300 uppercase tracking-wider block">Principal Monetización</span>
+                  <div className="text-4xl font-black text-primary my-2">$30 - $150</div>
+                  <span className="text-sm font-extrabold text-white block">Servicios Notariales y DDRR</span>
+                  <p className="text-xs text-blue-100 mt-2">
+                    Verificación de Folio Real, redacción de minutas de anticrético y firma notarial.
+                  </p>
+                </div>
+                <div className="h-2 w-full bg-primary rounded-full" />
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-4">
-                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-500/30">
-                  Nivel 3: Visibilidad Destacada
-                </span>
-                <h3 className="text-lg font-black text-white">Planes de Exposición VIP</h3>
-                <ul className="text-xs text-gray-300 space-y-2">
-                  <li className="flex items-center gap-2">✓ Posicionamiento prioritario en IA</li>
-                  <li className="flex items-center gap-2">✓ Insignia dorada de verificación</li>
-                  <li className="flex items-center gap-2">✓ Métricas y analítica de visitas</li>
-                </ul>
-                <p className="text-[11px] text-gray-400 pt-2 border-t border-white/10">
-                  Para propietarios con urgencia de cerrar su operación.
-                </p>
+              {/* Nivel 3 */}
+              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-3 flex flex-col justify-between">
+                <div>
+                  <span className="text-xs font-black text-gray-400 uppercase tracking-wider block">Urgencia de Cierre</span>
+                  <div className="text-4xl font-black text-amber-400 my-2">$15 - $45</div>
+                  <span className="text-sm font-extrabold text-amber-300 block">Exposición Destacada VIP</span>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Prioridad en el algoritmo de IA y mayor volumen de consultas por WhatsApp.
+                  </p>
+                </div>
+                <div className="h-1.5 w-full bg-amber-500/40 rounded-full" />
               </div>
 
             </div>
+
+            <div className="p-4 rounded-2xl bg-black/40 border border-white/10 text-center text-xs text-gray-300">
+              <strong>Alineación ética total:</strong> InmoVAX no se queda con el 5% de tu casa. Cobramos por el servicio legal que te da tranquilidad.
+            </div>
+
           </div>
         )}
 
-        {/* ================= SLIDE 7: MERCADO & OPORTUNIDAD ================= */}
+        {/* ================= SLIDE 7: MERCADO BOLIVIANO (BARRAS DE CRECIMIENTO EN MOVIMIENTO) ================= */}
         {currentSlide === 7 && (
-          <div className="space-y-6 animate-in zoom-in-95 duration-300">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <div className="space-y-6">
+            
+            {/* Gráfica de Barras Dinámica del Eje Troncal */}
+            <div className="bg-black/60 border border-white/10 rounded-3xl p-6 sm:p-8 space-y-5">
               
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-2">
-                <span className="text-3xl sm:text-4xl font-black text-primary">
-                  $us 2.5B+
-                </span>
-                <h4 className="text-sm font-extrabold text-white">Mercado Anual Transaccional</h4>
-                <p className="text-xs text-gray-400">
-                  Volumen anual estimado en compras, ventas y anticréticos en el eje troncal de Bolivia.
-                </p>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-black">
+                  <span className="text-blue-400">SANTA CRUZ • Mayor volumen de compraventa</span>
+                  <span>$us 1,100 Millones / año</span>
+                </div>
+                <div className="h-4 w-full bg-gray-900 rounded-full overflow-hidden p-0.5 border border-blue-500/30">
+                  <div className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full w-[85%] animate-pulse" />
+                </div>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-2">
-                <span className="text-3xl sm:text-4xl font-black text-emerald-400">
-                  70%+
-                </span>
-                <h4 className="text-sm font-extrabold text-white">Desintermediación Digital</h4>
-                <p className="text-xs text-gray-400">
-                  Propietarios que prefieren vender por su cuenta pero carecen de herramientas seguras.
-                </p>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-black">
+                  <span className="text-emerald-400">LA PAZ / EL ALTO • Capital del Anticrético</span>
+                  <span>$us 950 Millones / año</span>
+                </div>
+                <div className="h-4 w-full bg-gray-900 rounded-full overflow-hidden p-0.5 border border-emerald-500/30">
+                  <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full w-[75%] animate-pulse" style={{ animationDelay: '0.3s' }} />
+                </div>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-2">
-                <span className="text-3xl sm:text-4xl font-black text-amber-400">
-                  3 Ejes Clave
-                </span>
-                <h4 className="text-sm font-extrabold text-white">La Paz, Santa Cruz, Cochabamba</h4>
-                <p className="text-xs text-gray-400">
-                  Concentran más del 80% de la demanda habitacional y de inversión del país.
-                </p>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-black">
+                  <span className="text-amber-400">COCHABAMBA • Crecimiento urbano vertical</span>
+                  <span>$us 520 Millones / año</span>
+                </div>
+                <div className="h-4 w-full bg-gray-900 rounded-full overflow-hidden p-0.5 border border-amber-500/30">
+                  <div className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full w-[45%] animate-pulse" style={{ animationDelay: '0.6s' }} />
+                </div>
               </div>
 
             </div>
 
-            <div className="bg-gray-900 border border-white/10 rounded-3xl p-5 text-xs text-gray-300 leading-relaxed text-center max-w-3xl mx-auto">
-              <strong>Ventaja Competitiva Indestructible:</strong> Las plataformas transnacionales no entienden la figura jurídica del <em>anticrético boliviano</em> ni se conectan con los notarios locales. InmoVAX nace y está optimizada para la realidad del país.
+            {/* Número Total de Mercado */}
+            <div className="p-4 rounded-3xl bg-gradient-to-r from-emerald-950/30 to-blue-950/30 border border-emerald-500/30 text-center">
+              <span className="text-xs uppercase font-black text-emerald-400 tracking-wider block">
+                Mercado Total Accesible (TAM)
+              </span>
+              <span className="text-3xl sm:text-4xl font-black text-white">
+                +$us 2,500,000,000 Anuales
+              </span>
             </div>
+
           </div>
         )}
 
         {/* ================= SLIDE 8: CIERRE & DEMO EN VIVO ================= */}
         {currentSlide === 8 && (
-          <div className="space-y-8 text-center animate-in zoom-in-95 duration-300 max-w-3xl mx-auto">
+          <div className="space-y-8 text-center max-w-3xl mx-auto">
             
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary to-blue-500 text-white flex items-center justify-center mx-auto shadow-xl shadow-primary/30">
-              <Sparkles className="w-10 h-10" />
+            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary via-blue-500 to-emerald-400 text-white flex items-center justify-center mx-auto shadow-2xl anim-pulse-glow">
+              <Sparkles className="w-12 h-12" />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
+              <span className="text-xs font-black uppercase text-emerald-400 tracking-widest block">
+                La Oportunidad es Ahora
+              </span>
               <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
                 El futuro de los bienes raíces en Bolivia se llama <span className="text-primary">InmoVAX</span>
               </h2>
-              <p className="text-sm sm:text-base text-gray-300 font-medium">
-                Erradicamos las comisiones abusivas, aceleramos las búsquedas con Inteligencia Artificial y blindamos jurídicamente cada operación.
-              </p>
             </div>
 
-            {/* BOTONES DIRECTOS PARA DEMOSTRACIÓN EN VIVO */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            {/* BOTÓN GIGANTE A DEMO EN VIVO */}
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/#buscador-principal"
                 target="_blank"
-                className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary-hover text-white font-black text-sm uppercase tracking-wider rounded-full shadow-xl shadow-primary/30 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                className="w-full sm:w-auto px-8 py-5 bg-gradient-to-r from-primary to-blue-600 hover:from-primary-hover hover:to-blue-700 text-white font-black text-base uppercase tracking-wider rounded-full shadow-2xl shadow-primary/50 transition-all flex items-center justify-center gap-3 anim-pulse-glow cursor-pointer"
               >
                 <span>Probar Buscador con IA en Vivo</span>
-                <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <ArrowUpRight className="w-5 h-5" />
               </Link>
 
               <Link
                 href="/foro"
                 target="_blank"
-                className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-extrabold text-sm rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-6 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-sm rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Users className="w-4 h-4 text-amber-300" />
                 <span>Ver Foro Comunitario</span>
@@ -807,26 +853,26 @@ export default function PresentacionPitchPage() {
             </div>
 
             <p className="text-xs text-gray-500 font-medium">
-              Gracias por su atención. Quedo abierto a preguntas y comentarios.
+              Gracias por su atención. Comenzamos con la sesión de preguntas.
             </p>
           </div>
         )}
 
       </main>
 
-      {/* 3. GUION DEL ORADOR FLOTANTE (DRAWER / TECLA N) */}
+      {/* 3. GUION DEL ORADOR FLOTANTE (TECLA N) */}
       {showNotes && (
-        <div className="bg-amber-950/90 border-t-2 border-amber-400 text-amber-100 px-6 py-4 fixed bottom-18 left-0 right-0 z-40 backdrop-blur-lg shadow-2xl animate-in slide-in-from-bottom duration-200">
+        <div className="bg-amber-950/95 border-t-2 border-amber-400 text-amber-100 px-6 py-4 fixed bottom-16 left-0 right-0 z-40 backdrop-blur-xl shadow-2xl">
           <div className="max-w-4xl mx-auto space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
-                Guion de lo que debes decir en esta diapositiva ({slideMeta.durationRecommended}):
+                Guion exacto para decir en esta diapositiva ({slideMeta.durationRecommended}):
               </span>
               <button 
                 type="button" 
                 onClick={() => setShowNotes(false)}
-                className="text-xs font-bold text-amber-300 hover:text-white"
+                className="text-xs font-bold text-amber-300 hover:text-white cursor-pointer"
               >
                 Cerrar [✕]
               </button>
@@ -840,10 +886,9 @@ export default function PresentacionPitchPage() {
         </div>
       )}
 
-      {/* 4. BARRA INFERIOR DE NAVEGACIÓN ENTRE DIAPOSITIVAS */}
-      <footer className="w-full bg-gray-900/90 border-t border-white/10 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 sticky bottom-0 z-50">
+      {/* 4. BARRA INFERIOR DE NAVEGACIÓN */}
+      <footer className="w-full bg-black/60 border-t border-white/10 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 sticky bottom-0 z-50">
         
-        {/* Botón Anterior */}
         <button
           type="button"
           onClick={() => setCurrentSlide(prev => Math.max(1, prev - 1))}
@@ -854,9 +899,8 @@ export default function PresentacionPitchPage() {
           <span className="hidden sm:inline">Anterior</span>
         </button>
 
-        {/* Indicadores de bolitas clicables */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {SLIDES_META.map(s => (
+          {SLIDES.map(s => (
             <button
               key={s.id}
               type="button"
@@ -866,12 +910,11 @@ export default function PresentacionPitchPage() {
                   ? 'w-8 bg-primary shadow-sm shadow-primary' 
                   : 'w-2.5 bg-white/20 hover:bg-white/40'
               }`}
-              title={`Ir a diapositiva ${s.id}: ${s.badge}`}
+              title={`Slide ${s.id}`}
             />
           ))}
         </div>
 
-        {/* Botón Siguiente */}
         <button
           type="button"
           onClick={() => setCurrentSlide(prev => Math.min(totalSlides, prev + 1))}
