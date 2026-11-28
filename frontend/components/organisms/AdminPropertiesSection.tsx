@@ -316,9 +316,9 @@ export const AdminPropertiesSection = ({
       {/* TABLA DINÁMICA DE PROPIEDADES (RESPONSIVE: TABLA EN DESKTOP, TARJETAS EN MÓVIL) */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
         
-        {/* VISTA DESKTOP / TABLET (>= 768px): TABLA COMPACTA DE 5 COLUMNAS SIN SCROLL HORIZONTAL */}
-        <div className="hidden md:block overflow-x-hidden">
-          <table className="w-full text-left text-xs table-fixed">
+        {/* VISTA DESKTOP / TABLET (>= 768px): TABLA ADAPTABLE */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left text-xs min-w-[720px]">
             <thead className="bg-slate-50/90 border-b border-gray-200/80 text-gray-500 font-black uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="py-3.5 px-4 w-[42%]">Inmueble, Modalidad y Precio</th>

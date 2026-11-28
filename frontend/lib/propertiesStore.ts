@@ -99,13 +99,103 @@ export const syncPropertiesWithCloudBackend = async () => {
     const res = await fetch(getBackendPropertiesUrl(), { cache: 'no-store' });
     if (res.ok) {
       const json = await res.json();
-      if (json.properties && Array.isArray(json.properties)) {
+      if (json.properties && Array.isArray(json.properties) && json.properties.length > 0) {
         saveManagedProperties(json.properties);
+        return;
       }
     }
   } catch {
-    // Si el backend no está disponible temporalmente, se conserva la copia local
+    // Si el backend local no está disponible, intentar consultar Supabase directamente
   }
+  await fetchPropertiesDirectFromSupabase();
+};
+
+/**
+ * Consulta directa a Supabase (PostgreSQL) para producción y entornos sin Bun local
+ */
+export const fetchPropertiesDirectFromSupabase = async (): Promise<ManagedProperty[]> => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) return [];
+
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(url, key);
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*, property_images(*), profiles(*)')
+      .order('created_at', { ascending: false });
+
+    if (!error && Array.isArray(data) && data.length > 0) {
+      const typeMap: Record<number, 'Anticrético' | 'Venta' | 'Alquiler'> = {
+        1: 'Anticrético',
+        2: 'Venta',
+        3: 'Alquiler'
+      };
+      const statusMap: Record<number, 'Activo' | 'En Validación Legal' | 'Pausado' | 'Cerrado'> = {
+        1: 'Activo',
+        2: 'En Validación Legal',
+        3: 'Pausado',
+        4: 'Cerrado'
+      };
+
+      const mapped: ManagedProperty[] = data.map((dbProp: any) => {
+        const coverImg = Array.isArray(dbProp.property_images)
+          ? dbProp.property_images.find((img: any) => img.is_cover)?.image_url
+          : null;
+        const gallery: string[] = Array.isArray(dbProp.property_images)
+          ? dbProp.property_images.map((img: any) => img.image_url).filter(Boolean)
+          : [];
+        const image = coverImg || gallery[0] || dbProp.image || '';
+        const pricePrefix = dbProp.currency === 'USD' ? '$us ' : 'Bs. ';
+        const price = `${pricePrefix}${Number(dbProp.price_amount).toLocaleString()}`;
+        const code = dbProp.code || dbProp.id;
+
+        return {
+          id: code,
+          title: dbProp.title,
+          zone: dbProp.zone,
+          address: dbProp.address || dbProp.zone,
+          description: dbProp.description || '',
+          type: typeMap[dbProp.type_id] || 'Anticrético',
+          price,
+          views: dbProp.views_count ?? 0,
+          inquiries: dbProp.inquiries_count ?? 0,
+          status: statusMap[dbProp.status_id] || 'Activo',
+          folioReal: dbProp.folio_real || '',
+          assignedAdvisor: dbProp.profiles?.full_name || 'Propietario',
+          image,
+          gallery,
+          category: dbProp.category || 'Departamento',
+          isNegotiable: dbProp.is_negotiable ?? false,
+          latitude: dbProp.latitude !== null && dbProp.latitude !== undefined ? Number(dbProp.latitude) : null,
+          longitude: dbProp.longitude !== null && dbProp.longitude !== undefined ? Number(dbProp.longitude) : null,
+          habitaciones: dbProp.bedrooms !== null && dbProp.bedrooms !== undefined ? dbProp.bedrooms : undefined,
+          banos: dbProp.bathrooms !== null && dbProp.bathrooms !== undefined ? dbProp.bathrooms : undefined,
+          metros: dbProp.area_sqm !== null && dbProp.area_sqm !== undefined ? Number(dbProp.area_sqm) : undefined,
+          landAreaSqm: dbProp.land_area_sqm !== null && dbProp.land_area_sqm !== undefined ? Number(dbProp.land_area_sqm) : null,
+          estacionamientos: dbProp.parking_spots ?? 0,
+          parkingSpots: dbProp.parking_spots ?? 0,
+          amenidades: Array.isArray(dbProp.amenities) ? dbProp.amenities : [],
+          amenities: Array.isArray(dbProp.amenities) ? dbProp.amenities : [],
+          href: `/propiedad/${code}`,
+          datePublished: dbProp.created_at ? 'Publicado recientemente' : 'Publicado hace 4 días',
+          authorEmail: dbProp.profiles?.email || '',
+          authorName: dbProp.profiles?.full_name || 'Propietario',
+          isVerified: Boolean(dbProp.is_verified)
+        };
+      });
+
+      if (mapped.length > 0) {
+        saveManagedProperties(mapped);
+        return mapped;
+      }
+    }
+  } catch (err) {
+    console.error('Direct Supabase properties fetch error:', err);
+  }
+  return [];
 };
 
 /**
@@ -116,14 +206,20 @@ export const fetchAllPropertiesFromBackend = async (): Promise<ManagedProperty[]
     const res = await fetch(getBackendPropertiesUrl(), { cache: 'no-store' });
     if (res.ok) {
       const json = await res.json();
-      if (json.properties && Array.isArray(json.properties)) {
+      if (json.properties && Array.isArray(json.properties) && json.properties.length > 0) {
         saveManagedProperties(json.properties);
         return json.properties;
       }
     }
   } catch {
-    // Si el backend local no está encendido o no responde, usa de forma transparente la memoria local
+    // Si el backend local no está encendido o no responde, intentar directo con Supabase
   }
+
+  const directProps = await fetchPropertiesDirectFromSupabase();
+  if (directProps.length > 0) {
+    return directProps;
+  }
+
   return getAllManagedProperties();
 };
 

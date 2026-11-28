@@ -9,7 +9,7 @@ import { AdminUsersSection } from '@/components/organisms/AdminUsersSection';
 import { AdminMessagesSection } from '@/components/organisms/AdminMessagesSection';
 import { AdminSettingsSection } from '@/components/organisms/AdminSettingsSection';
 import { readStoredSession } from '@/lib/frontendStore';
-import { getAllManagedProperties, saveManagedProperties, deleteManagedProperty } from '@/lib/propertiesStore';
+import { getAllManagedProperties, saveManagedProperties, deleteManagedProperty, fetchAllPropertiesFromBackend } from '@/lib/propertiesStore';
 import { fetchAdminPendingPayments, fetchAdminHistoryPayments } from '@/lib/paymentsApi';
 import { API_BASE } from '@/lib/apiConfig';
 import { createClient } from '@/lib/supabase/client';
@@ -31,38 +31,50 @@ export default function AdminPage() {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
   const loadPropertiesAndMetrics = () => {
-    // 1. Inmuebles reales desde Supabase / Bun
+    const applyMappedProperties = (rawProps: any[]) => {
+      const mapped: PropertyItem[] = rawProps.map((p: any) => {
+        const rawOwner = p.sellerName || p.authorName || p.assignedAdvisor || '';
+        const isFakeAdvisor = rawOwner.toLowerCase().includes('carlos vega') || rawOwner.toLowerCase().includes('mariana');
+        const cleanOwner = isFakeAdvisor ? 'Propietario InmoVAX' : (rawOwner || 'Propietario InmoVAX');
+
+        return {
+          id: p.id,
+          title: p.title,
+          zone: p.zone,
+          type: p.type,
+          price: p.price,
+          status: p.status === 'Activo' ? 'Publicado' : (p.status === 'En Validación Legal' ? 'En Revisión Legal' : (p.status === 'Pausado' ? 'Pausado' : 'Pendiente')),
+          ownerName: cleanOwner,
+          ownerContact: p.sellerPhone || p.authorEmail || p.contact_phone || '+591 76543210',
+          folioReal: p.folioReal || 'Sin Folio',
+          image: p.image || '',
+          date: p.datePublished || 'Reciente',
+          rooms: p.habitaciones || 3,
+          area: `${p.metros || 120} m²`,
+          description: p.description || p.title
+        };
+      });
+      setProperties(mapped);
+      saveManagedProperties(rawProps);
+    };
+
+    // 1. Inmuebles reales desde Supabase / Bun con fallback reactivo directo
     fetch(`${API_BASE}/properties?status=all`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        if (data.properties) {
-          const mapped: PropertyItem[] = data.properties.map((p: any) => {
-            const rawOwner = p.sellerName || p.authorName || p.assignedAdvisor || '';
-            const isFakeAdvisor = rawOwner.toLowerCase().includes('carlos vega') || rawOwner.toLowerCase().includes('mariana');
-            const cleanOwner = isFakeAdvisor ? 'Propietario InmoVAX' : (rawOwner || 'Propietario InmoVAX');
-
-            return {
-              id: p.id,
-              title: p.title,
-              zone: p.zone,
-              type: p.type,
-              price: p.price,
-              status: p.status === 'Activo' ? 'Publicado' : (p.status === 'En Validación Legal' ? 'En Revisión Legal' : (p.status === 'Pausado' ? 'Pausado' : 'Pendiente')),
-              ownerName: cleanOwner,
-              ownerContact: p.sellerPhone || p.authorEmail || p.contact_phone || '+591 76543210',
-              folioReal: p.folioReal || 'Sin Folio',
-              image: p.image || '',
-              date: p.datePublished || 'Reciente',
-              rooms: p.habitaciones || 3,
-              area: `${p.metros || 120} m²`,
-              description: p.description || p.title
-            };
+        if (data.properties && Array.isArray(data.properties) && data.properties.length > 0) {
+          applyMappedProperties(data.properties);
+        } else {
+          fetchAllPropertiesFromBackend().then(props => {
+            if (props && props.length > 0) applyMappedProperties(props);
           });
-          setProperties(mapped);
-          saveManagedProperties(data.properties);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        fetchAllPropertiesFromBackend().then(props => {
+          if (props && props.length > 0) applyMappedProperties(props);
+        });
+      });
 
     // 2. Pagos reales (pendientes e historial de aprobados)
     Promise.all([

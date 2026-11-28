@@ -279,6 +279,13 @@ const PropertyResultsContent = ({ operation, type, showMap = false }: PropertyRe
           </aside>
 
           <section className={`min-w-0 pb-8 ${mapVisible ? 'lg:min-h-0 lg:overflow-y-auto' : ''}`}>
+            {/* Mapa Interactivo Móvil (Visible solo en pantallas < lg cuando mapVisible está activo) */}
+            {mapVisible && (
+              <div className="mb-6 h-[360px] sm:h-[420px] w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:hidden">
+                <ResultsMap properties={sortedProperties} />
+              </div>
+            )}
+
             <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-xl border border-gray-100 bg-surface-white p-4 shadow-sm sm:flex-row">
               <p className="min-w-0 flex-1 text-sm font-bold text-content-main">
                 Mostrando <span className="text-primary font-black">{sortedProperties.length}</span>{' '}
@@ -317,7 +324,7 @@ const PropertyResultsContent = ({ operation, type, showMap = false }: PropertyRe
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6 min-[1180px]:grid-cols-2">
+              <div className={`grid grid-cols-1 gap-6 ${mapVisible ? 'min-[1180px]:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-3'}`}>
                 {sortedProperties.map((property, index) => (
                   <PropertyCard key={property.id} {...property} imagePriority={index === 0} />
                 ))}
@@ -325,9 +332,10 @@ const PropertyResultsContent = ({ operation, type, showMap = false }: PropertyRe
             )}
           </section>
 
+          {/* Mapa Interactivo de Escritorio (Sticky en columna derecha en pantallas >= lg) */}
           {mapVisible && (
-            <div className="min-h-[420px] overflow-hidden rounded-xl border border-gray-200 bg-white lg:min-h-0">
-              <ResultsMap />
+            <div className="hidden lg:block lg:sticky lg:top-24 lg:h-[calc(100vh-8.5rem)] min-h-[500px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <ResultsMap properties={sortedProperties} />
             </div>
           )}
         </div>

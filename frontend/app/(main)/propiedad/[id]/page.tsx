@@ -8,6 +8,7 @@ import { FormField } from '@/components/molecules/FormField';
 import { fetchPropertyById } from '@/components/data/propertyListings';
 import Link from 'next/link';
 import { ClientMap } from '@/components/molecules/ClientMap';
+import { resolvePropertyCoordinates } from '@/lib/geoCoordinates';
 import { PropertyContactForm } from '@/components/molecules/PropertyContactForm';
 import { PropertyViewTracker } from '@/components/atoms/PropertyViewTracker';
 import { PropertyLegalSecurityBox } from '@/components/molecules/PropertyLegalSecurityBox';
@@ -44,6 +45,7 @@ export default async function PropiedadDetallePage({ params }: { params: Promise
   const metros = property.metros;
   const estacionamientos = property.estacionamientos;
   const folioReal = property.folioReal;
+  const propertyCoords = resolvePropertyCoordinates(property);
 
   // Extraer fotografías reales sin inventar imágenes de casas ficticias
   const galeria: string[] = property.galeria && property.galeria.length > 0
@@ -244,7 +246,7 @@ export default async function PropiedadDetallePage({ params }: { params: Promise
               <div className="mt-4">
                 <ClientMap 
                   readOnly={true} 
-                  externalCenter={{ lat: -16.5000, lng: -68.1193 }} 
+                  externalCenter={propertyCoords} 
                 />
               </div>
 

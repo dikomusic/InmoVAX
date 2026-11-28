@@ -23,6 +23,13 @@ const LocationMarker = ({ onLocationSelect, externalCenter, readOnly }: MapPicke
 
   // 2. Ya no usamos setPosition, solo volamos hacia la coordenada que manda el papá
   useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [map]);
+
+  useEffect(() => {
     if (externalCenter) {
       map.flyTo(externalCenter, 15, { animate: true, duration: 1.5 });
     }

@@ -27,6 +27,8 @@ export interface PropertyListing extends Omit<PropertyCardProps, 'href'> {
   galeria?: string[];
   amenidades?: string[];
   isVerified?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export const operationLabels: Record<PropertyOperation, string> = {
@@ -106,7 +108,9 @@ export function managedPropertyToListing(mp: ManagedProperty): PropertyListing {
     autorNombre: mp.authorName,
     galeria,
     amenidades: mp.amenidades || [],
-    isVerified: Boolean(mp.isVerified)
+    isVerified: Boolean(mp.isVerified),
+    latitude: mp.latitude !== undefined && mp.latitude !== null ? Number(mp.latitude) : null,
+    longitude: mp.longitude !== undefined && mp.longitude !== null ? Number(mp.longitude) : null
   };
 }
 
