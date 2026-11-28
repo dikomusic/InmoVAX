@@ -38,7 +38,7 @@ const QUICK_CATEGORIES = [
   { icon: Home, label: "Zona Sur", query: "Busco casas o departamentos en zona Sur Calacoto o Achumani" },
   { icon: FileText, label: "Anticreticos", query: "Como funciona un contrato de anticretico en Bolivia y que garantias legales tiene?" },
   { icon: ShieldCheck, label: "Folio Real", query: "Como me aseguro que un inmueble no tenga gravamenes o hipotecas en Bolivia?" },
-  { icon: Megaphone, label: "Publicar", query: "Que planes y requisitos tienen para publicar un inmueble con QR en InmoVAX?" }
+  { icon: Megaphone, label: "Publicar", query: "Como puedo publicar mi inmueble gratis sin pagar comisiones en InmoVAX?" }
 ];
 
 const LEGAL_GUIDES = [
@@ -55,8 +55,8 @@ const LEGAL_GUIDES = [
     desc: "En InmoVAX exigimos la verificacion de informacion rapida de Derechos Reales actualizada para garantizar que la propiedad este libre de embargos judiciales o anotaciones preventivas."
   },
   {
-    title: "Planes de publicacion con codigo QR",
-    desc: "InmoVAX cuenta con planes que incluyen cartel exterior con codigo QR para que los transeuntes puedan escanear la publicacion y contactarte directamente sin comisiones abusivas."
+    title: "Publicacion directa sin comisiones",
+    desc: "InmoVAX permite a propietarios publicar directamente y conectar con compradores o inquilinos por chat y WhatsApp, evitando pagar entre 3% y 7% a intermediarios."
   }
 ];
 

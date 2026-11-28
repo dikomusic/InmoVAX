@@ -4,10 +4,11 @@ import { supabase } from '../config/supabase';
 export const chatRouter = new Hono();
 
 const GEMINI_MODELS = [
-  'gemini-3-flash-preview',
+  'gemini-3.6-flash',
   'gemini-3.5-flash',
-  'gemini-flash-latest',
-  'gemini-2.5-flash'
+  'gemini-3.5-flash-lite',
+  'gemini-3.8-flash',
+  'gemini-3.7-flash'
 ];
 
 chatRouter.post('/', async (c) => {
@@ -68,7 +69,7 @@ chatRouter.post('/', async (c) => {
     }
 
     const systemPrompt = `Eres ${botName}, el Asistente Virtual Inteligente oficial de InmoVAX en Bolivia.
-Responde de forma amable, concisa y profesional. No utilices emojis en tus respuestas. Eres experto en el mercado inmobiliario boliviano (anticrético, venta y alquiler, requisitos de Folio Real y publicación con QR).
+Responde de forma amable, concisa y profesional. REGLA ESTRICTA: No utilices emojis ni emoticonos en tus respuestas. Eres experto en el mercado inmobiliario boliviano (anticrético, venta y alquiler, verificación en Derechos Reales y publicación directa sin comisiones).
 ${propertiesContext}`;
 
     if (!apiKey) {
@@ -79,32 +80,44 @@ ${propertiesContext}`;
       });
     }
 
-    const contents: any[] = [
-      { role: 'user', parts: [{ text: `[INSTRUCCIÓN DEL SISTEMA]:\n${systemPrompt}` }] },
-      { role: 'model', parts: [{ text: `Entendido. Soy ${botName}, listo para asistir a los usuarios de InmoVAX.` }] }
-    ];
+    const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+    const recentMessages = messages.slice(-8);
 
-    for (const msg of messages.slice(-6)) {
-      contents.push({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      });
+    for (const msg of recentMessages) {
+      const role: 'user' | 'model' = msg.role === 'assistant' ? 'model' : 'user';
+      if (contents.length === 0 && role !== 'user') continue;
+
+      if (contents.length > 0 && contents[contents.length - 1].role === role) {
+        contents[contents.length - 1].parts[0].text += `\n${msg.content}`;
+      } else {
+        contents.push({ role, parts: [{ text: msg.content }] });
+      }
+    }
+
+    if (contents.length === 0) {
+      contents.push({ role: 'user', parts: [{ text: lastUserMessage || 'Hola' }] });
     }
 
     let botReply = '';
+    let usedModel = '';
     for (const model of GEMINI_MODELS) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents, generationConfig: { temperature: 0.6, maxOutputTokens: 800 } })
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents,
+            generationConfig: { temperature: 0.4, maxOutputTokens: 800 }
+          })
         });
         if (res.ok) {
           const data = await res.json();
           const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (txt) {
             botReply = txt;
+            usedModel = model;
             break;
           }
         }
@@ -115,7 +128,7 @@ ${propertiesContext}`;
       botReply = `¡Hola! Soy **${botName}**. ¿Buscas comprar, alquilar o un anticrético en Bolivia? Cuéntame tu zona de preferencia o tu presupuesto y te ayudaré de inmediato.`;
     }
 
-    return c.json({ success: true, message: botReply, suggestedProperties });
+    return c.json({ success: true, message: botReply, suggestedProperties, model: usedModel });
   } catch (err: any) {
     return c.json({ success: false, error: err.message }, 500);
   }

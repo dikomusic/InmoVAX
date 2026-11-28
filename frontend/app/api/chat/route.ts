@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Modelos ordenados por prioridad y disponibilidad
+// Modelos oficiales y activos de Gemini ordenados por velocidad y disponibilidad
 const GEMINI_MODELS = [
-  'gemini-3-flash-preview',
+  'gemini-3.6-flash',
   'gemini-3.5-flash',
-  'gemini-flash-latest',
-  'gemini-2.5-flash'
+  'gemini-3.5-flash-lite',
+  'gemini-3.8-flash',
+  'gemini-3.7-flash'
 ];
 
 interface ChatMessage {
@@ -128,10 +129,11 @@ TU PERSONALIDAD Y TONO:
 - Hablas con propiedad sobre el mercado boliviano (zonas como Sopocachi, Calacoto, Achumani, Obrajes, Miraflores, Equipetrol, etc., y monedas \$us y Bs).
 
 CONOCIMIENTOS CLAVE DE INMOVAX Y BOLIVIA:
-1. ANTICRÉTICO: Explicar que en Bolivia es un contrato bilateral donde el anticresista entrega un capital al propietario sin intereses y recibe el uso pacífico de la vivienda. Al finalizar el plazo, el propietario debe devolver el 100% del capital. InmoVAX exige que cuente con Folio Real vigente y registro en Derechos Reales para evitar estafas.
-2. FOLIO REAL Y NOTARIAL: InmoVAX verifica antecedentes dominiales y gravámenes para que las operaciones sean seguras.
-3. PUBLICAR UN INMUEBLE: Cualquier propietario o agente puede publicar desde el botón "+ Publicar Inmueble" en la web o accediendo a /publicar. Ofrecemos planes con código QR y exposición destacada.
-4. RECOMENDACIÓN DE INMUEBLES: Si el contexto contiene inmuebles disponibles, menciónalos de forma atractiva indicando sus ventajas. No inventes propiedades ficticias si no están en la lista; invita a usar los filtros de búsqueda o contactar a un asesor.
+1. ANTICRÉTICO: Explicar que en Bolivia es un contrato bilateral donde el anticresista entrega un capital al propietario sin intereses y recibe el uso pacífico de la vivienda. Al finalizar el plazo, el propietario debe devolver el 100% del capital íntegro. InmoVAX exige que cuente con Folio Real vigente y registro en Derechos Reales para evitar estafas.
+2. FOLIO REAL Y NOTARIAL: InmoVAX asesora y ayuda a verificar antecedentes dominiales, gravámenes e hipotecas para que las operaciones sean completamente seguras.
+3. PUBLICAR UN INMUEBLE: Cualquier propietario puede publicar gratis y sin comisión inmobiliaria del 3% al 7% desde /publicar o el botón "+ Publicar Inmueble". Ofrecemos conexión directa P2P con compradores e inquilinos mediante mensajería y búsqueda inteligente con IA.
+4. BÚSQUEDA INTELIGENTE CON IA: En la portada de InmoVAX los usuarios pueden buscar directamente en lenguaje natural (ej: "departamento en Sopocachi en anticrético menos de $us 50,000").
+5. RECOMENDACIÓN DE INMUEBLES: Si el contexto contiene inmuebles disponibles, menciónalos de forma atractiva indicando sus ventajas. No inventes propiedades ficticias si no están en la lista; invita a usar los filtros de búsqueda o contactar a un asesor.
 
 ${propertiesContext}
 `;
@@ -145,30 +147,32 @@ ${propertiesContext}
       });
     }
 
-    // 4. Formatear historial para Gemini
-    // Gemini acepta: { role: 'user' | 'model', parts: [{ text }] }
-    const contents: any[] = [];
-    
-    // Inyectar System Instruction al inicio
-    contents.push({
-      role: 'user',
-      parts: [{ text: `[INSTRUCCIÓN DEL SISTEMA]:\n${systemPrompt}\n\nPor favor asume tu rol a partir de ahora.` }]
-    });
-    contents.push({
-      role: 'model',
-      parts: [{ text: `Entendido. Soy ${botName}, el asistente inmobiliario de InmoVAX en Bolivia. Estoy listo para ayudarte con búsqueda de inmuebles, consultas de anticréticos, verificación de folio real y publicación.` }]
-    });
+    // 4. Formatear historial para Gemini garantizando roles alternados válidos
+    const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+    const recentMessages = messages.slice(-8);
 
-    // Agregar últimos 6 mensajes del diálogo para mantener memoria
-    const recentMessages = messages.slice(-6);
     for (const msg of recentMessages) {
+      const role: 'user' | 'model' = msg.role === 'assistant' ? 'model' : 'user';
+      // Gemini requiere que el primer mensaje en contents sea de rol 'user'
+      if (contents.length === 0 && role !== 'user') continue;
+
+      // Si hay mensajes consecutivos del mismo rol, unificar el texto
+      if (contents.length > 0 && contents[contents.length - 1].role === role) {
+        contents[contents.length - 1].parts[0].text += `\n${msg.content}`;
+      } else {
+        contents.push({ role, parts: [{ text: msg.content }] });
+      }
+    }
+
+    // Si por alguna razón contents quedó vacío, asegurar al menos la última consulta
+    if (contents.length === 0) {
       contents.push({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
+        role: 'user',
+        parts: [{ text: lastUserMessage || 'Hola' }]
       });
     }
 
-    // 5. Invocar Gemini con rotación de modelos
+    // 5. Invocar Gemini con rotación de modelos y system_instruction oficial
     let botReply = '';
     let usedModel = '';
     let lastError: any = null;
@@ -180,9 +184,12 @@ ${propertiesContext}
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: systemPrompt }]
+            },
             contents,
             generationConfig: {
-              temperature: 0.6,
+              temperature: 0.4,
               maxOutputTokens: 800,
               topP: 0.95
             }
