@@ -35,13 +35,6 @@ export const AdminSidebar = ({
       badgeColor: 'bg-amber-500' 
     },
     { id: 'usuarios', label: 'Directorio de Usuarios', icon: Users },
-    { 
-      id: 'mensajes', 
-      label: 'Mensajes y Consultas', 
-      icon: MessageSquare, 
-      badge: unreadMessagesCount > 0 ? String(unreadMessagesCount) : undefined, 
-      badgeColor: 'bg-blue-500' 
-    },
     { id: 'configuracion', label: 'Configuración Global', icon: Settings }
   ];
 
