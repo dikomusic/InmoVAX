@@ -4,9 +4,11 @@ import { Check, MapPin, Scale } from 'lucide-react';
 export interface PropertyFormData {
   operacion: string;
   tipoInmueble: string;
+  ciudad?: string;
   moneda: string;
   precio: string;
   negociable: boolean;
+  titulo?: string;
   descripcion: string;
   zona: string;
   calle: string;
@@ -22,6 +24,8 @@ export interface PropertyFormData {
   fotosCount: number;
   imagenUrl?: string;
   galeria: string[];
+  contactoNombre?: string;
+  contactoTelefono?: string;
 }
 
 interface PublishSummaryCardProps {

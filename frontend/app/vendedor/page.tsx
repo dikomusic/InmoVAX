@@ -324,23 +324,31 @@ export default function SellerPortalPage() {
               <PublishPropertyForm
                 isLoggedInSeller={true}
                 onSuccessCallback={async (data) => {
+                  const propTitle = data.titulo?.trim() || `${data.tipoInmueble.toUpperCase()} en ${data.zona}`;
+                  const formattedPrice = isNaN(Number(data.precio)) 
+                    ? `${data.moneda === 'usd' ? '$us' : 'Bs.'} ${data.precio}`
+                    : `${data.moneda === 'usd' ? '$us' : 'Bs.'} ${Number(data.precio).toLocaleString('en-US')}`;
+
                   const newProp = await addManagedProperty({
-                    title: `${data.tipoInmueble.toUpperCase()} en ${data.zona}`,
-                    zone: data.zona,
+                    title: propTitle,
+                    zone: data.ciudad ? `${data.zona}, ${data.ciudad}` : data.zona,
                     address: data.calle || data.zona,
-                    description: data.descripcion || `${data.tipoInmueble.toUpperCase()} en ${data.zona}`,
+                    description: data.descripcion || propTitle,
                     type: (data.operacion.charAt(0).toUpperCase() + data.operacion.slice(1)) as ManagedProperty['type'],
-                    price: `${data.moneda === 'usd' ? '$us' : 'Bs.'} ${data.precio}`,
-                    status: currentEmail.toLowerCase().trim() === 'vip@inmovax.com' ? 'Activo' : 'En Validación Legal',
-                    folioReal: data.folioReal || `2.01.0.99.00${Math.floor(1000 + Math.random() * 9000)}`,
+                    price: formattedPrice,
+                    status: 'Activo',
+                    folioReal: data.folioReal || '',
                     assignedAdvisor: 'Lic. Carlos Vega',
                     image: data.imagenUrl || '',
+                    gallery: data.galeria || [],
                     authorEmail: currentEmail,
-                    authorName: currentName,
-                    habitaciones: Number(data.habitaciones) || 3,
-                    banos: Number(data.banos) || 2,
-                    metros: Number(data.supConstruida) || 120,
+                    authorName: data.contactoNombre || currentName,
+                    habitaciones: data.tipoInmueble === 'terreno' ? 0 : (Number(data.habitaciones) || 0),
+                    banos: data.tipoInmueble === 'terreno' ? 0 : (Number(data.banos) || 0),
+                    metros: Number(data.supConstruida) || Number(data.supTerreno) || 0,
+                    landAreaSqm: data.supTerreno ? Number(data.supTerreno) : null,
                     estacionamientos: Number(data.parqueos) || 0,
+                    category: data.tipoInmueble ? (data.tipoInmueble.charAt(0).toUpperCase() + data.tipoInmueble.slice(1)) : 'Casa',
                     amenidades: data.amenidades || []
                   });
 

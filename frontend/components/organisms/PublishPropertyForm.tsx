@@ -1,107 +1,138 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ImagePlus, UploadCloud, X, Star, Trash2, CheckCircle2, AlertCircle, ShieldCheck, Lock, Clock } from 'lucide-react';
+import { 
+  Home, Building2, Trees, Store, Briefcase, MapPin, DollarSign, 
+  Sparkles, CheckCircle2, AlertCircle, ShieldCheck, Phone, User, 
+  Trash2, Star, UploadCloud, ImagePlus, ArrowLeft, ArrowRight, 
+  Info, Check
+} from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
-import { PublishSummaryCard, PropertyFormData } from '../molecules/PublishSummaryCard';
-import dynamic from 'next/dynamic';
-import { AddressAutocomplete } from '../molecules/AddressAutocomplete';
+import { PropertyFormData } from '../molecules/PublishSummaryCard';
 import { saveStoredSession, readStoredSession } from '@/lib/frontendStore';
-import { createClient as createBrowserClient } from '@/lib/supabase/client';
 import { API_BASE } from '@/lib/apiConfig';
-
-const MapPicker = dynamic(() => import('../molecules/MapPicker'), { 
-  ssr: false,
-  loading: () => <div className="h-64 w-full bg-gray-100 animate-pulse rounded-xl flex items-center justify-center font-bold text-gray-400">Cargando mapa interactivo...</div>
-}); 
 
 interface PublishPropertyFormProps {
   isLoggedInSeller?: boolean;
   onSuccessCallback?: (data: PropertyFormData) => void;
 }
 
-export const PublishPropertyForm = ({
+const CIUDADES_BOLIVIA = [
+  { value: 'La Paz', label: 'La Paz' },
+  { value: 'El Alto', label: 'El Alto' },
+  { value: 'Cochabamba', label: 'Cochabamba' },
+  { value: 'Santa Cruz', label: 'Santa Cruz' },
+  { value: 'Sucre', label: 'Sucre' },
+  { value: 'Tarija', label: 'Tarija' },
+  { value: 'Oruro', label: 'Oruro' },
+  { value: 'Potosí', label: 'Potosí' },
+  { value: 'Beni', label: 'Beni' },
+  { value: 'Pando', label: 'Pando' }
+];
+
+const AMENIDADES_POR_TIPO: Record<string, string[]> = {
+  casa: [
+    'Jardín privado',
+    'Parrillero / Churrasquera',
+    'Patio trasero',
+    'Garaje techado',
+    'Gas domiciliario',
+    'Calefón / Termotanque',
+    'Tanque de agua / Bomba',
+    'Pet Friendly (Mascotas)',
+    'Sistema de alarma / Cámaras'
+  ],
+  departamento: [
+    'Ascensor',
+    'Seguridad 24/7',
+    'Baulera',
+    'Gas domiciliario',
+    'Parrillero en terraza / Copropiedad',
+    'Pet Friendly (Mascotas)',
+    'Salón de eventos',
+    'Cámaras de vigilancia'
+  ],
+  terreno: [
+    'Agua potable instalada',
+    'Luz eléctrica en puerta',
+    'Alcantarillado',
+    'Gas natural en la zona',
+    'Papeles al día en DDRR',
+    'Plano aprobado',
+    'Murallado'
+  ],
+  oficina: [
+    'Ascensor',
+    'Seguridad 24/7',
+    'Recepción / Conserjería',
+    'Internet fibra óptica',
+    'Parqueo de visitas',
+    'Cámaras de vigilancia'
+  ],
+  local: [
+    'Frente a calle principal',
+    'Persianas metálicas de seguridad',
+    'Baño privado',
+    'Luz trifásica',
+    'Depósito / Almacén',
+    'Parqueo frontal'
+  ]
+};
+
+export const PublishPropertyForm: React.FC<PublishPropertyFormProps> = ({
   isLoggedInSeller = false,
   onSuccessCallback
-}: PublishPropertyFormProps) => {
+}) => {
   const router = useRouter();
   const [paso, setPaso] = useState<number>(1);
-  
-  // Estado completo del formulario para no perder ningún dato
-  const [formData, setFormData] = useState<PropertyFormData>({
-    operacion: 'anticretico',
-    tipoInmueble: 'departamento',
-    moneda: 'usd',
-    precio: '45000',
-    negociable: true,
-    descripcion: 'Hermoso departamento con sol de mañana, amplios ventanales y vista al Illimani.',
-    zona: 'Sopocachi, La Paz',
-    calle: 'Av. 20 de Octubre esq. Guachalla, Edificio Los Andes',
-    coordenadas: { lat: -16.5020, lng: -68.1210 },
-    supConstruida: '120',
-    supTerreno: '',
-    habitaciones: '3',
-    banos: '2',
-    parqueos: '1',
-    amenidades: ['Ascensor', 'Seguridad 24/7', 'Parrillero'],
-    folioReal: '2.01.0.12.3456789',
-    tieneFolio: true,
-    fotosCount: 0,
-    imagenUrl: '',
-    galeria: []
-  });
-
-  // Estado de autenticación en paso 5
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPass, setAuthPass] = useState('');
-  const [authName, setAuthName] = useState('');
-  const [authPhone, setAuthPhone] = useState('');
   const [isCompleted, setIsCompleted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // Estado Google
-  const [googleError, setGoogleError] = useState<string | null>(null);
+  // Estado limpio: sin datos falsos precargados
+  const [formData, setFormData] = useState<PropertyFormData>({
+    operacion: 'venta',
+    tipoInmueble: 'casa',
+    ciudad: 'La Paz',
+    moneda: 'usd',
+    precio: '',
+    negociable: true,
+    titulo: '',
+    descripcion: '',
+    zona: '',
+    calle: '',
+    coordenadas: { lat: -16.5000, lng: -68.1500 },
+    supConstruida: '',
+    supTerreno: '',
+    habitaciones: '',
+    banos: '',
+    parqueos: '',
+    amenidades: [],
+    folioReal: '',
+    tieneFolio: false,
+    fotosCount: 0,
+    imagenUrl: '',
+    galeria: [],
+    contactoNombre: '',
+    contactoTelefono: ''
+  });
 
-  const handleGoogleOAuthDirect = async () => {
-    setIsLoading(true);
-    setGoogleError(null);
-    try {
-      const supabase = createBrowserClient();
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/vendedor`,
-        },
-      });
-
-      if (error) {
-        setGoogleError(error.message.includes('not enabled')
-          ? 'Google OAuth no está activado aún en tu panel de Supabase. Habilítalo en Authentication -> Providers -> Google.'
-          : error.message);
-        setIsLoading(false);
-        return;
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        setIsLoading(false);
-      }
-    } catch (err: any) {
-      setGoogleError(err?.message || 'Error al conectar con Google');
-      setIsLoading(false);
+  // Cargar datos de contacto existentes si el usuario ya inició sesión
+  useEffect(() => {
+    const session = readStoredSession();
+    if (session) {
+      setFormData(prev => ({
+        ...prev,
+        contactoNombre: prev.contactoNombre || session.name || '',
+        contactoTelefono: prev.contactoTelefono || ''
+      }));
     }
-  };
-
-  const avanzar = () => setPaso(prev => prev + 1);
-  const retroceder = () => setPaso(prev => Math.max(1, prev - 1));
+  }, []);
 
   const toggleAmenidad = (amenidad: string) => {
     setFormData(prev => ({
@@ -112,63 +143,58 @@ export const PublishPropertyForm = ({
     }));
   };
 
-  const handleStep4Submit = (e: React.FormEvent) => {
+  const handlePaso1Next = (e: React.FormEvent) => {
     e.preventDefault();
-    const currentSession = readStoredSession();
-    if (isLoggedInSeller || (currentSession && currentSession.email)) {
-      if (onSuccessCallback) {
-        onSuccessCallback(formData);
-      }
-      setIsCompleted(true);
-    } else {
-      // Avanzar al paso 5 (Split View con Login a la derecha)
-      setPaso(5);
-    }
-  };
-
-  const handleAuthSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const cleanEmail = authEmail.trim().toLowerCase();
-    const cleanName = authName.trim() || cleanEmail.split('@')[0];
-
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      setAuthError('Por favor ingresa un correo electrónico válido para vincular tu inmueble.');
+    if (!formData.precio || Number(formData.precio) <= 0) {
+      alert('Por favor indica un precio válido para el inmueble.');
       return;
     }
-    setAuthError(null);
+    if (!formData.zona.trim()) {
+      alert('Por favor indica la zona o barrio de la propiedad (ej: Calacoto, Sopocachi, Equipetrol).');
+      return;
+    }
+    setPaso(2);
+  };
 
-    setIsLoading(true);
+  const handlePaso2Next = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPaso(3);
+  };
+
+  const handleFinalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      // Registrar / sincronizar perfil en Supabase PostgreSQL
-      await fetch(`${API_BASE}/properties/register-profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: cleanEmail,
-          full_name: cleanName,
-          role_id: 2 // Comprador / Usuario regular hasta que el administrador verifique el pago
-        })
-      });
-    } catch (err) {
-      console.warn('Registro local de perfil:', err);
-    }
+      // 1. Asegurar sesión local de vendedor para gestionar su publicación
+      const currentSession = readStoredSession();
+      const authorEmail = currentSession?.email || 'propietario@inmovax.com';
+      const authorName = formData.contactoNombre?.trim() || currentSession?.name || 'Propietario InmoVAX';
 
-    const userSession = {
-      name: cleanName,
-      email: cleanEmail,
-      hasPublishedProperties: true, // Acceso inmediato al portal de vendedor
-      role: 'vendedor' as const
-    };
-    saveStoredSession(userSession);
-    setIsLoading(false);
-    setIsCompleted(true);
-    if (onSuccessCallback) {
-      onSuccessCallback(formData);
+      saveStoredSession({
+        name: authorName,
+        email: authorEmail,
+        hasPublishedProperties: true,
+        role: currentSession?.role === 'admin' ? 'admin' : 'vendedor'
+      });
+
+      // 2. Invocar callback de guardado en la base de datos/store
+      if (onSuccessCallback) {
+        onSuccessCallback({
+          ...formData,
+          contactoNombre: authorName
+        });
+      }
+
+      setIsCompleted(true);
+    } catch (err) {
+      console.error('Error al guardar publicación:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // PANTALLA DE ÉXITO FINAL (MODELO FREEMIUM)
+  // ================= PANTALLA DE ÉXITO =================
   if (isCompleted) {
     return (
       <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-emerald-100 max-w-3xl mx-auto text-center space-y-6 animate-in zoom-in-95 duration-200">
@@ -177,691 +203,679 @@ export const PublishPropertyForm = ({
         </div>
         <div>
           <span className="text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3.5 py-1 rounded-full border border-emerald-200">
-            Plan Gratuito Activo • En Línea
+            Publicación Exitosa • En Línea
           </span>
-          <h2 className="text-2xl sm:text-3xl font-black text-surface-dark mt-3">
-            ¡Felicidades, tu inmueble está publicado!
+          <h2 className="text-2xl sm:text-3xl font-black text-gray-950 mt-3">
+            ¡Tu propiedad ya está en InmoVAX!
           </h2>
-          <p className="text-sm text-content-muted mt-2 max-w-lg mx-auto font-medium">
-            Tu inmueble en <strong>{formData.zona}</strong> ({formData.operacion}) ya se encuentra activo y visible públicamente para miles de compradores e inquilinos en Bolivia.
+          <p className="text-sm text-gray-600 mt-2 max-w-lg mx-auto font-medium">
+            Tu {formData.tipoInmueble} en <strong>{formData.zona}, {formData.ciudad}</strong> se encuentra activo. Los interesados podrán contactarte directamente sin comisiones intermedias.
           </p>
         </div>
 
-        {/* RECUADRO DE AHORRO ESTIMADO */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-emerald-500/10 border border-emerald-200 rounded-2xl max-w-md mx-auto text-left text-xs space-y-2">
-          <div className="flex items-center gap-2 font-black text-emerald-900 text-sm">
-            <span>Ahorro Estimado: ~$4,000 USD en Comisiones</span>
-          </div>
-          <p className="text-emerald-800/90 leading-relaxed font-medium">
-            Al publicar directamente y sin intermediarios inmobiliarios, no regalas del 3% al 7% de tu patrimonio en comisiones.
-          </p>
-        </div>
-
-        <div className="p-4 bg-gray-50 rounded-2xl max-w-md mx-auto text-left text-xs space-y-1.5 border border-gray-100">
+        {/* Resumen del inmueble */}
+        <div className="p-5 bg-gray-50 rounded-2xl max-w-md mx-auto text-left text-xs space-y-2 border border-gray-100">
           <div className="flex justify-between">
-            <span className="text-gray-500 font-bold">Propietario:</span>
-            <span className="font-extrabold text-surface-dark">{authName || 'Propietario'}</span>
+            <span className="text-gray-500 font-bold">Modalidad:</span>
+            <span className="font-extrabold text-gray-900 capitalize">{formData.operacion}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500 font-bold">Precio Fijado:</span>
-            <span className="font-black text-emerald-600">$us {formData.precio}</span>
+            <span className="font-black text-emerald-600">
+              {formData.moneda === 'usd' ? '$us' : 'Bs.'} {Number(formData.precio).toLocaleString('en-US')}
+              {formData.negociable && ' (Negociable)'}
+            </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500 font-bold">Folio Real Registrado:</span>
-            <span className="font-mono font-bold text-gray-700">{formData.folioReal || 'No provisto'}</span>
+            <span className="text-gray-500 font-bold">Contacto Directo:</span>
+            <span className="font-bold text-gray-900">{formData.contactoNombre} {formData.contactoTelefono ? `(${formData.contactoTelefono})` : ''}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500 font-bold">Estado Actual:</span>
-            <span className="font-bold text-emerald-700">Activo y Visible (Gratuito)</span>
-          </div>
+          {formData.folioReal && (
+            <div className="flex justify-between">
+              <span className="text-gray-500 font-bold">Folio Real Registrado:</span>
+              <span className="font-mono font-bold text-blue-600">{formData.folioReal}</span>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
           <Link
             href="/vendedor?tab=inmuebles"
-            className="w-full sm:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer text-center"
+            className="w-full sm:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 text-center"
           >
-            Ir a Mi Portal de Vendedor →
+            Ir a Mi Portal de Propietario →
           </Link>
           <Link
             href="/"
-            className="w-full sm:w-auto px-5 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+            className="w-full sm:w-auto px-5 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all text-center"
           >
-            Volver a la Página Principal
+            Volver al Inicio
           </Link>
         </div>
       </div>
     );
   }
 
-  // ================= PASO 5: SPLIT VIEW (RESUMEN IZQUIERDA + LOGIN/REGISTRO DERECHA) =================
-  if (paso === 5) {
-    return (
-      <div className="w-full max-w-6xl mx-auto animate-in fade-in duration-300">
-        
-        {/* ENCABEZADO DE REQUISITO */}
-        <div className="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 sm:p-5 mb-8 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <Lock className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-surface-dark">Paso Final de Seguridad: Asigna tu Inmueble</h4>
-              <p className="text-xs text-content-muted">Tus datos están guardados intactos. Inicia sesión o regístrate para publicarlo en tu cuenta.</p>
+  const amenidadesDisponibles = AMENIDADES_POR_TIPO[formData.tipoInmueble] || AMENIDADES_POR_TIPO.casa;
+
+  return (
+    <div className="bg-white p-6 md:p-10 rounded-3xl shadow-xl border border-gray-100 w-full max-w-4xl mx-auto text-left">
+      
+      {/* BARRA DE PROGRESO DE 3 PASOS */}
+      <div className="mb-8">
+        <div className="flex justify-between mb-2 px-1 text-xs sm:text-sm font-extrabold">
+          <span className={paso >= 1 ? 'text-primary' : 'text-gray-400'}>
+            1. Datos y Precio
+          </span>
+          <span className={paso >= 2 ? 'text-primary' : 'text-gray-400'}>
+            2. Características
+          </span>
+          <span className={paso >= 3 ? 'text-primary' : 'text-gray-400'}>
+            3. Fotos y Contacto
+          </span>
+        </div>
+        <div className="h-2.5 bg-gray-100 rounded-full flex overflow-hidden">
+          <div 
+            className={`h-full bg-primary transition-all duration-300 ${
+              paso === 1 ? 'w-1/3' : paso === 2 ? 'w-2/3' : 'w-full'
+            }`} 
+          />
+        </div>
+      </div>
+
+      {/* ================= PASO 1: DATOS BÁSICOS Y PRECIO ================= */}
+      {paso === 1 && (
+        <form onSubmit={handlePaso1Next} className="space-y-6 animate-in fade-in duration-200">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-gray-950">
+              ¿Qué tipo de inmueble estás publicando?
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">
+              Selecciona la categoría y define la modalidad de tu oferta.
+            </p>
+          </div>
+
+          {/* Selector visual de Tipo de Inmueble */}
+          <div>
+            <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-2.5">
+              Tipo de Inmueble *
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+              {[
+                { key: 'casa', label: 'Casa', icon: Home },
+                { key: 'departamento', label: 'Departamento', icon: Building2 },
+                { key: 'terreno', label: 'Terreno', icon: Trees },
+                { key: 'oficina', label: 'Oficina', icon: Briefcase },
+                { key: 'local', label: 'Local Com.', icon: Store }
+              ].map(item => {
+                const IconComponent = item.icon;
+                const isSelected = formData.tipoInmueble === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, tipoInmueble: item.key })}
+                    className={`p-3.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-primary bg-primary/5 text-primary shadow-sm font-black'
+                        : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700 font-bold'
+                    }`}
+                  >
+                    <IconComponent className="w-5 h-5" />
+                    <span className="text-xs">{item.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setPaso(4)}
-            className="shrink-0 text-left text-xs font-bold text-primary hover:underline cursor-pointer"
-          >
-            ← Volver al formulario
-          </button>
-        </div>
 
-        {/* ESTRUCTURA SPLIT (2 COLUMNAS) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* COLUMNA IZQUIERDA: RESUMEN DE PROPIEDAD */}
-          <div className="lg:col-span-6 w-full space-y-4">
-            <PublishSummaryCard
-              data={formData}
-              onEditStep={(step) => setPaso(step)}
+          {/* Modalidad de Operación */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { key: 'venta', label: 'Quiero Vender', desc: 'Compraventa definitiva' },
+              { key: 'anticretico', label: 'Quiero en Anticrético', desc: 'Capital con devolución total' },
+              { key: 'alquiler', label: 'Quiero Alquilar', desc: 'Renta mensual' }
+            ].map(op => {
+              const isSelected = formData.operacion === op.key;
+              return (
+                <button
+                  key={op.key}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, operacion: op.key })}
+                  className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                    isSelected
+                      ? 'border-primary bg-primary/5 text-primary shadow-sm'
+                      : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
+                  }`}
+                >
+                  <span className="block font-black text-sm">{op.label}</span>
+                  <span className="block text-[11px] text-gray-500 font-normal mt-0.5">{op.desc}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Ciudad y Zona */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                Ciudad *
+              </label>
+              <Select
+                value={formData.ciudad || 'La Paz'}
+                onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })}
+                options={CIUDADES_BOLIVIA}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                Zona / Barrio *
+              </label>
+              <Input
+                type="text"
+                value={formData.zona}
+                onChange={(e) => setFormData({ ...formData, zona: e.target.value })}
+                placeholder="Ej. Sopocachi, Calacoto, Equipetrol, Sarco..."
+                required
+              />
+            </div>
+          </div>
+
+          {/* Dirección o Referencia */}
+          <div>
+            <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+              Dirección o Referencia
+            </label>
+            <Input
+              type="text"
+              value={formData.calle}
+              onChange={(e) => setFormData({ ...formData, calle: e.target.value })}
+              placeholder="Ej. Calle 21 de Calacoto, Edif. Los Andes, frente al parque..."
             />
           </div>
 
-          {/* COLUMNA DERECHA: INICIAR SESIÓN / REGISTRO */}
-          <div className="lg:col-span-6 w-full bg-white p-6 sm:p-8 rounded-3xl shadow-xl border border-gray-100 space-y-6">
-
-            {/* BOTÓN OFICIAL DE GOOGLE DIRECTO */}
-            <button
-              type="button"
-              onClick={handleGoogleOAuthDirect}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-50 text-surface-dark border border-gray-300 rounded-xl font-bold text-xs sm:text-sm shadow-xs hover:shadow-sm active:scale-98 transition-all cursor-pointer"
-            >
-              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                />
-              </svg>
-              <span>{isLoading ? 'Conectando con Google...' : 'Vincular y Publicar con Google'}</span>
-            </button>
-
-            {googleError && (
-              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
-                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-                <span>{googleError}</span>
-              </div>
-            )}
-
-            {authError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                <span>{authError}</span>
-              </div>
-            )}
-
-            <div className="relative flex items-center justify-center">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-              <span className="relative bg-white px-2 text-[10px] uppercase font-bold text-content-muted">O con correo y contraseña</span>
+          {/* Moneda y Precio */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div>
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                Moneda
+              </label>
+              <Select
+                value={formData.moneda}
+                onChange={(e) => setFormData({ ...formData, moneda: e.target.value })}
+                options={[
+                  { value: 'usd', label: '$us (Dólares)' },
+                  { value: 'bs', label: 'Bs (Bolivianos)' }
+                ]}
+              />
             </div>
-
-            {/* SELECTOR LOGIN / REGISTRO */}
-            <div className="flex border-b border-gray-100 pb-2 gap-4 text-xs font-extrabold">
-              <button
-                type="button"
-                onClick={() => setAuthMode('register')}
-                className={`pb-2 border-b-2 cursor-pointer transition-colors ${
-                  authMode === 'register' ? 'border-primary text-primary' : 'border-transparent text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                Registrarme como Propietario
-              </button>
-              <button
-                type="button"
-                onClick={() => setAuthMode('login')}
-                className={`pb-2 border-b-2 cursor-pointer transition-colors ${
-                  authMode === 'login' ? 'border-primary text-primary' : 'border-transparent text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                Iniciar Sesión
-              </button>
-            </div>
-
-            {/* FORMULARIO DE ACCESO / REGISTRO */}
-            <form onSubmit={handleAuthSubmit} className="space-y-4 text-left">
-              {authMode === 'register' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-bold text-surface-dark mb-1">Nombre Completo</label>
-                    <Input
-                      type="text"
-                      required
-                      value={authName}
-                      onChange={(e) => setAuthName(e.target.value)}
-                      placeholder="Tu nombre y apellido"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-surface-dark mb-1">Teléfono / WhatsApp</label>
-                    <Input
-                      type="text"
-                      required
-                      value={authPhone}
-                      onChange={(e) => setAuthPhone(e.target.value)}
-                      placeholder="+591 70000000"
-                    />
-                  </div>
-                </>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold text-surface-dark mb-1">Correo Electrónico</label>
-                <Input
-                  type="email"
-                  required
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  placeholder="tu.correo@ejemplo.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-surface-dark mb-1">Contraseña</label>
-                <Input
-                  type="password"
-                  required
-                  value={authPass}
-                  onChange={(e) => setAuthPass(e.target.value)}
-                  placeholder="Ingresa tu contraseña"
-                />
-              </div>
-
-              <div className="pt-2">
-                <Button type="submit" variant="primary" fullWidth disabled={isLoading}>
-                  {isLoading 
-                    ? 'Guardando publicación...' 
-                    : authMode === 'login' 
-                      ? 'Iniciar Sesión y Publicar Inmueble' 
-                      : 'Crear Cuenta y Publicar Inmueble'}
-                </Button>
-              </div>
-            </form>
-
-          </div>
-
-        </div>
-
-      </div>
-    );
-  }
-
-  // ================= PASOS 1 A 4: ASISTENTE DE PUBLICACIÓN =================
-  return (
-    <div className="bg-surface-white p-6 md:p-10 rounded-3xl shadow-lg border border-gray-100 w-full max-w-4xl mx-auto text-left">
-      
-      {/* Indicador de Pasos (Progress Bar) */}
-      <div className="mb-8">
-        <div className="hidden sm:flex justify-between mb-2 px-2">
-          <span className={`text-xs md:text-sm font-bold ${paso >= 1 ? 'text-primary' : 'text-content-muted'}`}>1. Principal</span>
-          <span className={`text-xs md:text-sm font-bold ${paso >= 2 ? 'text-primary' : 'text-content-muted'}`}>2. Ubicación</span>
-          <span className={`text-xs md:text-sm font-bold ${paso >= 3 ? 'text-primary' : 'text-content-muted'}`}>3. Características</span>
-          <span className={`text-xs md:text-sm font-bold ${paso >= 4 ? 'text-primary' : 'text-content-muted'}`}>4. Multimedia & Legal</span>
-        </div>
-        <div className="h-2.5 bg-gray-200 rounded-full flex overflow-hidden">
-          <div className={`h-full bg-primary transition-all duration-300 ${paso === 1 ? 'w-1/4' : paso === 2 ? 'w-2/4' : paso === 3 ? 'w-3/4' : 'w-full'}`}></div>
-        </div>
-      </div>
-
-      <form onSubmit={paso === 4 ? handleStep4Submit : (e) => { e.preventDefault(); avanzar(); }}>
-        
-        {/* ================= PASO 1: INFORMACIÓN PRINCIPAL ================= */}
-        {paso === 1 && (
-          <div className="space-y-6 animate-fade-in">
-            <h2 className="text-2xl font-extrabold text-content-main mb-4 border-b pb-2">Información Principal</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-content-main mb-2">Tipo de Operación</label>
-                <Select
-                  value={formData.operacion}
-                  onChange={(e) => setFormData({ ...formData, operacion: e.target.value })}
-                  options={[
-                    { value: 'anticretico', label: 'Anticrético' },
-                    { value: 'venta', label: 'Venta' },
-                    { value: 'alquiler', label: 'Alquiler' }
-                  ]}
-                  required 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-content-main mb-2">Tipo de Inmueble</label>
-                <Select
-                  value={formData.tipoInmueble}
-                  onChange={(e) => setFormData({ ...formData, tipoInmueble: e.target.value })}
-                  options={[
-                    { value: 'departamento', label: 'Departamento' },
-                    { value: 'casa', label: 'Casa' },
-                    { value: 'terreno', label: 'Terreno' },
-                    { value: 'oficina', label: 'Oficina' },
-                    { value: 'local', label: 'Local Comercial' }
-                  ]}
-                  required 
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-              <div className="md:col-span-1">
-                <label className="block text-sm font-bold text-content-main mb-2">Moneda</label>
-                <Select
-                  value={formData.moneda}
-                  onChange={(e) => setFormData({ ...formData, moneda: e.target.value })}
-                  options={[
-                    { value: 'usd', label: '$us (Dólares)' },
-                    { value: 'bs', label: 'Bs (Bolivianos)' }
-                  ]} 
-                />
-              </div>
-              <div className="md:col-span-1">
-                <label className="block text-sm font-bold text-content-main mb-2">Precio Base</label>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                Precio {formData.operacion === 'alquiler' ? 'Mensual' : 'Total'} *
+              </label>
+              <div className="flex gap-3 items-center">
                 <Input
                   type="number"
                   value={formData.precio}
                   onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
                   placeholder="Ej. 45000"
-                  required 
+                  required
+                  min="1"
                 />
-              </div>
-              <div className="md:col-span-1 flex items-center h-13 px-2">
-                <label className="flex items-center gap-2 cursor-pointer font-bold text-content-main">
+                <label className="flex items-center gap-2 shrink-0 cursor-pointer text-xs font-bold text-gray-700">
                   <input
                     type="checkbox"
                     checked={formData.negociable}
                     onChange={(e) => setFormData({ ...formData, negociable: e.target.checked })}
-                    className="w-5 h-5 accent-primary rounded cursor-pointer" 
+                    className="w-4 h-4 accent-primary rounded cursor-pointer"
                   />
-                  Precio Negociable
+                  <span>Negociable</span>
                 </label>
               </div>
             </div>
+          </div>
+
+          {/* Título y Descripción */}
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                Título del Anuncio (Opcional)
+              </label>
+              <Input
+                type="text"
+                value={formData.titulo || ''}
+                onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                placeholder={`Ej. Hermosa ${formData.tipoInmueble} con sol de mañana y acabados de lujo`}
+              />
+            </div>
 
             <div>
-              <label className="block text-sm font-bold text-content-main mb-2">Descripción Comercial</label>
-              <textarea 
-                className="w-full bg-surface-white text-content-main rounded-lg py-3 px-4 outline-none border-2 border-gray-200 focus:border-primary resize-none h-28 transition-colors"
-                placeholder="Ej. Hermoso departamento cálido con sol de mañana y vista a la ciudad..."
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                Descripción Detallada
+              </label>
+              <textarea
                 value={formData.descripcion}
                 onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                required
-              ></textarea>
-            </div>
-          </div>
-        )}
-
-        {/* ================= PASO 2: UBICACIÓN EXACTA ================= */}
-        {paso === 2 && (
-          <div className="space-y-6 animate-fade-in">
-            <h2 className="text-2xl font-extrabold text-content-main mb-4 border-b pb-2">Ubicación Exacta</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-content-main mb-2">1. Busca tu Zona (Ej. Sopocachi, Calacoto)</label>
-                <AddressAutocomplete 
-                  placeholder="Escribe la zona para centrar el mapa..." 
-                  onAddressSelect={(lat, lng, address) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      coordenadas: { lat, lng },
-                      zona: address
-                    }));
-                  }} 
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-bold text-content-main mb-2">2. Calle específica y edificio</label>
-                <Input
-                  type="text"
-                  value={formData.calle}
-                  onChange={(e) => setFormData({ ...formData, calle: e.target.value })}
-                  placeholder="Ej. Calle 10, Edificio Los Pinos, Piso 3"
-                  required 
-                />
-              </div>
-            </div>
-
-            <div className="mt-2">
-              <div className="flex justify-between items-end mb-2">
-                <label className="block text-sm font-bold text-content-main">3. Afina la ubicación (Arrastra el pin en La Paz)</label>
-              </div>
-              
-              <MapPicker 
-                externalCenter={formData.coordenadas}
-                onLocationSelect={(lat, lng) => setFormData(prev => ({ ...prev, coordenadas: { lat, lng } }))} 
+                placeholder="Describe las principales cualidades del inmueble, iluminación, cercanía a transporte, colegios o servicios..."
+                rows={3}
+                className="w-full bg-white text-gray-900 rounded-xl p-3 border-2 border-gray-200 focus:border-primary outline-hidden text-sm transition-colors resize-none"
               />
-              <p className="text-xs text-content-muted mt-2">Puedes hacer clic en el mapa o mover el pin para indicar el ingreso exacto.</p>
             </div>
           </div>
-        )}
 
-        {/* ================= PASO 3: CARACTERÍSTICAS ================= */}
-        {paso === 3 && (
-          <div className="space-y-8 animate-fade-in">
-            <h2 className="text-2xl font-extrabold text-content-main mb-4 border-b pb-2">Características y Distribución</h2>
-            
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-5">
-              <div className="sm:col-span-2 md:col-span-2">
-                <label className="block text-sm font-bold text-content-main mb-2">Sup. Construida (m²)</label>
+          {/* Botón Siguiente */}
+          <div className="flex justify-end pt-4 border-t border-gray-100">
+            <Button type="submit" variant="primary" className="h-12 px-8 rounded-full font-extrabold flex items-center gap-2">
+              <span>Continuar a Características</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {/* ================= PASO 2: CARACTERÍSTICAS Y DISTRIBUCIÓN ================= */}
+      {paso === 2 && (
+        <form onSubmit={handlePaso2Next} className="space-y-6 animate-in fade-in duration-200">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-gray-950">
+              Características de tu {formData.tipoInmueble}
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">
+              Detalla superficies y comodidades para que los compradores conozcan tu propiedad.
+            </p>
+          </div>
+
+          {/* CAMPOS ADAPTABLES SEGÚN TIPO */}
+          {formData.tipoInmueble === 'terreno' ? (
+            /* Campos específicos para Terreno */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                  Superficie del Terreno (m²) *
+                </label>
+                <Input
+                  type="number"
+                  value={formData.supTerreno || formData.supConstruida}
+                  onChange={(e) => setFormData({ 
+                    ...formData, 
+                    supTerreno: e.target.value,
+                    supConstruida: e.target.value 
+                  })}
+                  placeholder="Ej. 350"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                  Metros de Frente (m) (Opcional)
+                </label>
+                <Input
+                  type="number"
+                  placeholder="Ej. 12"
+                />
+              </div>
+            </div>
+          ) : (
+            /* Campos para Casa, Departamento, Oficina o Local */
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                  Sup. Construida (m²) *
+                </label>
                 <Input
                   type="number"
                   value={formData.supConstruida}
                   onChange={(e) => setFormData({ ...formData, supConstruida: e.target.value })}
                   placeholder="Ej. 120"
-                  required 
+                  required
                 />
               </div>
-              <div className="sm:col-span-2 md:col-span-3">
-                <label className="block text-sm font-bold text-content-main mb-2">Sup. Terreno (m²) <span className="text-xs font-normal text-gray-400">Solo casas</span></label>
-                <Input
-                  type="number"
-                  value={formData.supTerreno || ''}
-                  onChange={(e) => setFormData({ ...formData, supTerreno: e.target.value })}
-                  placeholder="Ej. 300" 
-                />
-              </div>
-              
+
+              {formData.tipoInmueble === 'casa' && (
+                <div>
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                    Sup. Terreno (m²)
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.supTerreno || ''}
+                    onChange={(e) => setFormData({ ...formData, supTerreno: e.target.value })}
+                    placeholder="Ej. 250"
+                  />
+                </div>
+              )}
+
+              {formData.tipoInmueble !== 'local' && (
+                <div>
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                    {formData.tipoInmueble === 'oficina' ? 'Ambientes' : 'Dormitorios'} *
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.habitaciones}
+                    onChange={(e) => setFormData({ ...formData, habitaciones: e.target.value })}
+                    placeholder="Ej. 3"
+                    min="0"
+                    required
+                  />
+                </div>
+              )}
+
               <div>
-                <label className="block text-sm font-bold text-content-main mb-2">Habitaciones</label>
-                <Input
-                  type="number"
-                  value={formData.habitaciones}
-                  onChange={(e) => setFormData({ ...formData, habitaciones: e.target.value })}
-                  placeholder="3"
-                  required 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-content-main mb-2">Baños</label>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                  Baños *
+                </label>
                 <Input
                   type="number"
                   value={formData.banos}
                   onChange={(e) => setFormData({ ...formData, banos: e.target.value })}
-                  placeholder="2"
-                  required 
+                  placeholder="Ej. 2"
+                  min="0"
+                  required
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-bold text-content-main mb-2">Parqueos</label>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                  Parqueos / Garaje
+                </label>
                 <Input
                   type="number"
                   value={formData.parqueos}
                   onChange={(e) => setFormData({ ...formData, parqueos: e.target.value })}
-                  placeholder="1"
-                  required 
+                  placeholder="Ej. 1"
+                  min="0"
                 />
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-bold text-content-main mb-4">Amenidades Incluidas</label>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-                {['Baulera', 'Ascensor', 'Seguridad 24/7', 'Parrillero', 'Jardín', 'Pet Friendly (Mascotas)'].map(amenidad => (
-                  <label key={amenidad} className="flex items-center gap-2 cursor-pointer p-3 border rounded-xl hover:bg-surface-light transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={formData.amenidades.includes(amenidad)}
-                      onChange={() => toggleAmenidad(amenidad)}
-                      className="w-5 h-5 accent-primary rounded cursor-pointer" 
-                    />
-                    <span className="text-sm font-bold text-content-main">{amenidad}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ================= PASO 4: MULTIMEDIA & LEGAL ================= */}
-        {paso === 4 && (
-          <div className="space-y-6 animate-fade-in">
-            <h2 className="text-2xl font-extrabold text-content-main mb-4 border-b pb-2">Multimedia y Respaldo Legal</h2>
-            
-            {/* Carga de fotografía real (Múltiple) */}
-            <div>
-              <label className="block text-sm font-bold text-content-main mb-2">
-                Fotografías del Inmueble (Opcional)
-              </label>
-              
-              {formData.galeria.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
-                  {formData.galeria.map((url, idx) => {
-                    const isCover = formData.imagenUrl === url || (!formData.imagenUrl && idx === 0);
-                    return (
-                      <div
-                        key={idx}
-                        className={`relative rounded-2xl overflow-hidden border-2 bg-gray-50 h-36 group shadow-sm transition-all ${
-                          isCover ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'
-                        }`}
-                      >
-                        <img
-                          src={url}
-                          alt={`Vista previa ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-
-                        {/* Badge de Portada */}
-                        {isCover && (
-                          <span className="absolute top-2 left-2 z-10 bg-primary text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md shadow-md flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-white" /> Portada
-                          </span>
-                        )}
-
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-between p-2">
-                          <div className="w-full flex justify-end">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newGaleria = formData.galeria.filter((_, i) => i !== idx);
-                                const newCover = isCover ? (newGaleria[0] || '') : formData.imagenUrl;
-                                setFormData({ 
-                                  ...formData, 
-                                  galeria: newGaleria, 
-                                  fotosCount: newGaleria.length,
-                                  imagenUrl: newCover
-                                });
-                              }}
-                              aria-label="Eliminar imagen"
-                              className="bg-red-600/90 text-white p-1.5 rounded-lg hover:bg-red-700 transition-colors shadow-lg cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-
-                          {!isCover && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  imagenUrl: url
-                                });
-                              }}
-                              className="w-full bg-white/95 hover:bg-white text-surface-dark font-extrabold text-[11px] py-1.5 px-2 rounded-lg shadow flex items-center justify-center gap-1 transition-transform active:scale-95 cursor-pointer"
-                            >
-                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                              <span>Fijar como Portada</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {uploadError && (
-                <div className="p-3 mb-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{uploadError}</span>
-                </div>
-              )}
-
-              <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center bg-gray-50/50 hover:bg-blue-50/40 hover:border-primary transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
-                  <ImagePlus className="w-6 h-6" />
-                </div>
-                <p className="font-extrabold text-content-main text-sm mb-1">
-                  Cargar fotografías desde tu dispositivo
-                </p>
-                <p className="text-xs text-content-muted mb-4 max-w-sm mx-auto">
-                  Formatos JPG o PNG. Selecciona uno o varios archivos a la vez. Puedes marcar cuál será la foto de portada.
-                </p>
-                
-                <label className="inline-flex items-center gap-2 cursor-pointer bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-sm">
-                  <UploadCloud className="w-4 h-4" />
-                  <span>Seleccionar archivos</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={async (e) => {
-                      const files = Array.from(e.target.files || []);
-                      if (files.length > 0) {
-                        setUploadError(null);
-                        const tempUrls = files.map(f => URL.createObjectURL(f));
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          galeria: [...prev.galeria, ...tempUrls],
-                          fotosCount: prev.galeria.length + files.length,
-                          imagenUrl: prev.imagenUrl || tempUrls[0] || ''
-                        }));
-                        
-                        setIsUploadingImage(true);
-                        try {
-                          const uploadPromises = files.map(async (file) => {
-                            const uploadData = new FormData();
-                            uploadData.append('file', file);
-                            
-                            const res = await fetch(`${API_BASE}/properties/upload`, {
-                              method: 'POST',
-                              body: uploadData
-                            });
-                            const data = await res.json();
-                            if (!data.success || !data.url) throw new Error(data.error);
-                            return data.url;
-                          });
-
-                          const urls = await Promise.all(uploadPromises);
-                          
-                          setFormData(prev => {
-                            const filteredGaleria = prev.galeria.filter(url => !url.startsWith('blob:'));
-                            const newGaleria = [...filteredGaleria, ...urls];
-                            return {
-                              ...prev,
-                              galeria: newGaleria,
-                              imagenUrl: prev.imagenUrl && !prev.imagenUrl.startsWith('blob:') ? prev.imagenUrl : (newGaleria[0] || ''),
-                              fotosCount: newGaleria.length
-                            };
-                          });
-                        } catch (error) {
-                          console.error('Error uploading images:', error);
-                          setUploadError('Hubo un error de conexión al subir las imágenes. Intenta nuevamente.');
-                          // Remueve las blobs que fallaron
-                          setFormData(prev => {
-                            const newGaleria = prev.galeria.filter(url => !url.startsWith('blob:'));
-                            return {
-                              ...prev,
-                              galeria: newGaleria,
-                              imagenUrl: newGaleria[0] || '',
-                              fotosCount: newGaleria.length
-                            };
-                          });
-                        } finally {
-                          setIsUploadingImage(false);
-                        }
-                      }
-                    }}
-                  />
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-content-main mb-2">Matrícula Folio Real (DDRR)</label>
-              <Input
-                type="text"
-                value={formData.folioReal}
-                onChange={(e) => setFormData({ ...formData, folioReal: e.target.value })}
-                placeholder="2.01.0.99.0018472"
-                required
-              />
-            </div>
-
-            <div className="bg-surface-light p-5 rounded-2xl border border-gray-200 mt-6">
-              <label className="block text-sm font-bold text-content-main mb-3">Declaración Legal del Propietario</label>
-              <div className="flex flex-col space-y-3">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="legal"
-                    checked={formData.tieneFolio}
-                    onChange={() => setFormData({ ...formData, tieneFolio: true })}
-                    className="w-5 h-5 mt-0.5 accent-primary cursor-pointer" 
-                    required 
-                  />
-                  <span className="text-sm font-medium">Sí, cuenta con Folio Real al día, sin gravámenes y con impuestos pagados.</span>
-                </label>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="legal"
-                    checked={!formData.tieneFolio}
-                    onChange={() => setFormData({ ...formData, tieneFolio: false })}
-                    className="w-5 h-5 mt-0.5 accent-primary cursor-pointer" 
-                  />
-                  <span className="text-sm font-medium">No, la documentación está en trámite notarial o tiene un gravamen en proceso.</span>
-                </label>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Botones de Navegación Inferior */}
-        <div className="mt-8 flex justify-between pt-6 border-t border-gray-100">
-          {paso > 1 ? (
-            <Button type="button" variant="ghost" onClick={retroceder}>
-              ← Anterior
-            </Button>
-          ) : <div></div>}
-          
-          {paso < 4 ? (
-            <Button type="submit" variant="primary">
-              Siguiente Paso →
-            </Button>
-          ) : (
-            <Button type="submit" variant="accent" disabled={isUploadingImage}>
-              {isUploadingImage ? 'Subiendo imagen...' : isLoggedInSeller ? 'Publicar Inmueble Directamente' : 'Guardar y Continuar →'}
-            </Button>
           )}
-        </div>
 
-      </form>
+          {/* AMENIDADES CON UN CLIC */}
+          <div className="pt-2">
+            <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-2.5">
+              Comodidades y Servicios Disponibles
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {amenidadesDisponibles.map(am => {
+                const isSelected = formData.amenidades.includes(am);
+                return (
+                  <button
+                    key={am}
+                    type="button"
+                    onClick={() => toggleAmenidad(am)}
+                    className={`px-3 py-2.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                      isSelected
+                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <span>{am}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Botones de navegación */}
+          <div className="flex justify-between pt-4 border-t border-gray-100">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPaso(1)}
+              className="h-12 px-6 rounded-full font-bold flex items-center gap-1.5"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Anterior</span>
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              className="h-12 px-8 rounded-full font-extrabold flex items-center gap-2"
+            >
+              <span>Continuar a Fotos y Contacto</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {/* ================= PASO 3: FOTOS Y CONTACTO DIRECTO ================= */}
+      {paso === 3 && (
+        <form onSubmit={handleFinalSubmit} className="space-y-6 animate-in fade-in duration-200">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-gray-950">
+              Fotografías y Datos de Contacto
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">
+              Las fotos aumentan en un 80% las consultas. Además, tus datos permitirán a los interesados contactarte de forma directa.
+            </p>
+          </div>
+
+          {/* CARGA DE FOTOGRAFÍAS */}
+          <div>
+            <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-2">
+              Fotografías del Inmueble (Opcional)
+            </label>
+
+            {formData.galeria.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                {formData.galeria.map((url, idx) => {
+                  const isCover = formData.imagenUrl === url || (!formData.imagenUrl && idx === 0);
+                  return (
+                    <div
+                      key={idx}
+                      className={`relative rounded-2xl overflow-hidden border-2 bg-gray-50 h-32 group shadow-xs transition-all ${
+                        isCover ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'
+                      }`}
+                    >
+                      <img
+                        src={url}
+                        alt={`Foto ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {isCover && (
+                        <span className="absolute top-2 left-2 z-10 bg-primary text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-white" /> Portada
+                        </span>
+                      )}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-between p-2">
+                        <div className="w-full flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newGal = formData.galeria.filter((_, i) => i !== idx);
+                              const newCover = isCover ? (newGal[0] || '') : formData.imagenUrl;
+                              setFormData({
+                                ...formData,
+                                galeria: newGal,
+                                imagenUrl: newCover,
+                                fotosCount: newGal.length
+                              });
+                            }}
+                            className="bg-red-600 text-white p-1 rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        {!isCover && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, imagenUrl: url })}
+                            className="w-full bg-white text-gray-900 font-extrabold text-[11px] py-1 rounded-md shadow-xs text-center cursor-pointer"
+                          >
+                            Fijar Portada
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {uploadError && (
+              <div className="p-3 mb-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{uploadError}</span>
+              </div>
+            )}
+
+            <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center bg-gray-50/60 hover:bg-blue-50/30 hover:border-primary transition-all">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2.5">
+                <ImagePlus className="w-5 h-5" />
+              </div>
+              <p className="font-extrabold text-gray-900 text-xs sm:text-sm mb-1">
+                Selecciona fotos desde tu teléfono o computadora
+              </p>
+              <p className="text-[11px] text-gray-500 mb-3">
+                Formatos JPG o PNG. Puedes elegir varias al mismo tiempo.
+              </p>
+              
+              <label className="inline-flex items-center gap-2 cursor-pointer bg-primary text-white text-xs font-black px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-xs">
+                <UploadCloud className="w-4 h-4" />
+                <span>Elegir Fotografías</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={async (e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length > 0) {
+                      setUploadError(null);
+                      const localPreviews = files.map(f => URL.createObjectURL(f));
+                      setFormData(prev => ({
+                        ...prev,
+                        galeria: [...prev.galeria, ...localPreviews],
+                        fotosCount: prev.galeria.length + files.length,
+                        imagenUrl: prev.imagenUrl || localPreviews[0] || ''
+                      }));
+
+                      // Intento de upload al backend
+                      setIsUploadingImage(true);
+                      try {
+                        const uploads = files.map(async file => {
+                          const data = new FormData();
+                          data.append('file', file);
+                          const res = await fetch(`${API_BASE}/properties/upload`, {
+                            method: 'POST',
+                            body: data
+                          });
+                          const resData = await res.json();
+                          return resData.url || null;
+                        });
+                        const results = await Promise.all(uploads);
+                        const serverUrls = results.filter((url): url is string => Boolean(url));
+                        if (serverUrls.length > 0) {
+                          setFormData(prev => {
+                            const withoutBlobs = prev.galeria.filter(u => !u.startsWith('blob:'));
+                            const merged = [...withoutBlobs, ...serverUrls];
+                            return {
+                              ...prev,
+                              galeria: merged,
+                              imagenUrl: merged[0] || '',
+                              fotosCount: merged.length
+                            };
+                          });
+                        }
+                      } catch {
+                        // Mantener previsualización local para no interrumpir al usuario
+                      } finally {
+                        setIsUploadingImage(false);
+                      }
+                    }
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* DATOS DE CONTACTO DIRECTO */}
+          <div className="bg-gray-50/70 p-5 rounded-2xl border border-gray-200/80 space-y-4">
+            <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-wider">
+              <Phone className="w-4 h-4" />
+              <span>Contacto Directo Comprador - Propietario</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                  Nombre del Propietario / Contacto *
+                </label>
+                <Input
+                  type="text"
+                  value={formData.contactoNombre}
+                  onChange={(e) => setFormData({ ...formData, contactoNombre: e.target.value })}
+                  placeholder="Ej. Arq. Marcelo Mendoza"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-gray-700 mb-1.5">
+                  Teléfono / WhatsApp de Contacto *
+                </label>
+                <Input
+                  type="text"
+                  value={formData.contactoTelefono}
+                  onChange={(e) => setFormData({ ...formData, contactoTelefono: e.target.value })}
+                  placeholder="Ej. +591 70612345"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* RESPALDO LEGAL (OPCIONAL PARA VERIFICACIÓN) */}
+          <div className="p-4 bg-blue-50/50 border border-blue-200/60 rounded-2xl space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-blue-900">
+                Matrícula de Folio Real (Opcional)
+              </label>
+              <span className="text-[10px] bg-blue-100 text-blue-800 font-extrabold px-2 py-0.5 rounded-full">
+                Opcional • Insignia Verificada
+              </span>
+            </div>
+            <Input
+              type="text"
+              value={formData.folioReal}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                folioReal: e.target.value,
+                tieneFolio: Boolean(e.target.value.trim()) 
+              })}
+              placeholder="Ej. 2.01.0.99.0018472"
+            />
+            <p className="text-[11px] text-gray-500 font-medium leading-relaxed">
+              Si cuentas con tu número de Folio Real en Derechos Reales puedes registrarlo para mostrar la insignia de verificación en tu ficha. Si no lo tienes a mano, puedes publicar y añadirlo más adelante.
+            </p>
+          </div>
+
+          {/* Botones de navegación final */}
+          <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPaso(2)}
+              className="h-12 px-6 rounded-full font-bold flex items-center gap-1.5"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Anterior</span>
+            </Button>
+
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isSubmitting || isUploadingImage}
+              className="h-12 px-8 rounded-full font-black flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>{isSubmitting ? 'Publicando...' : 'Publicar Inmueble Gratis'}</span>
+            </Button>
+          </div>
+        </form>
+      )}
+
     </div>
   );
 };
